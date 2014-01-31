@@ -1,28 +1,28 @@
 package observer;
-import java.util.*;
+
+import java.util.ArrayList;
+
 public class Bag implements Subject {
-   private ArrayList valueList = new ArrayList();
-   private ObserverArray obsList = new ObserverArray();
+	private ArrayList valueList = new ArrayList();
+	private ObserverArray obsList = new ObserverArray();
 
- 
-   public void add( Value v ) {                
-      valueList.add( v );                              
-      notifyObs();
-   }
-   
+	public void add(Value v) {
+		valueList.add(v);
+		notifyObs();
+	}
 
-    public ArrayList getValueList() {
-	return valueList;
-    }                  
-  
-    public void addObserver( Observer o ) {
-      obsList.add( o );
-   }
+	public ArrayList getValueList() {
+		return valueList;
+	}
 
-   private void notifyObs() {
-      for(int i=0;i<obsList.size();i++ ) {
-         Observer o = ( Observer ) obsList.get(i);
-         o.update( this );
-      }
-   }
+	public void addObserver(Observer o) {
+		obsList.add(o);
+	}
+
+	private void notifyObs() {
+		for (int i = 0; i < obsList.size(); i++) {
+			Observer o = (Observer) obsList.get(i);
+			o.update(this);
+		}
+	}
 }
