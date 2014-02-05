@@ -19,13 +19,11 @@
  */
 package callgraphstat;
 
-import java.util.Set;
-
 public class Edge {
-    private Node source;
-    private Set<Node> targets;
+	private String source;
+	private String targets;
 
-    public Edge() {
+	public Edge() {
 
-    }
+	}
 }

@@ -24,6 +24,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -32,22 +33,25 @@ public class JCallGraph {
 
 	public static void main(String[] args) {
 		try {
-			// String loc =
-			// "G:\\lnu\\5DV001 - Thesis Project\\Thesis - Jonas\\ThesisBackup\\JunitWithoutReflection.git.second\\JUnitWithoutReflection.Second\\bin\\callgraphstat";
-			String loc = "G:\\lnu\\5DV001 - Thesis Project\\Thesis - Jonas\\ThesisBackup\\JunitWithoutReflection.git.second\\JUnitWithoutReflection.Second\\bin\\observer";
-			// String spn = "callgraphstat.superclass.Example";
-			String spn = "observer.Printer";
+			String loc = "G:\\lnu\\5DV001 - Thesis Project\\Thesis - Jonas\\ThesisBackup\\JunitWithoutReflection.git.second\\JUnitWithoutReflection.Second\\bin\\callgraphstat";
+			String mainClass = "callgraphstat.superclass.Example";
+			// String mainClass = "observer.Printer";
 			File file = new File(loc);
-			// JCallGraph jCallGraph = new JCallGraph(file, "callgraphstat");
-			JCallGraph jCallGraph = new JCallGraph(file, "observer");
-			Map<String, Description> ssss = jCallGraph.getClassDescriptions();
+			JCallGraph jCallGraph = new JCallGraph(file, "callgraphstat");
+			// JCallGraph jCallGraph = new JCallGraph(file, "observer");
+			// Map<String, Description> ssss =
+			// jCallGraph.getClassDescriptions();
 			// System.out.println(ssss.get(
 			// "callgraphstat.testclasses.JonasTestMain").getClassName());
-			Description des = jCallGraph.getClassDescriptions().get(spn);
+			Description des = jCallGraph.getClassDescriptions().get(mainClass);
 			// System.out.println(des.printNode());
 			// make single call means check edges first
 			if (des != null) {
-				des.getClassVisitor().start();
+				// des.getClassVisitor().start();
+			}
+			List<String> nodes = des.getNodes();
+			for (String node : nodes) {
+				System.out.println(node);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -82,13 +86,13 @@ public class JCallGraph {
 		String pac = (pack.trim().equalsIgnoreCase("") ? "" : pack.concat("."));
 		for (final File fileEntry : folder.listFiles()) {
 			if (fileEntry.isDirectory()) {
-				// if (fileEntry.getName().equalsIgnoreCase("superclass")) {
 				if (fileEntry.getName().equalsIgnoreCase("superclass")) {
+					// if (fileEntry.getName().equalsIgnoreCase("superclass")) {
 					readFiles(fileEntry, pac.concat(fileEntry.getName()));
 				}
 			} else {
-				// if (pac.equalsIgnoreCase("callgraphstat.superclass.")) {
-				if (pac.equalsIgnoreCase("observer.")) {
+				if (pac.equalsIgnoreCase("callgraphstat.superclass.")) {
+					// if (pac.equalsIgnoreCase("observer.")) {
 					if (fileEntry.getName().endsWith(".class")) {
 						URL url = this.file.toURI().toURL();
 						URL[] urls = new URL[] { url };

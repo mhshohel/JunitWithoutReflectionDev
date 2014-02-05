@@ -30,49 +30,50 @@ import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.MethodGen;
 
 public class ClassVisitor extends EmptyVisitor {
-    private JavaClass clazz;
-    private ConstantPoolGen constants;
-    private String classReferenceFormat;
+	private JavaClass clazz;
+	private ConstantPoolGen constants;
+	private String classReferenceFormat;
 
-    public ClassVisitor(JavaClass jc) {
-	clazz = jc;
-	constants = new ConstantPoolGen(clazz.getConstantPool());
-	classReferenceFormat = "C:" + clazz.getClassName() + "  " + " %s";
-    }
-
-    public void visitJavaClass(JavaClass jc) {
-	jc.getConstantPool().accept(this);
-	Field[] fields = jc.getFields();
-	Method[] methods = jc.getMethods();
-	for (int i = 0; i < methods.length; i++) {
-	    String name = methods[i].getName();
-	    Method m = methods[i];
-	    LocalVariableTable s = m.getLocalVariableTable();
-	    // if (name.charAt(0) != '<')
-	    methods[i].accept(this);
-	    System.out.println("\t\t\t---------------Fin----------------");
+	public ClassVisitor(JavaClass jc) {
+		clazz = jc;
+		constants = new ConstantPoolGen(clazz.getConstantPool());
+		classReferenceFormat = "C:" + clazz.getClassName() + "  " + " %s";
 	}
-    }
 
-    public void visitConstantPool(ConstantPool constantPool) {
-	for (int i = 0; i < constantPool.getLength(); i++) {
-	    Constant constant = constantPool.getConstant(i);
-	    if (constant == null)
-		continue;
-	    if (constant.getTag() == 7) {
-		constantPool.constantToString(constant);
-	    }
+	public void visitJavaClass(JavaClass jc) {
+		jc.getConstantPool().accept(this);
+		Field[] fields = jc.getFields();
+		Method[] methods = jc.getMethods();
+		for (int i = 0; i < methods.length; i++) {
+			String name = methods[i].getName();
+			System.out.println(name);
+			Method m = methods[i];
+			LocalVariableTable s = m.getLocalVariableTable();
+			// if (name.charAt(0) != '<')
+			methods[i].accept(this);
+			System.out.println("\t\t\t---------------Fin----------------");
+		}
 	}
-    }
 
-    @Override
-    public void visitMethod(Method method) {
-	MethodGen mg = new MethodGen(method, clazz.getClassName(), constants);
-	MethodVisitor visitor = new MethodVisitor(mg, clazz);
-	visitor.start();
-    }
+	public void visitConstantPool(ConstantPool constantPool) {
+		for (int i = 0; i < constantPool.getLength(); i++) {
+			Constant constant = constantPool.getConstant(i);
+			if (constant == null)
+				continue;
+			if (constant.getTag() == 7) {
+				constantPool.constantToString(constant);
+			}
+		}
+	}
 
-    public void start() {
-	visitJavaClass(clazz);
-    }
+	@Override
+	public void visitMethod(Method method) {
+		MethodGen mg = new MethodGen(method, clazz.getClassName(), constants);
+		MethodVisitor visitor = new MethodVisitor(mg, clazz);
+		visitor.start();
+	}
+
+	public void start() {
+		visitJavaClass(clazz);
+	}
 }

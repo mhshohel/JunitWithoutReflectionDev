@@ -19,36 +19,74 @@
  */
 package callgraphstat;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
 
 public class ExtractMethod implements Comparable<ExtractMethod> {
-    private Method method = null;
-    private String extractMethod = "";
+	private Method method = null;
+	// node as target of edge
+	private String node = "";
+	// keep list source
+	private Set<String> sources = new HashSet<String>();
+	private Map<String, Set<Description>> values = new HashMap<String, Set<Description>>();
 
-    public ExtractMethod(Method method, String javaClassName) {
-	this.method = method;
-	Type[] types = method.getArgumentTypes();
-	int length = types.length;
-	String type = "(";
-	for (int i = 0; i < length; i++) {
-	    type += ((i + 1) == length) ? types[i] : types[i] + ",";
+	// save values with param and field name
+
+	public ExtractMethod(Method method, String javaClassName) {
+		this.method = method;
+		Type[] types = method.getArgumentTypes();
+		int length = types.length;
+		String type = "(";
+		for (int i = 0; i < length; i++) {
+			type += ((i + 1) == length) ? types[i] : types[i] + ",";
+		}
+		type += ")";
+		node = javaClassName + "." + method.getName() + type
+				+ method.getReturnType();
 	}
-	type += ")";
-	extractMethod = javaClassName + "." + method.getName() + type
-		+ method.getReturnType();
-    }
 
-    public Method getMethod() {
-	return this.method;
-    }
+	public Method getMethod() {
+		return this.method;
+	}
 
-    public String toString() {
-	return this.extractMethod;
-    }
+	public String toString() {
+		return this.node;
+	}
 
-    @Override
-    public int compareTo(ExtractMethod node) {
-	return getMethod().getName().compareTo(node.getMethod().getName());
-    }
+	public String getNode() {
+		return this.node;
+	}
+
+	public void addSource(String source) {
+		this.sources.add(source);
+	}
+
+	public Set<String> getSources() {
+		return this.sources;
+	}
+
+	public List<String> getEdges() {
+		List<String> edges = new ArrayList<String>();
+		for (String source : this.sources) {
+			edges.add(this.node + " --> " + source);
+		}
+		return edges;
+	}
+
+	public void addValues(String var, Description description) {
+		Set<Description> value = this.values.get(var);
+		value.add(description);
+	}
+
+	@Override
+	public int compareTo(ExtractMethod node) {
+		return getMethod().getName().compareTo(node.getMethod().getName());
+	}
 }

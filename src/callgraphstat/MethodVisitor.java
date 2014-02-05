@@ -70,15 +70,15 @@ public class MethodVisitor extends EmptyVisitor {
 
 	@Override
 	public void visitNEW(NEW obj) {
-		System.out.println(obj + "   --->   "
-				+ obj.getLoadClassType(cp).getClassName());
+		// System.out.println(obj + "   --->   "
+		// + obj.getLoadClassType(cp).getClassName());
 
 	}
 
 	@Override
 	public void visitALOAD(ALOAD obj) {
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(cp).getSignature());
+		// System.out.println("\t\t" + obj.getName() + "   --->   "
+		// + obj.getType(cp).getSignature());
 		// System.out.println("\t\t" + lv[obj.getIndex()]);
 		// LocalVariableGen l = lv[obj.getIndex()];
 		// System.err.println(l.getName());
@@ -86,8 +86,8 @@ public class MethodVisitor extends EmptyVisitor {
 
 	@Override
 	public void visitASTORE(ASTORE obj) {
-		System.out.println(obj.getName() + "   --->   "
-				+ obj.getType(cp).getSignature());
+		// System.out.println(obj.getName() + "   --->   "
+		// + obj.getType(cp).getSignature());
 		// System.out.println("\t\t" + lv[obj.getIndex()]);
 		// LocalVariableGen l = lv[obj.getIndex()];
 		// System.err.println(l.getName());
@@ -95,8 +95,8 @@ public class MethodVisitor extends EmptyVisitor {
 
 	@Override
 	public void visitPUTSTATIC(PUTSTATIC obj) {
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(cp).getSignature());
+		// System.out.println("\t\t" + obj.getName() + "   --->   "
+		// + obj.getType(cp).getSignature());
 
 		// System.out.println("\t\t" + obj.getFieldName(cp));
 		// System.out.println("\t\t" + obj.getFieldType(cp));
@@ -104,8 +104,8 @@ public class MethodVisitor extends EmptyVisitor {
 
 	@Override
 	public void visitPUTFIELD(PUTFIELD obj) {
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(cp).getSignature());
+		// System.out.println("\t\t" + obj.getName() + "   --->   "
+		// + obj.getType(cp).getSignature());
 
 		// System.out.println("\t\t" + obj.getFieldName(cp));
 		// System.out.println("\t\t" + obj.getFieldType(cp));
@@ -113,24 +113,24 @@ public class MethodVisitor extends EmptyVisitor {
 
 	@Override
 	public void visitGETSTATIC(GETSTATIC obj) {
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(cp).getSignature());
+		// System.out.println("\t\t" + obj.getName() + "   --->   "
+		// + obj.getType(cp).getSignature());
 		// System.out.println("\t\t" + obj.getFieldName(cp));
 		// System.out.println("\t\t" + obj.getFieldType(cp));
 	}
 
 	@Override
 	public void visitGETFIELD(GETFIELD obj) {
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(cp).getSignature());
+		// System.out.println("\t\t" + obj.getName() + "   --->   "
+		// + obj.getType(cp).getSignature());
 		// System.out.println("\t\t" + obj.getFieldName(cp));
 		// System.out.println("\t\t" + obj.getFieldType(cp));
 	}
 
 	@Override
 	public void visitRETURN(RETURN obj) {
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(cp).getSignature());
+		// System.out.println("\t\t" + obj.getName() + "   --->   "
+		// + obj.getType(cp).getSignature());
 		// System.out.println("\t\t" + obj.getType(cp));
 	}
 
@@ -140,8 +140,8 @@ public class MethodVisitor extends EmptyVisitor {
 		for (InstructionHandle ih = mg.getInstructionList().getStart(); ih != null; ih = ih
 				.getNext()) {
 			Instruction i = ih.getInstruction();
-			System.out.println("\t" + i + "     "
-					+ i.toString(cp.getConstantPool()));
+			// System.out.println("\t" + i + "     "
+			// + i.toString(cp.getConstantPool()));
 			// }
 			if (!visitInstruction(i)) {
 				i.accept(this);
@@ -152,7 +152,7 @@ public class MethodVisitor extends EmptyVisitor {
 	}
 
 	void print(Object s) {
-		System.out.println("\t" + s);
+		// System.out.println("\t" + s);
 	}
 
 	private boolean visitInstruction(Instruction i) {

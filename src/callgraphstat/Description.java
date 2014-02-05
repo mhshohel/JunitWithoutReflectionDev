@@ -123,6 +123,9 @@ public class Description implements Comparable<Description> {
 		}
 		if (!this.clas.isInterface()) {
 			// Methods as Node
+			// save node --- done
+			// save edge
+			// save values
 			ExtractMethod extractMethod = null;
 			for (Method method : this.javaClass.getMethods()) {
 				extractMethod = new ExtractMethod(method,
@@ -149,6 +152,20 @@ public class Description implements Comparable<Description> {
 				this.superClass.add(description);
 			}
 		}
+	}
+
+	public List<String> getNodes() {
+		List<String> nodes = new ArrayList<String>();
+		Description description = null;
+		for (Entry<String, Description> entry : this.classDescriptions
+				.entrySet()) {
+			description = entry.getValue();
+			for (Entry<Method, ExtractMethod> methodEntry : description
+					.getMethods().entrySet()) {
+				nodes.add(methodEntry.getValue().toString());
+			}
+		}
+		return nodes;
 	}
 
 	public List<Description> getInterfaces() {
@@ -267,17 +284,10 @@ public class Description implements Comparable<Description> {
 		return null;
 	}
 
-	public String getMethodFullName(Method method) {
-		return method.toString().substring(0,
-				(method.toString().indexOf(')') + 1));
-	}
+	int a = 10;
 
-	public String getMethodName(Method method) {
-		return method.getName();
-	}
-
-	public Map<Method, ExtractMethod> getMethods() {
-		return this.methods;
+	public void val(int aa) {
+		a = aa;
 	}
 
 	public ExtractMethod getNodeByNameAndTypeArgs(String methodName,
@@ -301,6 +311,19 @@ public class Description implements Comparable<Description> {
 		}
 
 		return null;
+	}
+
+	public String getMethodFullName(Method method) {
+		return method.toString().substring(0,
+				(method.toString().indexOf(')') + 1));
+	}
+
+	public String getMethodName(Method method) {
+		return method.getName();
+	}
+
+	public Map<Method, ExtractMethod> getMethods() {
+		return this.methods;
 	}
 
 	public ExtractMethod getExtractMethodByMethod(Method method) {
