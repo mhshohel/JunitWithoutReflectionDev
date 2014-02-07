@@ -41,6 +41,12 @@ public class ClassVisitor extends EmptyVisitor {
 		this.classReferenceFormat = "C:" + clazz.getClassName() + "  " + " %s";
 	}
 
+	public ClassVisitor copy() {
+		ClassVisitor classVisitor = new ClassVisitor(this.clazz,
+				this.description);
+		return classVisitor;
+	}
+
 	public void visitJavaClass(JavaClass jc) {
 		jc.getConstantPool().accept(this);
 		Field[] fields = jc.getFields();

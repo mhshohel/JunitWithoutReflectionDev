@@ -19,9 +19,7 @@
  */
 package callgraphstat;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -92,13 +90,13 @@ public class ExtractMethod implements Comparable<ExtractMethod> {
 		return this.node;
 	}
 
-	public List<String> getEdges() {
-		List<String> edges = new ArrayList<String>();
-		for (String source : this.methodVisitor.getSources()) {
-			edges.add(this.node + " --> " + source);
-		}
-		return edges;
-	}
+	// public List<String> getEdges() {
+	// List<String> edges = new ArrayList<String>();
+	// for (String source : this.methodVisitor.getSources()) {
+	// edges.add(this.node + " --> " + source);
+	// }
+	// return edges;
+	// }
 
 	//
 	// public void addValues(String var, Description description) {

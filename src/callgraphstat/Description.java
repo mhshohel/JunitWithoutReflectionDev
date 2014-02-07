@@ -19,6 +19,7 @@
  */
 package callgraphstat;
 
+import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -68,18 +69,19 @@ public class Description implements Comparable<Description> {
 	private JavaClass javaClass = null;
 	private ClassVisitor classVisitor = null;
 	private ConstantPoolGen constants = null;
-	private Map<String, Description> classDescriptions = null;
-	private List<Description> interfaces = new ArrayList<Description>();
-	private List<Description> superClass = new ArrayList<Description>();
 	private ClassCategory classCategory = null;
 	private InputStream classInputStream = null;
 	private ClassType classType = null;
+	private Map<String, Description> classDescriptions = new HashMap<String, Description>();
 	private Map<Method, ExtractMethod> methods = new HashMap<Method, ExtractMethod>();
+	private List<Description> interfaces = new ArrayList<Description>();
+	private List<Description> superClass = new ArrayList<Description>();
 	private List<String> nodes = new ArrayList<String>();
+	private List<String> edges = new ArrayList<String>();
 
-	// keep field values
-	// private Map<String, Set<Description>> values = new HashMap<String,
-	// Set<Description>>();
+	private Description() {
+		// used to make a new copy of Description
+	}
 
 	public Description(Class<?> clas, ClassCategory classCategory,
 			Map<String, Description> classDescriptions) throws Exception {
@@ -98,7 +100,9 @@ public class Description implements Comparable<Description> {
 		this.clas = clas;
 		this.classDescriptions = classDescriptions;
 		try {
-			String resourceName = clas.getName().replace('.', '/') + ".class";
+			String resourceName = clas.getName().replace('.',
+					File.separatorChar)
+					+ ".class";
 			this.classInputStream = clas.getClassLoader().getResourceAsStream(
 					resourceName);
 			this.javaClass = new ClassParser(classInputStream, resourceName)
@@ -126,10 +130,6 @@ public class Description implements Comparable<Description> {
 					ClassCategory.REGULAR, this.classDescriptions));
 		}
 		if (!this.clas.isInterface()) {
-			// Methods as Node
-			// save node --- done
-			// save edge
-			// save values
 			ExtractMethod extractMethod = null;
 			for (Method method : this.javaClass.getMethods()) {
 				extractMethod = new ExtractMethod(this, this.classVisitor,
@@ -158,16 +158,31 @@ public class Description implements Comparable<Description> {
 		}
 	}
 
-	// public void addValues(String var, Description description) {
-	// Set<Description> value = this.values.get(var);
-	// if (value != null) {
-	// value.add(description);
-	// } else {
-	// value = new HashSet<Description>();
-	// value.add(description);
-	// this.values.put(var, value);
-	// }
-	// }
+	public Description copy() {
+		Description dummy = new Description();
+		dummy.clas = this.clas;
+		dummy.javaClass = this.javaClass;
+		dummy.classVisitor = this.classVisitor.copy();
+		dummy.constants = this.constants;
+		dummy.classDescriptions = this.classDescriptions;
+		dummy.interfaces = this.interfaces;
+		dummy.superClass = this.superClass;
+		dummy.classCategory = this.classCategory;
+		dummy.classInputStream = this.classInputStream;
+		dummy.classType = this.classType;
+		dummy.methods = null;
+		if (!this.clas.isInterface()) {
+			ExtractMethod extractMethod = null;
+			for (Method method : dummy.javaClass.getMethods()) {
+				extractMethod = new ExtractMethod(dummy, dummy.classVisitor,
+						method, dummy.javaClass.getClassName());
+				dummy.methods.put(method, extractMethod);
+			}
+		}
+		dummy.nodes = this.nodes;
+		dummy.edges = this.edges;
+		return dummy;
+	}
 
 	public List<String> getNodes() {
 		List<String> nodes = new ArrayList<String>();
@@ -183,20 +198,21 @@ public class Description implements Comparable<Description> {
 		return nodes;
 	}
 
-	public List<String> getEdges() {
-		List<String> edges = new ArrayList<String>();
-		Description description = null;
-		for (Entry<String, Description> entry : this.classDescriptions
-				.entrySet()) {
-			description = entry.getValue();
-			for (Entry<Method, ExtractMethod> methodEntry : description
-					.getMethods().entrySet()) {
-				for (String value : methodEntry.getValue().getEdges()) {
-					edges.add(value);
-				}
-			}
+	public boolean addEdge(String edge) {
+		if (this.edges.contains(edge)) {
+			return true;
 		}
-		return edges;
+		this.edges.add(edge);
+		return false;
+	}
+
+	public List<String> getSortedEdges() {
+		Collections.sort(this.edges);
+		return this.edges;
+	}
+
+	public List<String> getUnsortedEdges() {
+		return this.edges;
 	}
 
 	public List<Description> getInterfaces() {
@@ -205,22 +221,6 @@ public class Description implements Comparable<Description> {
 
 	public List<Description> getSuperClass() {
 		return this.superClass;
-	}
-
-	public List<String> getNode() {
-		return this.nodes;
-	}
-
-	public String printNode() {
-		StringBuilder sb = new StringBuilder();
-		int size = this.nodes.size();
-		String val = "";
-		for (int i = 0; i < size; i++) {
-			val = this.nodes.get(i);
-			sb.append(((i + 1) == size) ? val : (val + "\n"));
-		}
-
-		return sb.toString();
 	}
 
 	public Description getDescriptionByJavaClass(JavaClass jc) {

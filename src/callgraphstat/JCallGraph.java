@@ -24,6 +24,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -50,11 +51,17 @@ public class JCallGraph {
 				new GenerateCallGraph(des);
 			}
 
+			// des.getClassVisitor().print();
+			// Description d = des.copy();
+			// d.getClassVisitor().print();
+			// d.getClassVisitor().num = 100;
+			// des.getClassVisitor().print();
+
 			// print nodes
-			// List<String> nodes = des.getNodes();
-			// for (String node : nodes) {
-			// System.out.println(node);
-			// }
+			List<String> nodes = des.getNodes();
+			for (String node : nodes) {
+				System.out.println(node);
+			}
 			// print edges
 			// List<String> edges = des.getEdges();
 			// for (String edge : edges) {

@@ -102,7 +102,7 @@ public class MethodVisitor extends EmptyVisitor {
 		// + obj.getType(constantPoolGen).getSignature());
 		// System.out.println("\t\t" + lv[obj.getIndex()]);
 		LocalVariableGen l = localVariableGens[obj.getIndex()];
-		System.err.println("LOAD: " + l.getName());
+		System.out.println("LOAD: " + l.getName());
 	}
 
 	@Override
@@ -111,7 +111,7 @@ public class MethodVisitor extends EmptyVisitor {
 		// + obj.getType(constantPoolGen).getSignature());
 		// System.out.println("\t\t" + localVariables[obj.getIndex()]);
 		LocalVariableGen l = localVariableGens[obj.getIndex()];
-		System.err.println("STORE: " + l.getName());
+		System.out.println("STORE: " + l.getName());
 	}
 
 	@Override
