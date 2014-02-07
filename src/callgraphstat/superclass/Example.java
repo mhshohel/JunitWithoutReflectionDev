@@ -20,15 +20,22 @@
 package callgraphstat.superclass;
 
 public class Example {
+	// static A na = null;
 
 	/**
 	 * @param Example
 	 */
 	public static void main(String[] args) {
+		// na = new A();
+		// A a = null;
+		// new C();
 		B b1 = new B();
 		A a2 = new A();
 		f(b1);
 		g(b1);
+		// a = new C();
+		// a = b1;
+		// A d = get();
 	}
 
 	static void f(A a2) {
@@ -39,5 +46,9 @@ public class Example {
 		B b4 = b3;
 		b4 = new C();
 		b4.foo();
+	}
+
+	static A get() {
+		return new D();
 	}
 }

@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="D:/Eclipse-Kepler-SR1-win32-x86_64/lib/bcel-5.2/bcel-5.2.jar"/>
+	<classpathentry kind="lib" path="D:/JavaLib/lib/bcel-5.2/bcel-5.2.jar" sourcepath="D:/JavaLib/lib/bcel-5.2/bcel-5.2-src.zip"/>
 	<classpathentry kind="lib" path="D:/Program Files/Java/jdk1.7.0_45/lib/tools.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="output" path="bin"/>

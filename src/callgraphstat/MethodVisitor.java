@@ -19,14 +19,20 @@
  */
 package callgraphstat;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.LocalVariable;
+import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.generic.ALOAD;
 import org.apache.bcel.generic.ASTORE;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.ConstantPushInstruction;
 import org.apache.bcel.generic.EmptyVisitor;
-import org.apache.bcel.generic.FieldGen;
 import org.apache.bcel.generic.GETFIELD;
 import org.apache.bcel.generic.GETSTATIC;
 import org.apache.bcel.generic.INVOKEINTERFACE;
@@ -36,6 +42,7 @@ import org.apache.bcel.generic.INVOKEVIRTUAL;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionConstants;
 import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.MethodGen;
@@ -47,108 +54,136 @@ import org.apache.bcel.generic.ReturnInstruction;
 
 public class MethodVisitor extends EmptyVisitor {
 	JavaClass visitedClass;
-	private MethodGen mg;
-	private ConstantPoolGen cp;
+	private MethodGen methodGen;
+	private ConstantPoolGen constantPoolGen;
 	private String format;
-	private LocalVariableGen[] lv;
-	private Field[] fl;
-	private FieldGen[] flg;
+	private LocalVariable[] localVariables;
+	private LocalVariableGen[] localVariableGens;
+	private ExtractMethod extractMethod = null;
+	private Description description = null;
+	private Set<String> sources = new HashSet<String>();
+	private Map<Field, Set<Description>> values = new HashMap<Field, Set<Description>>();
 
-	public MethodVisitor(MethodGen m, JavaClass jc) {
-		visitedClass = jc;
-		mg = m;
-		cp = mg.getConstantPool();
-		format = "M:" + visitedClass.getClassName() + ":" + mg.getName() + " "
-				+ "(%s)%s:%s";
-		lv = mg.getLocalVariables();
-		fl = jc.getFields();
-		flg = new FieldGen[fl.length];
-		for (int i = 0; i < fl.length; i++) {
-			flg[i] = new FieldGen(fl[i], cp);
+	// public MethodVisitor(MethodGen m, JavaClass jc, ExtractMethod
+	// extractMethod) {
+	public MethodVisitor(Description description, ExtractMethod extractMethod) {
+		this.extractMethod = extractMethod;
+		this.description = description;
+		visitedClass = this.description.getJavaClass();
+		methodGen = this.extractMethod.getMethodGen();
+		constantPoolGen = methodGen.getConstantPool();
+		format = "M:" + visitedClass.getClassName() + ":" + methodGen.getName()
+				+ " " + "(%s)%s:%s";
+		localVariableGens = methodGen.getLocalVariables();
+		localVariables = new LocalVariable[localVariableGens.length];
+		for (int i = 0; i < localVariableGens.length; i++) {
+			localVariables[i] = localVariableGens[i]
+					.getLocalVariable(constantPoolGen);
 		}
+		lvt = methodGen.getLocalVariableTable(constantPoolGen);
+	}
+
+	LocalVariableTable lvt;
+
+	public void print() {
+		System.out.println(this.extractMethod);
 	}
 
 	@Override
 	public void visitNEW(NEW obj) {
 		// System.out.println(obj + "   --->   "
-		// + obj.getLoadClassType(cp).getClassName());
+		// + obj.getLoadClassType(constantPoolGen).getClassName());
 
 	}
 
 	@Override
 	public void visitALOAD(ALOAD obj) {
 		// System.out.println("\t\t" + obj.getName() + "   --->   "
-		// + obj.getType(cp).getSignature());
+		// + obj.getType(constantPoolGen).getSignature());
 		// System.out.println("\t\t" + lv[obj.getIndex()]);
-		// LocalVariableGen l = lv[obj.getIndex()];
-		// System.err.println(l.getName());
+		LocalVariableGen l = localVariableGens[obj.getIndex()];
+		System.err.println("LOAD: " + l.getName());
 	}
 
 	@Override
 	public void visitASTORE(ASTORE obj) {
 		// System.out.println(obj.getName() + "   --->   "
-		// + obj.getType(cp).getSignature());
-		// System.out.println("\t\t" + lv[obj.getIndex()]);
-		// LocalVariableGen l = lv[obj.getIndex()];
-		// System.err.println(l.getName());
+		// + obj.getType(constantPoolGen).getSignature());
+		// System.out.println("\t\t" + localVariables[obj.getIndex()]);
+		LocalVariableGen l = localVariableGens[obj.getIndex()];
+		System.err.println("STORE: " + l.getName());
 	}
 
 	@Override
 	public void visitPUTSTATIC(PUTSTATIC obj) {
 		// System.out.println("\t\t" + obj.getName() + "   --->   "
-		// + obj.getType(cp).getSignature());
+		// + obj.getType(constantPoolGen).getSignature());
 
-		// System.out.println("\t\t" + obj.getFieldName(cp));
-		// System.out.println("\t\t" + obj.getFieldType(cp));
+		// System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
+		// System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
 	}
 
 	@Override
 	public void visitPUTFIELD(PUTFIELD obj) {
 		// System.out.println("\t\t" + obj.getName() + "   --->   "
-		// + obj.getType(cp).getSignature());
+		// + obj.getType(constantPoolGen).getSignature());
 
-		// System.out.println("\t\t" + obj.getFieldName(cp));
-		// System.out.println("\t\t" + obj.getFieldType(cp));
+		// System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
+		// System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
 	}
 
 	@Override
 	public void visitGETSTATIC(GETSTATIC obj) {
 		// System.out.println("\t\t" + obj.getName() + "   --->   "
-		// + obj.getType(cp).getSignature());
-		// System.out.println("\t\t" + obj.getFieldName(cp));
-		// System.out.println("\t\t" + obj.getFieldType(cp));
+		// + obj.getType(constantPoolGen).getSignature());
+		// System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
+		// System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
 	}
 
 	@Override
 	public void visitGETFIELD(GETFIELD obj) {
 		// System.out.println("\t\t" + obj.getName() + "   --->   "
-		// + obj.getType(cp).getSignature());
-		// System.out.println("\t\t" + obj.getFieldName(cp));
-		// System.out.println("\t\t" + obj.getFieldType(cp));
+		// + obj.getType(constantPoolGen).getSignature());
+		// System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
+		// System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
 	}
 
 	@Override
 	public void visitRETURN(RETURN obj) {
 		// System.out.println("\t\t" + obj.getName() + "   --->   "
-		// + obj.getType(cp).getSignature());
-		// System.out.println("\t\t" + obj.getType(cp));
+		// + obj.getType(constantPoolGen).getSignature());
+		// System.out.println("\t\t" + obj.getType(constantPoolGen));
 	}
 
-	public void start() {
-		if (mg.isAbstract() || mg.isNative())
+	public void start(String source) {
+		// System.out.println(localVariableGens[1].getName());
+		// System.out.println(localVariables[1]);
+		addSource(source);
+		if (methodGen.isAbstract() || methodGen.isNative())
 			return;
-		for (InstructionHandle ih = mg.getInstructionList().getStart(); ih != null; ih = ih
+		InstructionList lis = methodGen.getInstructionList();
+		for (InstructionHandle ih = methodGen.getInstructionList().getStart(); ih != null; ih = ih
 				.getNext()) {
 			Instruction i = ih.getInstruction();
 			// System.out.println("\t" + i + "     "
-			// + i.toString(cp.getConstantPool()));
+			// + i.toString(constantPoolGen.getConstantPool()));
 			// }
+
 			if (!visitInstruction(i)) {
 				i.accept(this);
 			}
 			String a1 = "";
-
 		}
+	}
+
+	public void addSource(String source) {
+		if (source != null) {
+			this.sources.add(source);
+		}
+	}
+
+	public Set<String> getSources() {
+		return this.sources;
 	}
 
 	void print(Object s) {
@@ -164,32 +199,36 @@ public class MethodVisitor extends EmptyVisitor {
 
 	@Override
 	public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i) {
-		System.out.println(String.format(format, "M", i.getReferenceType(cp),
-				i.getMethodName(cp)));
+		System.out.println(String.format(format, "M",
+				i.getReferenceType(constantPoolGen),
+				i.getMethodName(constantPoolGen)));
 		System.out.println("------------------------");
 	}
 
 	@Override
 	public void visitINVOKEINTERFACE(INVOKEINTERFACE i) {
-		// String s = i.getType()(cp).toString();
-		LocalVariableGen[] f = mg.getLocalVariables();
-		LineNumberGen[] lns = mg.getLineNumbers();
-		System.out.println(String.format(format, "I", i.getReferenceType(cp),
-				i.getMethodName(cp)));
+		// String s = i.getType()(constantPoolGen).toString();
+		LocalVariableGen[] f = methodGen.getLocalVariables();
+		LineNumberGen[] lns = methodGen.getLineNumbers();
+		System.out.println(String.format(format, "I",
+				i.getReferenceType(constantPoolGen),
+				i.getMethodName(constantPoolGen)));
 		System.out.println("------------------------");
 	}
 
 	@Override
 	public void visitINVOKESPECIAL(INVOKESPECIAL i) {
-		System.out.println(String.format(format, "O", i.getReferenceType(cp),
-				i.getMethodName(cp)));
+		System.out.println(String.format(format, "O",
+				i.getReferenceType(constantPoolGen),
+				i.getMethodName(constantPoolGen)));
 		System.out.println("------------------------");
 	}
 
 	@Override
 	public void visitINVOKESTATIC(INVOKESTATIC i) {
-		System.out.println(String.format(format, "S", i.getReferenceType(cp),
-				i.getMethodName(cp)));
+		System.out.println(String.format(format, "S",
+				i.getReferenceType(constantPoolGen),
+				i.getMethodName(constantPoolGen)));
 		System.out.println("------------------------");
 	}
 }
