@@ -31,8 +31,10 @@ public class Example {
 		// new C();
 		B b1 = new B();
 		A a2 = new A();
+		A a3 = new C();
 		f(b1);
 		g(b1);
+		a3.fos(b1);
 		// a = new C();
 		// a = b1;
 		// A d = get();
@@ -51,4 +53,5 @@ public class Example {
 	static A get() {
 		return new D();
 	}
+
 }

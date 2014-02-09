@@ -34,6 +34,7 @@ import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.Type;
 
 public class Description implements Comparable<Description> {
@@ -72,27 +73,38 @@ public class Description implements Comparable<Description> {
 	private ClassCategory classCategory = null;
 	private InputStream classInputStream = null;
 	private ClassType classType = null;
-	private Map<String, Description> classDescriptions = new HashMap<String, Description>();
-	private Map<Method, ExtractMethod> methods = new HashMap<Method, ExtractMethod>();
-	private List<Description> interfaces = new ArrayList<Description>();
-	private List<Description> superClass = new ArrayList<Description>();
-	private List<String> nodes = new ArrayList<String>();
-	private List<String> edges = new ArrayList<String>();
+	private Map<String, Description> classDescriptions = null;
+	private Map<Method, MethodVisitor> methods = null;
+	private List<Description> interfaces = null;
+	private List<Description> superClass = null;
+	private List<String> nodes = null;
+	private List<String> edges = null;
 
 	private Description() {
-		// used to make a new copy of Description
+		initialize();
 	}
 
 	public Description(Class<?> clas, ClassCategory classCategory,
 			Map<String, Description> classDescriptions) throws Exception {
+		initialize();
 		this.classCategory = classCategory;
 		initialize(clas, classDescriptions);
 	}
 
 	public Description(Class<?> clas, Map<String, Description> classDescriptions)
 			throws Exception {
+		initialize();
 		this.classCategory = ClassCategory.REGULAR;
 		initialize(clas, classDescriptions);
+	}
+
+	private void initialize() {
+		this.classDescriptions = new HashMap<String, Description>();
+		this.methods = new HashMap<Method, MethodVisitor>();
+		this.interfaces = new ArrayList<Description>();
+		this.superClass = new ArrayList<Description>();
+		this.nodes = new ArrayList<String>();
+		this.edges = new ArrayList<String>();
 	}
 
 	private void initialize(Class<?> clas,
@@ -129,16 +141,23 @@ public class Description implements Comparable<Description> {
 			this.classDescriptions.put(cls.getName(), new Description(cls,
 					ClassCategory.REGULAR, this.classDescriptions));
 		}
-		if (!this.clas.isInterface()) {
-			ExtractMethod extractMethod = null;
-			for (Method method : this.javaClass.getMethods()) {
-				extractMethod = new ExtractMethod(this, this.classVisitor,
-						method, this.javaClass.getClassName());
-				this.methods.put(method, extractMethod);
-				this.nodes.add(extractMethod.toString());
+		initializeMethodVisitor(this);
+	}
+
+	private void initializeMethodVisitor(Description description) {
+		if (!description.clas.isInterface()) {
+			MethodVisitor methodVisitor = null;
+			MethodGen methodGen = null;
+			for (Method method : description.javaClass.getMethods()) {
+				methodGen = new MethodGen(method, description.getJavaClass()
+						.getClassName(), description.getConstantPoolGen());
+				methodVisitor = new MethodVisitor(description,
+						description.getClassVisitor(), method, methodGen);
+				description.methods.put(method, methodVisitor);
+				description.nodes.add(methodVisitor.toString());
 			}
+			Collections.sort(description.nodes);
 		}
-		Collections.sort(this.nodes);
 	}
 
 	public void initializeInterfacesAndSuperClasses() throws Exception {
@@ -158,6 +177,7 @@ public class Description implements Comparable<Description> {
 		}
 	}
 
+	// make new copy
 	public Description copy() {
 		Description dummy = new Description();
 		dummy.clas = this.clas;
@@ -170,19 +190,31 @@ public class Description implements Comparable<Description> {
 		dummy.classCategory = this.classCategory;
 		dummy.classInputStream = this.classInputStream;
 		dummy.classType = this.classType;
-		dummy.methods = null;
-		if (!this.clas.isInterface()) {
-			ExtractMethod extractMethod = null;
-			for (Method method : dummy.javaClass.getMethods()) {
-				extractMethod = new ExtractMethod(dummy, dummy.classVisitor,
-						method, dummy.javaClass.getClassName());
-				dummy.methods.put(method, extractMethod);
-			}
-		}
+		initializeMethodVisitor(dummy);
 		dummy.nodes = this.nodes;
 		dummy.edges = this.edges;
 		return dummy;
 	}
+
+	// // make same copy
+	// public Description clone() {
+	// Description dummy = new Description();
+	// dummy.clas = this.clas;
+	// dummy.javaClass = this.javaClass;
+	// // need to have clone
+	// dummy.classVisitor = this.classVisitor.clone();
+	// dummy.constants = this.constants;
+	// dummy.classDescriptions = this.classDescriptions;
+	// dummy.interfaces = this.interfaces;
+	// dummy.superClass = this.superClass;
+	// dummy.classCategory = this.classCategory;
+	// dummy.classInputStream = this.classInputStream;
+	// dummy.classType = this.classType;
+	// dummy.methods = new HashMap<Method, ExtractMethod>(this.methods);
+	// dummy.nodes = this.nodes;
+	// dummy.edges = this.edges;
+	// return dummy;
+	// }
 
 	public List<String> getNodes() {
 		List<String> nodes = new ArrayList<String>();
@@ -190,7 +222,7 @@ public class Description implements Comparable<Description> {
 		for (Entry<String, Description> entry : this.classDescriptions
 				.entrySet()) {
 			description = entry.getValue();
-			for (Entry<Method, ExtractMethod> methodEntry : description
+			for (Entry<Method, MethodVisitor> methodEntry : description
 					.getMethods().entrySet()) {
 				nodes.add(methodEntry.getValue().toString());
 			}
@@ -198,7 +230,8 @@ public class Description implements Comparable<Description> {
 		return nodes;
 	}
 
-	public boolean addEdge(String edge) {
+	public boolean addEdge(String source, String target) {
+		String edge = source.concat(" -- > ").concat(target).trim();
 		if (this.edges.contains(edge)) {
 			return true;
 		}
@@ -237,6 +270,17 @@ public class Description implements Comparable<Description> {
 		for (Entry<String, Description> entry : this.classDescriptions
 				.entrySet()) {
 			if (entry.getValue().getActualClass().equals(cls)) {
+				return entry.getValue();
+			}
+		}
+		return null;
+	}
+
+	public Description getDescriptionByClassName(String name) {
+		for (Entry<String, Description> entry : this.classDescriptions
+				.entrySet()) {
+			if (entry.getValue().getActualClass().getName()
+					.equalsIgnoreCase(name)) {
 				return entry.getValue();
 			}
 		}
@@ -290,7 +334,7 @@ public class Description implements Comparable<Description> {
 		String name = null;
 		Type[] types = null;
 		Method method = null;
-		for (Entry<Method, ExtractMethod> entry : this.methods.entrySet()) {
+		for (Entry<Method, MethodVisitor> entry : this.methods.entrySet()) {
 			if (methodName != null) {
 				method = entry.getKey();
 				name = method.getName();
@@ -307,11 +351,11 @@ public class Description implements Comparable<Description> {
 		return null;
 	}
 
-	public List<ExtractMethod> getExtractedMethodByName(String methodName) {
+	public List<MethodVisitor> getMethodVisitorByName(String methodName) {
 		String name = null;
-		List<ExtractMethod> methods = new ArrayList<ExtractMethod>();
+		List<MethodVisitor> methods = new ArrayList<MethodVisitor>();
 
-		for (Entry<Method, ExtractMethod> entry : this.methods.entrySet()) {
+		for (Entry<Method, MethodVisitor> entry : this.methods.entrySet()) {
 			if (methodName != null) {
 				name = entry.getKey().getName();
 				if (name.equalsIgnoreCase(methodName)) {
@@ -331,11 +375,11 @@ public class Description implements Comparable<Description> {
 		return method.getName();
 	}
 
-	public Map<Method, ExtractMethod> getMethods() {
+	public Map<Method, MethodVisitor> getMethods() {
 		return this.methods;
 	}
 
-	public ExtractMethod getExtractMethodByMethod(Method method) {
+	public MethodVisitor getMethodVisitorByMethod(Method method) {
 		return this.methods.get(method);
 	}
 

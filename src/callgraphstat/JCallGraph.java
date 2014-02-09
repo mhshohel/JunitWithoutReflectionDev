@@ -48,7 +48,7 @@ public class JCallGraph {
 			// make single call means check edges first
 			if (des != null) {
 				// des.getClassVisitor().start();
-				new GenerateCallGraph(des);
+				new GenerateCallGraph(des.copy());
 			}
 
 			// des.getClassVisitor().print();
@@ -63,7 +63,8 @@ public class JCallGraph {
 				System.out.println(node);
 			}
 			// print edges
-			// List<String> edges = des.getEdges();
+			// List<String> edges = des.getSortedEdges();
+			// System.out.println("Edges...");
 			// for (String edge : edges) {
 			// System.out.println(edge);
 			// }

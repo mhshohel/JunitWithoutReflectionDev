@@ -19,15 +19,15 @@
  */
 package callgraphstat;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
+import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ALOAD;
 import org.apache.bcel.generic.ASTORE;
 import org.apache.bcel.generic.ConstantPoolGen;
@@ -51,42 +51,101 @@ import org.apache.bcel.generic.PUTFIELD;
 import org.apache.bcel.generic.PUTSTATIC;
 import org.apache.bcel.generic.RETURN;
 import org.apache.bcel.generic.ReturnInstruction;
+import org.apache.bcel.generic.Type;
 
-public class MethodVisitor extends EmptyVisitor {
-	JavaClass visitedClass;
-	private MethodGen methodGen;
-	private ConstantPoolGen constantPoolGen;
-	private String format;
-	private LocalVariable[] localVariables;
-	private LocalVariableGen[] localVariableGens;
-	private ExtractMethod extractMethod = null;
+public class MethodVisitor extends EmptyVisitor implements
+		Comparable<MethodVisitor> {
 	private Description description = null;
-	private Set<String> sources = new HashSet<String>();
-	private Map<Field, Set<Description>> values = new HashMap<Field, Set<Description>>();
+	private ClassVisitor classVisitor = null;
+	private Method method = null;
+	private MethodGen methodGen = null;
+	private JavaClass javaClass = null;
+	private Type[] types = null;
+	private ConstantPoolGen constantPoolGen = null;
+	private String format = "";
+	private String node = "";
+	private LocalVariable[] localVariables = null;
+	private LocalVariableGen[] localVariableGens = null;
+	// private ExtractMethod extractMethod = null;
+	private Description currentValue = null;
+	private Map<String, List<Description>> values = null;
+	private List<Description> parametersValue = null;
 
 	// public MethodVisitor(MethodGen m, JavaClass jc, ExtractMethod
 	// extractMethod) {
-	public MethodVisitor(Description description, ExtractMethod extractMethod) {
-		this.extractMethod = extractMethod;
+	public MethodVisitor(Description description, ClassVisitor classVisitor,
+			Method method, MethodGen methodGen) {
 		this.description = description;
-		visitedClass = this.description.getJavaClass();
-		methodGen = this.extractMethod.getMethodGen();
-		constantPoolGen = methodGen.getConstantPool();
-		format = "M:" + visitedClass.getClassName() + ":" + methodGen.getName()
-				+ " " + "(%s)%s:%s";
-		localVariableGens = methodGen.getLocalVariables();
-		localVariables = new LocalVariable[localVariableGens.length];
-		for (int i = 0; i < localVariableGens.length; i++) {
-			localVariables[i] = localVariableGens[i]
-					.getLocalVariable(constantPoolGen);
+		this.classVisitor = classVisitor;
+		this.method = method;
+		this.methodGen = methodGen;
+		this.javaClass = this.description.getJavaClass();
+		this.constantPoolGen = methodGen.getConstantPool();
+		initialize();
+
+		this.format = "M:" + this.javaClass.getClassName() + ":"
+				+ methodGen.getName() + " " + "(%s)%s:%s";
+		this.localVariableGens = methodGen.getLocalVariables();
+		this.localVariables = new LocalVariable[this.localVariableGens.length];
+		for (int i = 0; i < this.localVariableGens.length; i++) {
+			localVariables[i] = this.localVariableGens[i]
+					.getLocalVariable(this.constantPoolGen);
 		}
-		lvt = methodGen.getLocalVariableTable(constantPoolGen);
+		this.lvt = methodGen.getLocalVariableTable(this.constantPoolGen);
+	}
+
+	private void initialize() {
+		this.types = this.method.getArgumentTypes();
+		int length = this.types.length;
+		String type = "(";
+		for (int i = 0; i < length; i++) {
+			type += ((i + 1) == length) ? this.types[i] : this.types[i] + ",";
+		}
+		type += ")";
+		this.node = this.javaClass.getClassName() + "." + this.method.getName()
+				+ type + " - " + this.method.getReturnType();
+		this.values = new HashMap<String, List<Description>>();
+		this.parametersValue = new ArrayList<Description>();
+	}
+
+	public Description getDescription() {
+		return this.description;
+	}
+
+	public ClassVisitor getClassVisitor() {
+		return this.classVisitor;
+	}
+
+	public MethodGen getMethodGen() {
+		return this.methodGen;
+	}
+
+	public Method getMethod() {
+		return this.method;
+	}
+
+	public String toString() {
+		return this.node;
+	}
+
+	public String getNode() {
+		return this.node;
+	}
+
+	@Override
+	public int compareTo(MethodVisitor node) {
+		return getMethod().getName().compareTo(node.getMethod().getName());
 	}
 
 	LocalVariableTable lvt;
+	int v = 5;
+
+	public void prints() {
+		System.out.println(v);
+	}
 
 	public void print() {
-		System.out.println(this.extractMethod);
+		// System.out.println(this.extractMethod);
 	}
 
 	@Override
@@ -103,6 +162,10 @@ public class MethodVisitor extends EmptyVisitor {
 		// System.out.println("\t\t" + lv[obj.getIndex()]);
 		LocalVariableGen l = localVariableGens[obj.getIndex()];
 		System.out.println("LOAD: " + l.getName());
+		List<Description> list = this.values.get(l.getName());
+		if (list != null) {
+			parametersValue.add(list.get(list.size() - 1));
+		}
 	}
 
 	@Override
@@ -112,6 +175,10 @@ public class MethodVisitor extends EmptyVisitor {
 		// System.out.println("\t\t" + localVariables[obj.getIndex()]);
 		LocalVariableGen l = localVariableGens[obj.getIndex()];
 		System.out.println("STORE: " + l.getName());
+		if (currentValue != null) {
+			addValues(l.getName(), currentValue);
+		}
+		currentValue = null;
 	}
 
 	@Override
@@ -156,34 +223,35 @@ public class MethodVisitor extends EmptyVisitor {
 	}
 
 	public void start(String source) {
-		// System.out.println(localVariableGens[1].getName());
-		// System.out.println(localVariables[1]);
-		addSource(source);
-		if (methodGen.isAbstract() || methodGen.isNative())
-			return;
-		InstructionList lis = methodGen.getInstructionList();
-		for (InstructionHandle ih = methodGen.getInstructionList().getStart(); ih != null; ih = ih
-				.getNext()) {
-			Instruction i = ih.getInstruction();
-			// System.out.println("\t" + i + "     "
-			// + i.toString(constantPoolGen.getConstantPool()));
-			// }
+		// empty values
+		this.values.clear();
+		boolean result = addSource(source);
+		if (!result) {
+			if (methodGen.isAbstract() || methodGen.isNative())
+				return;
+			InstructionList lis = methodGen.getInstructionList();
+			for (InstructionHandle ih = methodGen.getInstructionList()
+					.getStart(); ih != null; ih = ih.getNext()) {
+				Instruction i = ih.getInstruction();
+				// System.out.println("\t" + i + "     "
+				// + i.toString(constantPoolGen.getConstantPool()));
+				// }
 
-			if (!visitInstruction(i)) {
-				i.accept(this);
+				if (!visitInstruction(i)) {
+					i.accept(this);
+				}
+				String a1 = "";
 			}
-			String a1 = "";
 		}
+		System.out.println("Somethings");
 	}
 
-	public void addSource(String source) {
-		if (source != null) {
-			this.sources.add(source);
-		}
-	}
-
-	public Set<String> getSources() {
-		return this.sources;
+	public boolean addSource(String source) {
+		// if (source != null) {
+		// String target = extractMethod.getNode();
+		// return description.addEdge(source, target);
+		// }
+		return false;
 	}
 
 	void print(Object s) {
@@ -221,6 +289,11 @@ public class MethodVisitor extends EmptyVisitor {
 		System.out.println(String.format(format, "O",
 				i.getReferenceType(constantPoolGen),
 				i.getMethodName(constantPoolGen)));
+		Description description = this.description.getDescriptionByClassName(i
+				.getReferenceType(constantPoolGen).toString());
+		if (description != null) {
+			this.currentValue = description.copy();
+		}
 		System.out.println("------------------------");
 	}
 
@@ -230,5 +303,16 @@ public class MethodVisitor extends EmptyVisitor {
 				i.getReferenceType(constantPoolGen),
 				i.getMethodName(constantPoolGen)));
 		System.out.println("------------------------");
+	}
+
+	private void addValues(String key, Description value) {
+		List<Description> values = this.values.get(key);
+		if (values == null) {
+			values = new ArrayList<Description>();
+			values.add(value);
+			this.values.put(key, values);
+		} else if (!values.contains(description)) {
+			values.add(description);
+		}
 	}
 }
