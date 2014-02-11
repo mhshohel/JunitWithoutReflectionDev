@@ -23,7 +23,7 @@ public class A {
 	void foo() {
 	}
 
-	void fos(A s) {
-
-	}
+	// void fos(A s) {
+	//
+	// }
 }

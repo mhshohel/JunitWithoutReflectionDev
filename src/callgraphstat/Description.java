@@ -141,22 +141,34 @@ public class Description implements Comparable<Description> {
 			this.classDescriptions.put(cls.getName(), new Description(cls,
 					ClassCategory.REGULAR, this.classDescriptions));
 		}
-		initializeMethodVisitor(this);
+		initializeMethodVisitor(this, false);
 	}
 
-	private void initializeMethodVisitor(Description description) {
+	// if it a copy then true else false
+	private void initializeMethodVisitor(Description description, boolean isCopy) {
 		if (!description.clas.isInterface()) {
 			MethodVisitor methodVisitor = null;
 			MethodGen methodGen = null;
-			for (Method method : description.javaClass.getMethods()) {
-				methodGen = new MethodGen(method, description.getJavaClass()
-						.getClassName(), description.getConstantPoolGen());
-				methodVisitor = new MethodVisitor(description,
-						description.getClassVisitor(), method, methodGen);
-				description.methods.put(method, methodVisitor);
-				description.nodes.add(methodVisitor.toString());
+			if (!isCopy) {
+				for (Method method : description.javaClass.getMethods()) {
+					methodGen = new MethodGen(method, description
+							.getJavaClass().getClassName(),
+							description.getConstantPoolGen());
+					methodVisitor = new MethodVisitor(description,
+							description.getClassVisitor(), method, methodGen);
+					description.methods.put(method, methodVisitor);
+					description.nodes.add(methodVisitor.toString());
+				}
+				Collections.sort(description.nodes);
+			} else {
+				for (Entry<Method, MethodVisitor> entry : this.getMethods()
+						.entrySet()) {
+					methodVisitor = new MethodVisitor(description,
+							description.getClassVisitor(), entry.getKey(),
+							entry.getValue().getMethodGen());
+					description.methods.put(entry.getKey(), methodVisitor);
+				}
 			}
-			Collections.sort(description.nodes);
 		}
 	}
 
@@ -190,7 +202,7 @@ public class Description implements Comparable<Description> {
 		dummy.classCategory = this.classCategory;
 		dummy.classInputStream = this.classInputStream;
 		dummy.classType = this.classType;
-		initializeMethodVisitor(dummy);
+		initializeMethodVisitor(dummy, true);
 		dummy.nodes = this.nodes;
 		dummy.edges = this.edges;
 		return dummy;

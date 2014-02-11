@@ -24,7 +24,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -46,10 +45,15 @@ public class JCallGraph {
 			Description des = jCallGraph.getClassDescriptions().get(mainClass);
 			// System.out.println(des.printNode());
 			// make single call means check edges first
+
+			long start = System.nanoTime();
 			if (des != null) {
 				// des.getClassVisitor().start();
 				new GenerateCallGraph(des.copy());
 			}
+			long end = System.nanoTime();
+			System.out.println("\n\n\n\t\t\t\t\tElapsed Time: "
+					+ (double) (end - start) / 1000000000.0 + "s");
 
 			// des.getClassVisitor().print();
 			// Description d = des.copy();
@@ -58,11 +62,13 @@ public class JCallGraph {
 			// des.getClassVisitor().print();
 
 			// print nodes
-			List<String> nodes = des.getNodes();
-			for (String node : nodes) {
-				System.out.println(node);
-			}
+			// System.out.println("NODES\n_____________________");
+			// List<String> nodes = des.getNodes();
+			// for (String node : nodes) {
+			// System.out.println(node);
+			// }
 			// print edges
+			// System.out.println("EDGES\n_____________________");
 			// List<String> edges = des.getSortedEdges();
 			// System.out.println("Edges...");
 			// for (String edge : edges) {

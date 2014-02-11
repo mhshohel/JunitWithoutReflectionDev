@@ -39,6 +39,8 @@ public class ClassVisitor extends EmptyVisitor {
 	private Description description = null;
 	// public Map<String, List<Description>> values = new HashMap<String,
 	// List<Description>>();
+	// keep static var for each class
+
 	public Map<String, List<Integer>> values = null;
 
 	public void prints() {

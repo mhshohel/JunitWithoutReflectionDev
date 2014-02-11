@@ -23,10 +23,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.classfile.LocalVariable;
-import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ALOAD;
 import org.apache.bcel.generic.ASTORE;
@@ -64,15 +63,15 @@ public class MethodVisitor extends EmptyVisitor implements
 	private ConstantPoolGen constantPoolGen = null;
 	private String format = "";
 	private String node = "";
-	private LocalVariable[] localVariables = null;
 	private LocalVariableGen[] localVariableGens = null;
 	// private ExtractMethod extractMethod = null;
+	private Stack<Object> temporalVariables;
 	private Description currentValue = null;
-	private Map<String, List<Description>> values = null;
-	private List<Description> parametersValue = null;
+	// String: key=var name, value=Description
+	private Map<String, List<Description>> localVariables = null;
+	// private List<Description> parametersValue = null;
+	public static final String UNKNOWN = "Not a class or not found in Description or Library class";
 
-	// public MethodVisitor(MethodGen m, JavaClass jc, ExtractMethod
-	// extractMethod) {
 	public MethodVisitor(Description description, ClassVisitor classVisitor,
 			Method method, MethodGen methodGen) {
 		this.description = description;
@@ -86,12 +85,16 @@ public class MethodVisitor extends EmptyVisitor implements
 		this.format = "M:" + this.javaClass.getClassName() + ":"
 				+ methodGen.getName() + " " + "(%s)%s:%s";
 		this.localVariableGens = methodGen.getLocalVariables();
-		this.localVariables = new LocalVariable[this.localVariableGens.length];
-		for (int i = 0; i < this.localVariableGens.length; i++) {
-			localVariables[i] = this.localVariableGens[i]
-					.getLocalVariable(this.constantPoolGen);
+		for (LocalVariableGen localVariableGen : this.localVariableGens) {
+			this.localVariables.put(localVariableGen.getName(),
+					new ArrayList<Description>());
 		}
-		this.lvt = methodGen.getLocalVariableTable(this.constantPoolGen);
+		// this.localVariables = new
+		// LocalVariable[this.localVariableGens.length];
+		// for (int i = 0; i < this.localVariableGens.length; i++) {
+		// localVariables[i] = this.localVariableGens[i]
+		// .getLocalVariable(this.constantPoolGen);
+		// }
 	}
 
 	private void initialize() {
@@ -104,8 +107,9 @@ public class MethodVisitor extends EmptyVisitor implements
 		type += ")";
 		this.node = this.javaClass.getClassName() + "." + this.method.getName()
 				+ type + " - " + this.method.getReturnType();
-		this.values = new HashMap<String, List<Description>>();
-		this.parametersValue = new ArrayList<Description>();
+		this.temporalVariables = new Stack<Object>();
+		this.localVariables = new HashMap<String, List<Description>>();
+		// this.parametersValue = new ArrayList<Description>();
 	}
 
 	public Description getDescription() {
@@ -132,20 +136,30 @@ public class MethodVisitor extends EmptyVisitor implements
 		return this.node;
 	}
 
+	private void addValue(String variableName, Description currentValue) {
+		List<Description> values = this.localVariables.get(variableName);
+		System.out.println();
+		if (values != null) {
+			values.add(currentValue);
+		}
+	}
+
+	private List<Description> getValues(String variableName) {
+		return this.localVariables.get(variableName);
+	}
+
+	private Description getLastValue(String variableName) {
+		List<Description> values = this.localVariables.get(variableName);
+		if (values.size() != 0) {
+			return values.get(values.size() - 1);
+		} else {
+			return values.get(0);
+		}
+	}
+
 	@Override
 	public int compareTo(MethodVisitor node) {
 		return getMethod().getName().compareTo(node.getMethod().getName());
-	}
-
-	LocalVariableTable lvt;
-	int v = 5;
-
-	public void prints() {
-		System.out.println(v);
-	}
-
-	public void print() {
-		// System.out.println(this.extractMethod);
 	}
 
 	@Override
@@ -162,23 +176,26 @@ public class MethodVisitor extends EmptyVisitor implements
 		// System.out.println("\t\t" + lv[obj.getIndex()]);
 		LocalVariableGen l = localVariableGens[obj.getIndex()];
 		System.out.println("LOAD: " + l.getName());
-		List<Description> list = this.values.get(l.getName());
-		if (list != null) {
-			parametersValue.add(list.get(list.size() - 1));
-		}
+		// List<Description> list = this.values.get(l.getName());
+		// if (list != null) {
+		// parametersValue.add(list.get(list.size() - 1));
+		// }
 	}
 
 	@Override
 	public void visitASTORE(ASTORE obj) {
-		// System.out.println(obj.getName() + "   --->   "
-		// + obj.getType(constantPoolGen).getSignature());
-		// System.out.println("\t\t" + localVariables[obj.getIndex()]);
-		LocalVariableGen l = localVariableGens[obj.getIndex()];
-		System.out.println("STORE: " + l.getName());
-		if (currentValue != null) {
-			addValues(l.getName(), currentValue);
+		String name = this.localVariableGens[obj.getIndex()].getName();
+		System.out.println("STORE: " + name);
+		Object object = this.temporalVariables.pop();
+		if (object instanceof Description) {
+			addValue(name, (Description) object);
+		} else {
+			// maybe required for param value
 		}
-		currentValue = null;
+		// if (currentValue != null) {
+		// addValues(name, currentValue);
+		// }
+		// currentValue = null;
 	}
 
 	@Override
@@ -222,9 +239,9 @@ public class MethodVisitor extends EmptyVisitor implements
 		// System.out.println("\t\t" + obj.getType(constantPoolGen));
 	}
 
-	public void start(String source) {
+	public void start(String source, String params) {
 		// empty values
-		this.values.clear();
+		// this.values.clear();
 		boolean result = addSource(source);
 		if (!result) {
 			if (methodGen.isAbstract() || methodGen.isNative())
@@ -236,7 +253,7 @@ public class MethodVisitor extends EmptyVisitor implements
 				// System.out.println("\t" + i + "     "
 				// + i.toString(constantPoolGen.getConstantPool()));
 				// }
-
+				System.out.println(i.getName());
 				if (!visitInstruction(i)) {
 					i.accept(this);
 				}
@@ -286,14 +303,32 @@ public class MethodVisitor extends EmptyVisitor implements
 
 	@Override
 	public void visitINVOKESPECIAL(INVOKESPECIAL i) {
+		Type[] types = i.getArgumentTypes(constantPoolGen);// this.method.getArgumentTypes();
+		int length = types.length;
+		String type = "(";
+		for (int j = 0; j < length; j++) {
+			type += ((j + 1) == length) ? types[j] : types[j] + ",";
+		}
+		type += ")";
 		System.out.println(String.format(format, "O",
 				i.getReferenceType(constantPoolGen),
-				i.getMethodName(constantPoolGen)));
+				i.getMethodName(constantPoolGen))
+				+ " " + type);
+
+		// return type: i.getReturnType(constantPoolGen)
+
+		// System.out.println(i.getArgumentTypes(constantPoolGen));
+
 		Description description = this.description.getDescriptionByClassName(i
 				.getReferenceType(constantPoolGen).toString());
 		if (description != null) {
-			this.currentValue = description.copy();
+			// this.currentValue = description.copy();
+			this.temporalVariables.add(description.copy());
+		} else {
+			this.temporalVariables.add(UNKNOWN);
 		}
+		// this.currentValue.getClassVisitor().start();
+
 		System.out.println("------------------------");
 	}
 
@@ -305,14 +340,4 @@ public class MethodVisitor extends EmptyVisitor implements
 		System.out.println("------------------------");
 	}
 
-	private void addValues(String key, Description value) {
-		List<Description> values = this.values.get(key);
-		if (values == null) {
-			values = new ArrayList<Description>();
-			values.add(value);
-			this.values.put(key, values);
-		} else if (!values.contains(description)) {
-			values.add(description);
-		}
-	}
 }
