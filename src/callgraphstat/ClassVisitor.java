@@ -19,11 +19,6 @@
  */
 package callgraphstat;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.apache.bcel.classfile.Constant;
 import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.EmptyVisitor;
@@ -37,26 +32,15 @@ public class ClassVisitor extends EmptyVisitor {
 	private ConstantPoolGen constants;
 	private String classReferenceFormat;
 	private Description description = null;
+
 	// public Map<String, List<Description>> values = new HashMap<String,
 	// List<Description>>();
 	// keep static var for each class
-
-	public Map<String, List<Integer>> values = null;
-
-	public void prints() {
-		for (Entry<String, List<Integer>> entry : this.values.entrySet()) {
-			System.out.println(entry.getKey());
-			for (Integer d : entry.getValue()) {
-				System.out.println("    --> " + d);
-			}
-		}
-	}
 
 	public ClassVisitor(JavaClass jc, Description description) {
 		this.description = description;
 		this.clazz = jc;
 		this.constants = new ConstantPoolGen(this.clazz.getConstantPool());
-		this.values = new HashMap<String, List<Integer>>();
 		this.classReferenceFormat = "C:" + this.clazz.getClassName() + "  "
 				+ " %s";
 	}
@@ -71,7 +55,6 @@ public class ClassVisitor extends EmptyVisitor {
 	public ClassVisitor clone() {
 		ClassVisitor classVisitor = new ClassVisitor(this.clazz,
 				this.description);
-		classVisitor.values = new HashMap<String, List<Integer>>(this.values);
 		return classVisitor;
 	}
 

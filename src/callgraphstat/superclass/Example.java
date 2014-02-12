@@ -27,15 +27,19 @@ public class Example {
 	 */
 	public static void main(String[] args) {
 		// na = new A();
-		new C().foo();
-		B.st();
-		new B().st();
-		A v = new B().val();
-		A n = new B();
-		n.foo();
-		A a = null;
-		new C();
-		A c1 = new C();
+		// new C().foo();
+		// B.st();
+		// new B().st();
+		// A v = new B().val();
+		// A n = new B();
+		// n.foo();
+		// A a = null;
+		// new C();
+		String s = "sd";
+		new A();
+		new A();
+		new A();
+		A c1 = new C(new A(), s, new C());
 		A c2 = new B();
 		A a2 = new A();
 		B b1 = new B(new A(), new D(), new C(), c2, c1, a2);
@@ -49,6 +53,9 @@ public class Example {
 		// a = b1;
 		// A d = get();
 	}
+
+	static int i;
+	int v;
 
 	static void f(A a2) {
 		a2.foo();

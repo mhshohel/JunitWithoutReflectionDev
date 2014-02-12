@@ -21,6 +21,15 @@ package callgraphstat.superclass;
 
 public class C extends B {
 
-    void foo() {
-    }
+	public C() {
+
+	}
+
+	public C(A c, String d, B ds) {
+	}
+
+	void foo() {
+		A v = new B();
+		int c;
+	}
 }

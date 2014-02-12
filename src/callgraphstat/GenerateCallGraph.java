@@ -1,5 +1,6 @@
 package callgraphstat;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GenerateCallGraph {
@@ -29,8 +30,8 @@ public class GenerateCallGraph {
 		// in class visitor pass params, maybe static var too, check that
 		this.mainClass.getClassVisitor().start();
 		// pass source and params
-		this.mainMethod.start(null, null);
-		this.mainMethod = null;
-		this.mainClass = null;
+		this.mainMethod.start(null, new ArrayList<Object>());
+		// this.mainMethod = null;
+		// this.mainClass = null;
 	}
 }

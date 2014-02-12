@@ -22,8 +22,10 @@ package callgraphstat;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -60,30 +62,31 @@ public class JCallGraph {
 			// d.getClassVisitor().print();
 			// d.getClassVisitor().num = 100;
 			// des.getClassVisitor().print();
-
 			// print nodes
-			// System.out.println("NODES\n_____________________");
-			// List<String> nodes = des.getNodes();
-			// for (String node : nodes) {
-			// System.out.println(node);
-			// }
+			System.out.println("NODES\n_____________________");
+			List<String> nodes = Description.getNodes();
+			for (String node : nodes) {
+				System.out.println(node);
+			}
 			// print edges
-			// System.out.println("EDGES\n_____________________");
-			// List<String> edges = des.getSortedEdges();
-			// System.out.println("Edges...");
-			// for (String edge : edges) {
-			// System.out.println(edge);
-			// }
+			System.out.println("EDGES\n_____________________");
+			java.util.List<String> edges = Description.getUnsortedEdges();
+			System.out.println("Edges...");
+			for (String edge : edges) {
+				System.out.println(edge);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
+	public static List<String> edges = new ArrayList<String>();
 	private Map<String, Description> classDescriptions = new HashMap<String, Description>();
 	private File file = null;
 	private Set<Node> nodes = new HashSet<Node>();
+
 	// String as src node
-	private Map<String, Edge> edges = new HashMap<String, Edge>();
+	// private Map<String, Edge> edges = new HashMap<String, Edge>();
 
 	public JCallGraph(File file, String pack) throws Exception {
 		this.file = file;

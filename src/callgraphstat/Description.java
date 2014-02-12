@@ -77,8 +77,8 @@ public class Description implements Comparable<Description> {
 	private Map<Method, MethodVisitor> methods = null;
 	private List<Description> interfaces = null;
 	private List<Description> superClass = null;
-	private List<String> nodes = null;
-	private List<String> edges = null;
+	private static List<String> nodes = new ArrayList<String>();
+	private static List<String> edges = new ArrayList<String>();
 
 	private Description() {
 		initialize();
@@ -103,8 +103,8 @@ public class Description implements Comparable<Description> {
 		this.methods = new HashMap<Method, MethodVisitor>();
 		this.interfaces = new ArrayList<Description>();
 		this.superClass = new ArrayList<Description>();
-		this.nodes = new ArrayList<String>();
-		this.edges = new ArrayList<String>();
+		// this.nodes = new ArrayList<String>();
+		// this.edges = new ArrayList<String>();
 	}
 
 	private void initialize(Class<?> clas,
@@ -157,9 +157,9 @@ public class Description implements Comparable<Description> {
 					methodVisitor = new MethodVisitor(description,
 							description.getClassVisitor(), method, methodGen);
 					description.methods.put(method, methodVisitor);
-					description.nodes.add(methodVisitor.toString());
+					Description.nodes.add(methodVisitor.toString());
 				}
-				Collections.sort(description.nodes);
+				// Collections.sort(description.nodes);
 			} else {
 				for (Entry<Method, MethodVisitor> entry : this.getMethods()
 						.entrySet()) {
@@ -203,8 +203,8 @@ public class Description implements Comparable<Description> {
 		dummy.classInputStream = this.classInputStream;
 		dummy.classType = this.classType;
 		initializeMethodVisitor(dummy, true);
-		dummy.nodes = this.nodes;
-		dummy.edges = this.edges;
+		// dummy.nodes = this.nodes;
+		// dummy.edges = this.edges;
 		return dummy;
 	}
 
@@ -228,36 +228,26 @@ public class Description implements Comparable<Description> {
 	// return dummy;
 	// }
 
-	public List<String> getNodes() {
-		List<String> nodes = new ArrayList<String>();
-		Description description = null;
-		for (Entry<String, Description> entry : this.classDescriptions
-				.entrySet()) {
-			description = entry.getValue();
-			for (Entry<Method, MethodVisitor> methodEntry : description
-					.getMethods().entrySet()) {
-				nodes.add(methodEntry.getValue().toString());
-			}
-		}
+	public static List<String> getNodes() {
 		return nodes;
 	}
 
-	public boolean addEdge(String source, String target) {
+	public static boolean addEdge(String source, String target) {
 		String edge = source.concat(" -- > ").concat(target).trim();
-		if (this.edges.contains(edge)) {
+		if (edges.contains(edge)) {
 			return true;
 		}
-		this.edges.add(edge);
+		edges.add(edge);
 		return false;
 	}
 
-	public List<String> getSortedEdges() {
-		Collections.sort(this.edges);
-		return this.edges;
+	public static List<String> getSortedEdges() {
+		Collections.sort(edges);
+		return edges;
 	}
 
-	public List<String> getUnsortedEdges() {
-		return this.edges;
+	public static List<String> getUnsortedEdges() {
+		return edges;
 	}
 
 	public List<Description> getInterfaces() {
@@ -354,6 +344,28 @@ public class Description implements Comparable<Description> {
 				if (methodName.equalsIgnoreCase(name)) {
 					if (Arrays.deepEquals(methodTypeArgs, types)) {
 						return method;
+					}
+				}
+			} else {
+				return null;
+			}
+		}
+		return null;
+	}
+
+	public MethodVisitor getMethodVisitorByNameAndTypeArgs(String methodName,
+			Type[] methodTypeArgs) {
+		String name = null;
+		Type[] types = null;
+		Method method = null;
+		for (Entry<Method, MethodVisitor> entry : this.methods.entrySet()) {
+			if (methodName != null) {
+				method = entry.getKey();
+				name = method.getName();
+				types = method.getArgumentTypes();
+				if (methodName.equalsIgnoreCase(name)) {
+					if (Arrays.deepEquals(methodTypeArgs, types)) {
+						return entry.getValue();
 					}
 				}
 			} else {
