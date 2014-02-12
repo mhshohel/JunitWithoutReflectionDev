@@ -25,7 +25,7 @@ public class B extends A {
 	}
 
 	public B() {
-
+		System.out.println("SD");
 	}
 
 	void foos(A v, A a) {

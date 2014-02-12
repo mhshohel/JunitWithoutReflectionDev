@@ -69,7 +69,7 @@ public class MethodVisitor extends EmptyVisitor implements
 	private Stack<Object> temporalVariables;
 	private Description currentValue = null;
 	// String: key=var name, value=Description
-	private Map<String, List<Object>> localVariables = null;
+	private Map<String, Stack<Object>> localVariables = null;
 	private List<Object> parametersValue = null;
 	public static final String UNKNOWN = "Not a class or not found in Description or Library class";
 	public static final String THIS = "this";
@@ -88,20 +88,14 @@ public class MethodVisitor extends EmptyVisitor implements
 		this.localVariableGens = methodGen.getLocalVariables();
 		for (LocalVariableGen localVariableGen : this.localVariableGens) {
 			if (localVariableGen.getName().equalsIgnoreCase(THIS)) {
-				List<Object> object = new ArrayList<Object>();
+				Stack<Object> object = new Stack<Object>();
 				object.add(description);
 				this.localVariables.put(localVariableGen.getName(), object);
 			} else {
 				this.localVariables.put(localVariableGen.getName(),
-						new ArrayList<Object>());
+						new Stack<Object>());
 			}
 		}
-		// this.localVariables = new
-		// LocalVariable[this.localVariableGens.length];
-		// for (int i = 0; i < this.localVariableGens.length; i++) {
-		// localVariables[i] = this.localVariableGens[i]
-		// .getLocalVariable(this.constantPoolGen);
-		// }
 	}
 
 	private void initialize() {
@@ -115,7 +109,7 @@ public class MethodVisitor extends EmptyVisitor implements
 		this.node = this.javaClass.getClassName() + "." + this.method.getName()
 				+ type + this.method.getReturnType();
 		this.temporalVariables = new Stack<Object>();
-		this.localVariables = new HashMap<String, List<Object>>();
+		this.localVariables = new HashMap<String, Stack<Object>>();
 		this.parametersValue = new ArrayList<Object>();
 	}
 
@@ -144,8 +138,13 @@ public class MethodVisitor extends EmptyVisitor implements
 	}
 
 	private void addValue(String variableName, Object currentValue) {
+		// first check in local, otherwise in class
 		try {
 			List<Object> values = this.localVariables.get(variableName);
+			if (values == null) {
+				values = this.classVisitor.getFields(this.classVisitor,
+						variableName);
+			}
 			if (values != null) {
 				values.add(currentValue);
 			}
@@ -153,19 +152,113 @@ public class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
-	private List<Object> getValues(String variableName) {
-		return this.localVariables.get(variableName);
+	private Stack<Object> getValuesByVarialbleName(String variableName) {
+		Stack<Object> objects = null;
+		try {
+			objects = this.localVariables.get(variableName);
+			if (objects == null) {
+				this.classVisitor.getFields(this.classVisitor, variableName);
+			}
+		} catch (Exception e) {
+
+		}
+		// first check in local, otherwise in class
+		return objects;
 	}
 
-	private Object getLastValue(String variableName) {
-		List<Object> values = this.localVariables.get(variableName);
-		int size = (values.size() > 0) ? values.size() - 1 : values.size();
-		return values.get(size);
+	private Object getValueByVarialbleName(String variableName) {
+		Stack<Object> objects = getValuesByVarialbleName(variableName);
+		if (objects != null) {
+			return objects.peek();
+		}
+		return null;
 	}
+
+	// private Object getValueFromLocalVariableByName(String variableName) {
+	// // first check in local, otherwise in class
+	// return this.localVariables.get(variableName).peek();
+	// }
+
+	// private Object getLastValue(String variableName) {
+	// List<Object> values = this.localVariables.get(variableName);
+	// int size = (values.size() > 0) ? values.size() - 1 : values.size();
+	// return values.get(size);
+	// }
 
 	@Override
 	public int compareTo(MethodVisitor node) {
 		return getMethod().getName().compareTo(node.getMethod().getName());
+	}
+
+	private boolean visitInstruction(Instruction i) {
+		short opcode = i.getOpcode();
+
+		return ((InstructionConstants.INSTRUCTIONS[opcode] != null)
+				&& !(i instanceof ConstantPushInstruction) && !(i instanceof ReturnInstruction));
+	}
+
+	public void start(String source, List<Object> params) {
+		// empty values
+		this.temporalVariables = new Stack<Object>();
+		this.parametersValue = params;
+		this.currentValue = null;
+		Type returnType = this.method.getReturnType();
+		// empty local var value
+		for (Entry<String, Stack<Object>> key : this.localVariables.entrySet()) {
+			if (!key.getKey().equalsIgnoreCase(THIS)) {
+				key.setValue(new Stack<Object>());
+			}
+		}
+
+		// generating new params
+		int length = params.size();
+		String target = "";
+		String type = "(";
+		if (length != 0) {
+			for (int i = 0; i < length; i++) {
+				type += ((i + 1) == length) ? params.get(i) : params.get(i)
+						+ ",";
+			}
+			type += ")";
+			target = this.javaClass.getClassName() + "."
+					+ this.method.getName() + type
+					+ this.method.getReturnType();
+		} else {
+			target = this.node;
+		}
+		// add edge
+		boolean result = addSource(source, target);
+
+		if (!result) {
+			if (methodGen.isAbstract() || methodGen.isNative())
+				return;
+			// InstructionList instructionList = methodGen.getInstructionList();
+			for (InstructionHandle ihInstructionHandle = methodGen
+					.getInstructionList().getStart(); ihInstructionHandle != null; ihInstructionHandle = ihInstructionHandle
+					.getNext()) {
+				Instruction i = ihInstructionHandle.getInstruction();
+				// System.out.println("\t" + i + "     "
+				// + i.toString(constantPoolGen.getConstantPool()));
+				// }
+				System.out.println(i.getName());
+				if (!visitInstruction(i)) {
+					i.accept(this);
+				}
+				String a1 = "";
+			}
+		}
+		System.out.println("Somethings");
+	}
+
+	public boolean addSource(String source, String target) {
+		if (source != null) {
+			Description.addEdge(source, target);
+		}
+		return false;
+	}
+
+	void print(Object s) {
+		// System.out.println("\t" + s);
 	}
 
 	@Override
@@ -184,9 +277,7 @@ public class MethodVisitor extends EmptyVisitor implements
 		System.out.println("LOAD: " + name + "   "
 				+ this.localVariableGens[obj.getIndex()].getType());
 		try {
-			// List<Object> list = this.localVariables.get(name);
-			// int size = (list.size() > 0) ? list.size() - 1 : list.size();
-			Object object = getLastValue(name);// list.get(size);
+			Object object = getValueByVarialbleName(name);
 			if (object != null) {
 				this.temporalVariables.add(object);
 			}
@@ -259,79 +350,6 @@ public class MethodVisitor extends EmptyVisitor implements
 		// System.out.println("\t\t" + obj.getName() + "   --->   "
 		// + obj.getType(constantPoolGen).getSignature());
 		// System.out.println("\t\t" + obj.getType(constantPoolGen));
-	}
-
-	public void start(String source, List<Object> params) {
-		// empty values
-		this.temporalVariables = new Stack<Object>();
-		this.parametersValue = params;
-		this.currentValue = null;
-		Type returnType = this.method.getReturnType();
-		// empty localvar value
-		for (Entry<String, List<Object>> key : this.localVariables.entrySet()) {
-			if (!key.getKey().equalsIgnoreCase(THIS)) {
-				key.setValue(new ArrayList<Object>());
-			}
-		}
-
-		int length = params.size();
-		String target = "";
-		String type = "(";
-		if (length != 0) {
-			for (int i = 0; i < length; i++) {
-				type += ((i + 1) == length) ? params.get(i) : params.get(i)
-						+ ",";
-			}
-			type += ")";
-			target = this.javaClass.getClassName() + "."
-					+ this.method.getName() + type
-					+ this.method.getReturnType();
-		} else {
-			target = this.node;
-		}
-		boolean result = addSource(source, target);
-		if (!result) {
-			if (methodGen.isAbstract() || methodGen.isNative())
-				return;
-			// InstructionList instructionList = methodGen.getInstructionList();
-			for (InstructionHandle ihInstructionHandle = methodGen
-					.getInstructionList().getStart(); ihInstructionHandle != null; ihInstructionHandle = ihInstructionHandle
-					.getNext()) {
-				Instruction i = ihInstructionHandle.getInstruction();
-				// System.out.println("\t" + i + "     "
-				// + i.toString(constantPoolGen.getConstantPool()));
-				// }
-				System.out.println(i.getName());
-				if (!visitInstruction(i)) {
-					i.accept(this);
-				}
-				String a1 = "";
-			}
-		}
-		System.out.println("Somethings");
-	}
-
-	public boolean addSource(String source, String target) {
-		if (source != null) {
-			String edge = source.concat(" -- > ").concat(target).trim();
-			if (!JCallGraph.edges.contains(edge)) {
-				JCallGraph.edges.add(edge);
-			}
-
-			return this.description.addEdge(source, target);
-		}
-		return false;
-	}
-
-	void print(Object s) {
-		// System.out.println("\t" + s);
-	}
-
-	private boolean visitInstruction(Instruction i) {
-		short opcode = i.getOpcode();
-
-		return ((InstructionConstants.INSTRUCTIONS[opcode] != null)
-				&& !(i instanceof ConstantPushInstruction) && !(i instanceof ReturnInstruction));
 	}
 
 	@Override

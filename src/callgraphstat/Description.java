@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Stack;
 
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
@@ -76,7 +77,8 @@ public class Description implements Comparable<Description> {
 	private Map<String, Description> classDescriptions = null;
 	private Map<Method, MethodVisitor> methods = null;
 	private List<Description> interfaces = null;
-	private List<Description> superClass = null;
+	private Description superClass = null;
+	public Map<String, Stack<Object>> staticFields = new HashMap<String, Stack<Object>>();
 	private static List<String> nodes = new ArrayList<String>();
 	private static List<String> edges = new ArrayList<String>();
 
@@ -102,7 +104,7 @@ public class Description implements Comparable<Description> {
 		this.classDescriptions = new HashMap<String, Description>();
 		this.methods = new HashMap<Method, MethodVisitor>();
 		this.interfaces = new ArrayList<Description>();
-		this.superClass = new ArrayList<Description>();
+		this.superClass = null;
 		// this.nodes = new ArrayList<String>();
 		// this.edges = new ArrayList<String>();
 	}
@@ -184,7 +186,7 @@ public class Description implements Comparable<Description> {
 		if (superClass != null) {
 			description = this.classDescriptions.get(superClass.getName());
 			if (description != null) {
-				this.superClass.add(description);
+				this.superClass = description;
 			}
 		}
 	}
@@ -202,10 +204,19 @@ public class Description implements Comparable<Description> {
 		dummy.classCategory = this.classCategory;
 		dummy.classInputStream = this.classInputStream;
 		dummy.classType = this.classType;
+		dummy.staticFields = this.staticFields;
 		initializeMethodVisitor(dummy, true);
 		// dummy.nodes = this.nodes;
 		// dummy.edges = this.edges;
 		return dummy;
+	}
+
+	public void addValueToStaticField(String key, Stack<Object> value) {
+		this.staticFields.put(key, value);
+	}
+
+	public Stack<Object> getStaticFieldValues(String key) {
+		return this.staticFields.get(key);
 	}
 
 	// // make same copy
@@ -254,7 +265,7 @@ public class Description implements Comparable<Description> {
 		return this.interfaces;
 	}
 
-	public List<Description> getSuperClass() {
+	public Description getSuperClassDescription() {
 		return this.superClass;
 	}
 

@@ -19,12 +19,8 @@
  */
 package callgraphstat.superclass;
 
-public class Example {
-	// static A na = null;
+public class Example extends A {
 
-	/**
-	 * @param Example
-	 */
 	public static void main(String[] args) {
 		// na = new A();
 		// new C().foo();
@@ -54,8 +50,12 @@ public class Example {
 		// A d = get();
 	}
 
+	static A na = null;
 	static int i;
 	int v;
+	private A num;
+	public A bs = new B();
+	static A jn = new C();
 
 	static void f(A a2) {
 		a2.foo();

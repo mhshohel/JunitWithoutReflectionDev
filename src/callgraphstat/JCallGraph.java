@@ -22,7 +22,6 @@ package callgraphstat;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,14 +47,18 @@ public class JCallGraph {
 			// System.out.println(des.printNode());
 			// make single call means check edges first
 
+			// Get the Java runtime
+			Runtime runtime = Runtime.getRuntime();
+			// Run the garbage collector
+			runtime.gc();
 			long start = System.nanoTime();
 			if (des != null) {
 				// des.getClassVisitor().start();
 				new GenerateCallGraph(des.copy());
 			}
 			long end = System.nanoTime();
-			System.out.println("\n\n\n\t\t\t\t\tElapsed Time: "
-					+ (double) (end - start) / 1000000000.0 + "s");
+			// Calculate the used memory
+			long memory = runtime.totalMemory() - runtime.freeMemory();
 
 			// des.getClassVisitor().print();
 			// Description d = des.copy();
@@ -75,12 +78,23 @@ public class JCallGraph {
 			for (String edge : edges) {
 				System.out.println(edge);
 			}
+			System.out.println("\n\n\n\t\t\t\t\tElapsed Time: "
+					+ (double) (end - start) / 1000000000.0 + "s");
+			System.out.println("\t\t\t\t\tUsed memory is bytes: " + memory);
+			System.out.println("\t\t\t\t\tUsed memory is megabytes: "
+					+ bytesToMegabytes(memory));
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static List<String> edges = new ArrayList<String>();
+	private static final long MEGABYTE = 1024L * 1024L;
+
+	public static long bytesToMegabytes(long bytes) {
+		return bytes / MEGABYTE;
+	}
+
 	private Map<String, Description> classDescriptions = new HashMap<String, Description>();
 	private File file = null;
 	private Set<Node> nodes = new HashSet<Node>();

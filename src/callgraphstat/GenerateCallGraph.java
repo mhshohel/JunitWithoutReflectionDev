@@ -31,7 +31,7 @@ public class GenerateCallGraph {
 		this.mainClass.getClassVisitor().start();
 		// pass source and params
 		this.mainMethod.start(null, new ArrayList<Object>());
-		// this.mainMethod = null;
-		// this.mainClass = null;
+		this.mainMethod = null;
+		this.mainClass = null;
 	}
 }
