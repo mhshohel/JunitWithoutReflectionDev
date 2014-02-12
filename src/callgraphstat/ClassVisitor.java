@@ -54,7 +54,7 @@ public class ClassVisitor extends EmptyVisitor {
 		Field[] fields = javaClass.getFields();
 		for (Field field : fields) {
 			if (field.isStatic()) {
-				description.addValueToStaticField(field.getName(),
+				description.staticFields.put(field.getName(),
 						new Stack<Object>());
 			} else {
 				this.fields.put(field.getName(), new Stack<Object>());
@@ -73,7 +73,7 @@ public class ClassVisitor extends EmptyVisitor {
 		Field[] fields = this.javaClass.getFields();
 		for (Field field : fields) {
 			if (!field.isStatic()) {
-				this.fields.put(field.getName(), new Stack<Object>());
+				classVisitor.fields.put(field.getName(), new Stack<Object>());
 			}
 		}
 		classVisitor.classReferenceFormat = this.classReferenceFormat;
@@ -89,20 +89,50 @@ public class ClassVisitor extends EmptyVisitor {
 		return classVisitor;
 	}
 
-	public Stack<Object> getFields(ClassVisitor classVisitor, String fieldName) {
+	public Stack<Object> getValuesFromField(ClassVisitor classVisitor,
+			String fieldName) {
 		Stack<Object> fields = classVisitor.fields.get(fieldName);
 		if (fields == null) {
-			fields = classVisitor.description.getStaticFieldValues(fieldName);
-		}
-		if (fields == null) {
 			if (classVisitor.description.getSuperClassDescription() != null) {
-				fields = getFields(classVisitor.description
+				fields = getValuesFromField(classVisitor.description
 						.getSuperClassDescription().getClassVisitor(),
 						fieldName);
 			}
 		}
 		return fields;
 	}
+
+	public Object getValueFromField(ClassVisitor classVisitor, String fieldName) {
+		Stack<Object> fields = getValuesFromField(classVisitor, fieldName);
+		if (fields != null) {
+			return fields.peek();
+		}
+		return fields;
+	}
+
+	public void addValueToField(ClassVisitor classVisitor, String fieldName,
+			Object value) {
+		Stack<Object> fields = getValuesFromField(classVisitor, fieldName);
+		if (fields != null) {
+			fields.add(value);
+		}
+	}
+
+	// public Stack<Object> getFields(ClassVisitor classVisitor, String
+	// fieldName) {
+	// Stack<Object> fields = classVisitor.fields.get(fieldName);
+	// if (fields == null) {
+	// fields = classVisitor.description.getStaticFieldValues(fieldName);
+	// }
+	// if (fields == null) {
+	// if (classVisitor.description.getSuperClassDescription() != null) {
+	// fields = getFields(classVisitor.description
+	// .getSuperClassDescription().getClassVisitor(),
+	// fieldName);
+	// }
+	// }
+	// return fields;
+	// }
 
 	public void visitJavaClass(JavaClass javaClass) {
 		javaClass.getConstantPool().accept(this);

@@ -81,6 +81,8 @@ public class Description implements Comparable<Description> {
 	public Map<String, Stack<Object>> staticFields = new HashMap<String, Stack<Object>>();
 	private static List<String> nodes = new ArrayList<String>();
 	private static List<String> edges = new ArrayList<String>();
+	public static final String UNKNOWN = "Unknown";
+	public static final String THIS = "this";
 
 	private Description() {
 		initialize();
@@ -211,33 +213,38 @@ public class Description implements Comparable<Description> {
 		return dummy;
 	}
 
-	public void addValueToStaticField(String key, Stack<Object> value) {
-		this.staticFields.put(key, value);
+	public void addValueToStaticField(Description description,
+			String fieldName, Object value) {
+		Stack<Object> fields = getValuesFromStaticField(description, fieldName);
+		if (fields != null) {
+			fields.add(value);
+		}
 	}
 
 	public Stack<Object> getStaticFieldValues(String key) {
 		return this.staticFields.get(key);
 	}
 
-	// // make same copy
-	// public Description clone() {
-	// Description dummy = new Description();
-	// dummy.clas = this.clas;
-	// dummy.javaClass = this.javaClass;
-	// // need to have clone
-	// dummy.classVisitor = this.classVisitor.clone();
-	// dummy.constants = this.constants;
-	// dummy.classDescriptions = this.classDescriptions;
-	// dummy.interfaces = this.interfaces;
-	// dummy.superClass = this.superClass;
-	// dummy.classCategory = this.classCategory;
-	// dummy.classInputStream = this.classInputStream;
-	// dummy.classType = this.classType;
-	// dummy.methods = new HashMap<Method, ExtractMethod>(this.methods);
-	// dummy.nodes = this.nodes;
-	// dummy.edges = this.edges;
-	// return dummy;
-	// }
+	public Stack<Object> getValuesFromStaticField(Description description,
+			String fieldName) {
+		Stack<Object> fields = description.getStaticFieldValues(fieldName);
+		if (fields == null) {
+			if (description.getSuperClassDescription() != null) {
+				fields = getValuesFromStaticField(
+						description.getSuperClassDescription(), fieldName);
+			}
+		}
+		return fields;
+	}
+
+	public Object getValueFromStaticField(Description description,
+			String fieldName) {
+		Stack<Object> fields = getValuesFromStaticField(description, fieldName);
+		if (fields != null) {
+			return fields.peek();
+		}
+		return fields;
+	}
 
 	public static List<String> getNodes() {
 		return nodes;

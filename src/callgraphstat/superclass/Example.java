@@ -31,8 +31,10 @@ public class Example extends A {
 		// n.foo();
 		// A a = null;
 		// new C();
+		// E ee = e;
 		String s = "sd";
-		new A();
+		// na = new A();
+
 		new A();
 		new A();
 		A c1 = new C(new A(), s, new C());
@@ -50,12 +52,13 @@ public class Example extends A {
 		// A d = get();
 	}
 
-	static A na = null;
-	static int i;
+	// static A na = null;
+	// static int i;
 	int v;
 	private A num;
 	public A bs = new B();
-	static A jn = new C();
+
+	// static A jn = new C();
 
 	static void f(A a2) {
 		a2.foo();

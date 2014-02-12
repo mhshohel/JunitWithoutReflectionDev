@@ -23,9 +23,10 @@ public class A {
 	void foo() {
 	}
 
-	private static int valSS = 5;
-	public static int valS = 5;
-	static int valA = 5;
+	// static E e = new E();
+	// private static int valSS = 5;
+	// public static int valS = 5;
+	// static int valA = 5;
 	public int valAA = 10;
 	private int valAAA = 55;
 	protected int valAAAA = 66;

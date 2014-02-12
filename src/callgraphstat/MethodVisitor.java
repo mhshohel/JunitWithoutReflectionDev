@@ -71,8 +71,6 @@ public class MethodVisitor extends EmptyVisitor implements
 	// String: key=var name, value=Description
 	private Map<String, Stack<Object>> localVariables = null;
 	private List<Object> parametersValue = null;
-	public static final String UNKNOWN = "Not a class or not found in Description or Library class";
-	public static final String THIS = "this";
 
 	public MethodVisitor(Description description, ClassVisitor classVisitor,
 			Method method, MethodGen methodGen) {
@@ -87,7 +85,7 @@ public class MethodVisitor extends EmptyVisitor implements
 				+ methodGen.getName() + " " + "(%s)%s:%s";
 		this.localVariableGens = methodGen.getLocalVariables();
 		for (LocalVariableGen localVariableGen : this.localVariableGens) {
-			if (localVariableGen.getName().equalsIgnoreCase(THIS)) {
+			if (localVariableGen.getName().equalsIgnoreCase(Description.THIS)) {
 				Stack<Object> object = new Stack<Object>();
 				object.add(description);
 				this.localVariables.put(localVariableGen.getName(), object);
@@ -137,43 +135,6 @@ public class MethodVisitor extends EmptyVisitor implements
 		return this.node;
 	}
 
-	private void addValue(String variableName, Object currentValue) {
-		// first check in local, otherwise in class
-		try {
-			List<Object> values = this.localVariables.get(variableName);
-			if (values == null) {
-				values = this.classVisitor.getFields(this.classVisitor,
-						variableName);
-			}
-			if (values != null) {
-				values.add(currentValue);
-			}
-		} catch (Exception e) {
-		}
-	}
-
-	private Stack<Object> getValuesByVarialbleName(String variableName) {
-		Stack<Object> objects = null;
-		try {
-			objects = this.localVariables.get(variableName);
-			if (objects == null) {
-				this.classVisitor.getFields(this.classVisitor, variableName);
-			}
-		} catch (Exception e) {
-
-		}
-		// first check in local, otherwise in class
-		return objects;
-	}
-
-	private Object getValueByVarialbleName(String variableName) {
-		Stack<Object> objects = getValuesByVarialbleName(variableName);
-		if (objects != null) {
-			return objects.peek();
-		}
-		return null;
-	}
-
 	// private Object getValueFromLocalVariableByName(String variableName) {
 	// // first check in local, otherwise in class
 	// return this.localVariables.get(variableName).peek();
@@ -199,13 +160,15 @@ public class MethodVisitor extends EmptyVisitor implements
 
 	public void start(String source, List<Object> params) {
 		// empty values
+		// this.description = currentDescription;
+		// this.classVisitor = currentDescription.getClassVisitor();
 		this.temporalVariables = new Stack<Object>();
 		this.parametersValue = params;
 		this.currentValue = null;
 		Type returnType = this.method.getReturnType();
 		// empty local var value
 		for (Entry<String, Stack<Object>> key : this.localVariables.entrySet()) {
-			if (!key.getKey().equalsIgnoreCase(THIS)) {
+			if (!key.getKey().equalsIgnoreCase(Description.THIS)) {
 				key.setValue(new Stack<Object>());
 			}
 		}
@@ -257,8 +220,33 @@ public class MethodVisitor extends EmptyVisitor implements
 		return false;
 	}
 
-	void print(Object s) {
-		// System.out.println("\t" + s);
+	private void addToLoaclVariable(String variableName, Object currentValue) {
+		try {
+			List<Object> values = this.localVariables.get(variableName);
+			if (values != null) {
+				values.add(currentValue);
+			}
+		} catch (Exception e) {
+		}
+	}
+
+	private Stack<Object> getLocalVariablesByVarialbleName(String variableName) {
+		Stack<Object> objects = null;
+		try {
+			objects = this.localVariables.get(variableName);
+		} catch (Exception e) {
+
+		}
+		// first check in local, otherwise in class
+		return objects;
+	}
+
+	private Object getLocalVariableByVarialbleName(String variableName) {
+		Stack<Object> objects = getLocalVariablesByVarialbleName(variableName);
+		if (objects != null) {
+			return objects.peek();
+		}
+		return null;
 	}
 
 	@Override
@@ -277,7 +265,7 @@ public class MethodVisitor extends EmptyVisitor implements
 		System.out.println("LOAD: " + name + "   "
 				+ this.localVariableGens[obj.getIndex()].getType());
 		try {
-			Object object = getValueByVarialbleName(name);
+			Object object = getLocalVariableByVarialbleName(name);
 			if (object != null) {
 				this.temporalVariables.add(object);
 			}
@@ -293,15 +281,17 @@ public class MethodVisitor extends EmptyVisitor implements
 		String name = this.localVariableGens[obj.getIndex()].getName();
 		System.out.println("STORE: " + name + "   "
 				+ this.localVariableGens[obj.getIndex()].getType());
-		Object object;
-		try {
-			object = this.temporalVariables.pop();
-		} catch (Exception e) {
-			object = this.localVariableGens[obj.getIndex()].getType();
-		}
-		System.out.println("STACK: " + this.temporalVariables);
+		// Object object;
+		// try {
+		// object = this.temporalVariables.pop();
+		// } catch (Exception e) {
+		// object = this.localVariableGens[obj.getIndex()].getType();
+		// }
+		addValues("ASTORE", name,
+				this.localVariableGens[obj.getIndex()].getType());
+		// System.out.println("STACK: " + this.temporalVariables);
 		// if (object instanceof Description) {
-		addValue(name, object);
+		// addToLoaclVariable(name, object);
 		// } else {
 		// maybe required for param value
 		// }
@@ -311,34 +301,65 @@ public class MethodVisitor extends EmptyVisitor implements
 		// currentValue = null;
 	}
 
-	@Override
-	public void visitPUTSTATIC(PUTSTATIC obj) {
-		// System.out.println("\t\t" + obj.getName() + "   --->   "
-		// + obj.getType(constantPoolGen).getSignature());
-
-		// System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
-		// System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
+	private void addValues(String flag, String variableName, Object type) {
+		Object value = null;
+		try {
+			if (this.description.getDescriptionByClassName(type.toString()) == null) {
+				value = type;
+			} else {
+				value = this.temporalVariables.pop();
+			}
+		} catch (Exception e) {
+			value = type;
+		}
+		switch (flag) {
+		case "ASTORE":
+			addToLoaclVariable(variableName, value);
+			break;
+		case "PUTFIELD":
+			this.classVisitor.addValueToField(this.classVisitor, variableName,
+					value);
+			break;
+		case "PUTSTATIC":
+			this.description.addValueToStaticField(this.description,
+					variableName, value);
+			break;
+		}
+		System.out.println("STACK: " + this.temporalVariables);
 	}
 
 	@Override
 	public void visitPUTFIELD(PUTFIELD obj) {
-		// System.out.println("\t\t" + obj.getName() + "   --->   "
-		// + obj.getType(constantPoolGen).getSignature());
+		System.out.println("\t\t" + obj.getName() + "   --->   "
+				+ obj.getType(constantPoolGen).getSignature());
 
-		// System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
-		// System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
-	}
-
-	@Override
-	public void visitGETSTATIC(GETSTATIC obj) {
-		// System.out.println("\t\t" + obj.getName() + "   --->   "
-		// + obj.getType(constantPoolGen).getSignature());
-		// System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
-		// System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
+		System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
+		System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
+		addValues("PUTFIELD", obj.getFieldName(constantPoolGen),
+				obj.getFieldType(constantPoolGen));
 	}
 
 	@Override
 	public void visitGETFIELD(GETFIELD obj) {
+		// System.out.println("\t\t" + obj.getName() + "   --->   "
+		// + obj.getType(constantPoolGen).getSignature());
+		// System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
+		// System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
+	}
+
+	@Override
+	public void visitPUTSTATIC(PUTSTATIC obj) {
+		// System.out.println("\t\t" + obj.getName() + "   --->   "
+		// + obj.getType(constantPoolGen).getSignature());
+		//
+		// System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
+		// System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
+		// addValues("PUTSTATIC", obj.getFieldName(constantPoolGen),
+		// obj.getFieldType(constantPoolGen));
+	}
+
+	@Override
+	public void visitGETSTATIC(GETSTATIC obj) {
 		// System.out.println("\t\t" + obj.getName() + "   --->   "
 		// + obj.getType(constantPoolGen).getSignature());
 		// System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
@@ -413,12 +434,19 @@ public class MethodVisitor extends EmptyVisitor implements
 			// this.currentValue = description.copy();
 			this.temporalVariables.add(description.copy());
 			System.out.println("STACK: " + this.temporalVariables);
-			methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
-					methodName, types);
-			description.getClassVisitor().start();
+			Description copiedDescription = ((Description) this.temporalVariables
+					.peek());
+			methodVisitor = copiedDescription
+					.getMethodVisitorByNameAndTypeArgs(methodName, types);
+			copiedDescription.getClassVisitor().start();
+
+			// MethodVisitor m = copiedDescription
+			// .getMethodVisitorByNameAndTypeArgs("<clinit>", types);
+
+			// m.start(this.node, params);
 			methodVisitor.start(this.node, params);
 		} else {
-			this.temporalVariables.add(UNKNOWN);
+			this.temporalVariables.add(i.getReferenceType(constantPoolGen));
 		}
 
 		System.out.println("------------------------");
