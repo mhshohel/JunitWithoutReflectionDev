@@ -32,9 +32,10 @@ public class Example {
 		// A a = null;
 		// new C();
 		// E ee = e;
-		String s = "sd";
-		new B(s, new E());
 		// String s = "sd";
+		new B(5, new A(), "", new A());
+		new B(5, new A(), "", new A());
+		String s = "sd";
 		// na = new A();
 		new A();
 		// new A();

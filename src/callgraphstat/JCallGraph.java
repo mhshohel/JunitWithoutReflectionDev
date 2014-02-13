@@ -22,12 +22,10 @@ package callgraphstat;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 public class JCallGraph {
 
@@ -95,12 +93,11 @@ public class JCallGraph {
 		return bytes / MEGABYTE;
 	}
 
-	private Map<String, Description> classDescriptions = new HashMap<String, Description>();
+	private Map<String, Description> classDescriptions = new LinkedHashMap<String, Description>();
 	private File file = null;
-	private Set<Node> nodes = new HashSet<Node>();
 
 	// String as src node
-	// private Map<String, Edge> edges = new HashMap<String, Edge>();
+	// private Map<String, Edge> edges = new LinkedHashMap<String, Edge>();
 
 	public JCallGraph(File file, String pack) throws Exception {
 		this.file = file;

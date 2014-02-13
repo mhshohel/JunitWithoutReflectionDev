@@ -23,8 +23,11 @@ public class B extends A {
 	private A valA;
 	private A valB = new E();
 	public A valC = new E();
+	public int num;
 
-	public B(String aa, A d) {
+	public B(int ssss, A ab, String aa, A d) {
+		num = ssss;
+		valA = ab;
 		// int av = aa;
 		A dss = new A();
 		valB = d;

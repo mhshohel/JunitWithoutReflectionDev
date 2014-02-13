@@ -21,14 +21,13 @@ package callgraphstat;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Stack;
 
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ALOAD;
 import org.apache.bcel.generic.ASTORE;
@@ -108,7 +107,7 @@ public class MethodVisitor extends EmptyVisitor implements
 		this.node = this.javaClass.getClassName() + "." + this.method.getName()
 				+ type + this.method.getReturnType();
 		this.temporalVariables = new Stack<Object>();
-		this.localVariables = new HashMap<String, Stack<Object>>();
+		this.localVariables = new LinkedHashMap<String, Stack<Object>>();
 		this.parametersValue = new ArrayList<Object>();
 	}
 
@@ -206,42 +205,30 @@ public class MethodVisitor extends EmptyVisitor implements
 	}
 
 	public void start(String source, List<Object> params) {
-		// empty values
-		// this.description = currentDescription;
-		// this.classVisitor = currentDescription.getClassVisitor();
 		this.temporalVariables = new Stack<Object>();
 		this.parametersValue = params;
 		this.currentValue = null;
 		Type returnType = this.method.getReturnType();
-		// empty local var value
-		for (Entry<String, Stack<Object>> key : this.localVariables.entrySet()) {
-			String name = "";
-			if (params.size() != 0) {
-				name = key.getKey();
-				LocalVariable[] lv = this.getMethodGen()
-						.getLocalVariableTable(constantPoolGen)
-						.getLocalVariableTable();
-				System.out.println(this.getMethodGen()
-						.getLocalVariableTable(constantPoolGen)
-						.getLocalVariableTable()[0]);
-			}
-
-			if (!key.getKey().equalsIgnoreCase(Description.THIS)) {
-
-				key.setValue(new Stack<Object>());
-			}
-
-			// if (params.size() != 0) {
-			//
-			// MethodGen m = this.getMethodGen();
-			// System.out.println(m.getLocalVariableTable(constantPoolGen));
-			// Type[] s = this.getMethod().getArgumentTypes();
-			// System.out.println(s[0]);
-			// }
-		}
-
-		// generating new params
 		int length = params.size();
+		if (length > 0) {
+			int k = -1;
+			Stack<Object> object = null;
+			for (Entry<String, Stack<Object>> key : this.localVariables
+					.entrySet()) {
+				k++;
+				if (key.getKey().equalsIgnoreCase(Description.THIS)) {
+					k--;
+				} else {
+					if (k < length) {
+						object = new Stack<Object>();
+						object.add(params.get(k));
+						key.setValue(object);
+					} else {
+						key.setValue(new Stack<Object>());
+					}
+				}
+			}
+		}
 		String target = "";
 		String type = "(";
 		if (length != 0) {
@@ -267,9 +254,6 @@ public class MethodVisitor extends EmptyVisitor implements
 					.getInstructionList().getStart(); ihInstructionHandle != null; ihInstructionHandle = ihInstructionHandle
 					.getNext()) {
 				Instruction i = ihInstructionHandle.getInstruction();
-				// System.out.println("\t" + i + "     "
-				// + i.toString(constantPoolGen.getConstantPool()));
-				// }
 				System.out.println(i.getName());
 				if (!visitInstruction(i)) {
 					System.out.println("\t\tBefore\n-------------------");
@@ -287,7 +271,8 @@ public class MethodVisitor extends EmptyVisitor implements
 				String a1 = "";
 			}
 		}
-		System.out.println("Somethings");
+		System.out.println("\t\t\t\t------------END MEHOD: "
+				+ this.method.getName() + " --------------");
 	}
 
 	public boolean addSource(String source, String target) {

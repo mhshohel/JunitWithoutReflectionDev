@@ -25,7 +25,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -78,7 +78,7 @@ public class Description implements Comparable<Description> {
 	private Map<Method, MethodVisitor> methods = null;
 	private List<Description> interfaces = null;
 	private Description superClass = null;
-	public Map<String, Stack<Object>> staticFields = new HashMap<String, Stack<Object>>();
+	public Map<String, Stack<Object>> staticFields = new LinkedHashMap<String, Stack<Object>>();
 	private static List<String> nodes = new ArrayList<String>();
 	private static List<String> edges = new ArrayList<String>();
 	public static final String UNKNOWN = "Unknown";
@@ -103,8 +103,8 @@ public class Description implements Comparable<Description> {
 	}
 
 	private void initialize() {
-		this.classDescriptions = new HashMap<String, Description>();
-		this.methods = new HashMap<Method, MethodVisitor>();
+		this.classDescriptions = new LinkedHashMap<String, Description>();
+		this.methods = new LinkedHashMap<Method, MethodVisitor>();
 		this.interfaces = new ArrayList<Description>();
 		this.superClass = null;
 		// this.nodes = new ArrayList<String>();

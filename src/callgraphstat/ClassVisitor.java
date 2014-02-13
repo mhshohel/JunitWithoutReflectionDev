@@ -19,7 +19,7 @@
  */
 package callgraphstat;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Stack;
 
@@ -38,7 +38,7 @@ public class ClassVisitor extends EmptyVisitor {
 	private Description description = null;
 	public Map<String, Stack<Object>> fields = null;
 
-	// public Map<String, List<Description>> values = new HashMap<String,
+	// public Map<String, List<Description>> values = new LinkedHashMap<String,
 	// List<Description>>();
 	// keep static var for each class
 
@@ -50,7 +50,7 @@ public class ClassVisitor extends EmptyVisitor {
 		this.description = description;
 		this.javaClass = javaClass;
 		this.constants = new ConstantPoolGen(this.javaClass.getConstantPool());
-		this.fields = new HashMap<String, Stack<Object>>();
+		this.fields = new LinkedHashMap<String, Stack<Object>>();
 		Field[] fields = javaClass.getFields();
 		for (Field field : fields) {
 			if (field.isStatic()) {
@@ -69,7 +69,7 @@ public class ClassVisitor extends EmptyVisitor {
 		classVisitor.description = this.description;
 		classVisitor.javaClass = this.javaClass;
 		classVisitor.constants = this.constants;
-		classVisitor.fields = new HashMap<String, Stack<Object>>();
+		classVisitor.fields = new LinkedHashMap<String, Stack<Object>>();
 		Field[] fields = this.javaClass.getFields();
 		for (Field field : fields) {
 			if (!field.isStatic()) {
@@ -79,7 +79,7 @@ public class ClassVisitor extends EmptyVisitor {
 		classVisitor.classReferenceFormat = this.classReferenceFormat;
 
 		// classVisitor.staticFields = this.staticFields;
-		// this.values = new HashMap<String, List<Integer>>();
+		// this.values = new LinkedHashMap<String, List<Integer>>();
 		return classVisitor;
 	}
 
