@@ -20,6 +20,6 @@
 package callgraphstat.superclass;
 
 public class D extends B {
-    void foo() {
-    }
+	void foo() {
+	}
 }

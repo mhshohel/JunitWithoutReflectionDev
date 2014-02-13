@@ -252,6 +252,7 @@ public class Description implements Comparable<Description> {
 
 	public static boolean addEdge(String source, String target) {
 		String edge = source.concat(" -- > ").concat(target).trim();
+		System.out.println("\t\t\tEdge: " + edge);
 		if (edges.contains(edge)) {
 			return true;
 		}

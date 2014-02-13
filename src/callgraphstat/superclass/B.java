@@ -20,8 +20,25 @@
 package callgraphstat.superclass;
 
 public class B extends A {
-	public B(A v, A vl, A c, A d, A f, A g) {
+	private A valA;
+	private A valB = new E();
+	public A valC = new E();
 
+	public B(String aa, A d) {
+		// int av = aa;
+		A dss = new A();
+		valB = d;
+		// valC = c;
+		int a = 5;
+		String v = "s";
+	}
+
+	public B(A v, A vl, A c, A d, A f, A g) {
+		valA = v;
+		valB = valA;
+		this.valB = c;
+		valC = g;
+		A localV = d;
 	}
 
 	public B() {

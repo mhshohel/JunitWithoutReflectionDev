@@ -25,11 +25,11 @@ public class C extends B {
 
 	}
 
-	public C(A c, String d, B ds) {
+	public C(A c, Object d, B ds, Object s) {
 	}
 
 	void foo() {
-		A v = new B();
-		int c;
+		// A v = new B();
+		// int c;
 	}
 }

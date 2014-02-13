@@ -36,7 +36,7 @@ public class ClassVisitor extends EmptyVisitor {
 	private ConstantPoolGen constants;
 	private String classReferenceFormat;
 	private Description description = null;
-	private Map<String, Stack<Object>> fields = null;
+	public Map<String, Stack<Object>> fields = null;
 
 	// public Map<String, List<Description>> values = new HashMap<String,
 	// List<Description>>();

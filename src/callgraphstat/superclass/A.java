@@ -21,15 +21,24 @@ package callgraphstat.superclass;
 
 public class A {
 	void foo() {
+		// dval = new E();
+		// int a = dval.val();
+		// valAA = dval.val();
+		// E ev = dval.valA();
 	}
 
-	// static E e = new E();
-	// private static int valSS = 5;
-	// public static int valS = 5;
-	// static int valA = 5;
-	public int valAA = 10;
-	private int valAAA = 55;
-	protected int valAAAA = 66;
+	// static A na = null;
+	// static int i;
+	// E dval;
+	// private A nums;
+	//
+	// // static E e = new E();
+	// // private static int valSS = 5;
+	// // public static int valS = 5;
+	// // static int valA = 5;
+	// public int valAA = 10;
+	// private int valAAA = 55;
+	// protected int valAAAA = 66;
 
 	// void fos(A s) {
 	//

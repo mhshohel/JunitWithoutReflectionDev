@@ -19,7 +19,7 @@
  */
 package callgraphstat.superclass;
 
-public class Example extends A {
+public class Example {
 
 	public static void main(String[] args) {
 		// na = new A();
@@ -33,15 +33,18 @@ public class Example extends A {
 		// new C();
 		// E ee = e;
 		String s = "sd";
+		new B(s, new E());
+		// String s = "sd";
 		// na = new A();
-
 		new A();
-		new A();
-		A c1 = new C(new A(), s, new C());
+		// new A();
+		A c1 = new C(
+				new B(new A(), new D(), new C(), new A(), new A(), new A()), s,
+				new D(), new Object());
 		A c2 = new B();
 		A a2 = new A();
-		B b1 = new B(new A(), new D(), new C(), c2, c1, a2);
-		b1.foos(new B(), c1);
+		B b1 = new B(new A(), new D(), new C(), c2, c2, a2);
+		// b1.foos(new B(), c1);
 
 		// A a3 = new C();
 		f(b1);
@@ -52,14 +55,14 @@ public class Example extends A {
 		// A d = get();
 	}
 
-	// static A na = null;
-	// static int i;
-	int v;
-	private A num;
-	public A bs = new B();
-
-	// static A jn = new C();
-
+	// // static A na = null;
+	// // static int i;
+	// int v;
+	// private A num;
+	// public A bs = new B();
+	//
+	// // static A jn = new C();
+	//
 	static void f(A a2) {
 		a2.foo();
 	}

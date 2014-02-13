@@ -12,6 +12,7 @@ public class GenerateCallGraph {
 		// ---------------------
 		// get main class fields info
 		// ---------------------
+		// initiate static - not done
 		List<MethodVisitor> methods = this.mainClass
 				.getMethodVisitorByName("main");
 		if (methods.size() > 1) {
@@ -28,7 +29,7 @@ public class GenerateCallGraph {
 	private void start() {
 		// // try to keep values from start --- not done
 		// in class visitor pass params, maybe static var too, check that
-		this.mainClass.getClassVisitor().start();
+		// this.mainClass.getClassVisitor().start();
 		// pass source and params
 		this.mainMethod.start(null, new ArrayList<Object>());
 		this.mainMethod = null;
