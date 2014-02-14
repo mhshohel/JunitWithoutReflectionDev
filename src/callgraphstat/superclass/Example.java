@@ -22,6 +22,7 @@ package callgraphstat.superclass;
 public class Example {
 
 	public static void main(String[] args) {
+		F f = new F(4);
 		// na = new A();
 		// new C().foo();
 		// B.st();
@@ -33,23 +34,23 @@ public class Example {
 		// new C();
 		// E ee = e;
 		// String s = "sd";
-		new B(5, new A(), "", new A());
-		new B(5, new A(), "", new A());
-		String s = "sd";
-		// na = new A();
-		new A();
+		// new B(5, new A(), "", new A());
+		// new B(5, new A(), "", new A());
+		// String s = "sd";
+		// // na = new A();
 		// new A();
-		A c1 = new C(
-				new B(new A(), new D(), new C(), new A(), new A(), new A()), s,
-				new D(), new Object());
-		A c2 = new B();
-		A a2 = new A();
-		B b1 = new B(new A(), new D(), new C(), c2, c2, a2);
-		// b1.foos(new B(), c1);
-
-		// A a3 = new C();
-		f(b1);
-		g(b1);
+		// // new A();
+		// A c1 = new C(
+		// new B(new A(), new D(), new C(), new A(), new A(), new A()), s,
+		// new D(), new Object());
+		// A c2 = new B();
+		// A a2 = new A();
+		// B b1 = new B(new A(), new D(), new C(), c2, c2, a2);
+		// // b1.foos(new B(), c1);
+		//
+		// // A a3 = new C();
+		// f(b1);
+		// g(b1);
 		// a3.fos(b1);
 		// a = new C();
 		// a = b1;

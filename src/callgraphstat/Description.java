@@ -83,6 +83,7 @@ public class Description implements Comparable<Description> {
 	private static List<String> edges = new ArrayList<String>();
 	public static final String UNKNOWN = "Unknown";
 	public static final String THIS = "this";
+	public boolean isSuperClassObjectInitiated = false;
 
 	private Description() {
 		initialize();
@@ -191,6 +192,8 @@ public class Description implements Comparable<Description> {
 				this.superClass = description;
 			}
 		}
+		this.isSuperClassObjectInitiated = (this.superClass == null) ? true
+				: false;
 	}
 
 	// make new copy
@@ -207,11 +210,16 @@ public class Description implements Comparable<Description> {
 		dummy.classInputStream = this.classInputStream;
 		dummy.classType = this.classType;
 		dummy.staticFields = this.staticFields;
+		dummy.isSuperClassObjectInitiated = (this.superClass == null) ? true
+				: false;
 		initializeMethodVisitor(dummy, true);
 		// dummy.nodes = this.nodes;
 		// dummy.edges = this.edges;
+		dummy.spc = this.superClass;
 		return dummy;
 	}
+
+	public Description spc = null;
 
 	public void addValueToStaticField(Description description,
 			String fieldName, Object value) {
@@ -271,6 +279,10 @@ public class Description implements Comparable<Description> {
 
 	public List<Description> getInterfaces() {
 		return this.interfaces;
+	}
+
+	public void setSuperClassDescription(Description description) {
+		this.superClass = description;
 	}
 
 	public Description getSuperClassDescription() {

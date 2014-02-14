@@ -20,6 +20,11 @@
 package callgraphstat.superclass;
 
 public class A {
+	public int intval;
+	protected int intvalA;
+	public A valAOfA;
+	protected A valAOfB;
+
 	void foo() {
 		// dval = new E();
 		// int a = dval.val();

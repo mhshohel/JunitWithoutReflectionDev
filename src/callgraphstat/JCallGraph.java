@@ -52,7 +52,9 @@ public class JCallGraph {
 			long start = System.nanoTime();
 			if (des != null) {
 				// des.getClassVisitor().start();
-				new GenerateCallGraph(des.copy());
+				GenerateCallGraph generateCallGraph = new GenerateCallGraph(
+						des.copy());
+				generateCallGraph = null;
 			}
 			long end = System.nanoTime();
 			// Calculate the used memory
