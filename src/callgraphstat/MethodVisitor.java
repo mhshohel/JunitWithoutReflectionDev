@@ -46,14 +46,13 @@ import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.MethodGen;
-import org.apache.bcel.generic.NEW;
 import org.apache.bcel.generic.PUTFIELD;
 import org.apache.bcel.generic.PUTSTATIC;
 import org.apache.bcel.generic.RETURN;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Type;
 
-public class MethodVisitor extends EmptyVisitor implements
+public final class MethodVisitor extends EmptyVisitor implements
 		Comparable<MethodVisitor> {
 	private Description description = null;
 	private ClassVisitor classVisitor = null;
@@ -108,40 +107,29 @@ public class MethodVisitor extends EmptyVisitor implements
 		this.localVariables = new LinkedHashMap<String, Stack<Object>>();
 	}
 
-	public Description getDescription() {
+	public final Description getDescription() {
 		return this.description;
 	}
 
-	public ClassVisitor getClassVisitor() {
+	public final ClassVisitor getClassVisitor() {
 		return this.classVisitor;
 	}
 
-	public MethodGen getMethodGen() {
+	public final MethodGen getMethodGen() {
 		return this.methodGen;
 	}
 
-	public Method getMethod() {
+	public final Method getMethod() {
 		return this.method;
 	}
 
-	public String toString() {
+	public final String toString() {
 		return this.node;
 	}
 
-	public String getNode() {
+	public final String getNode() {
 		return this.node;
 	}
-
-	// private Object getValueFromLocalVariableByName(String variableName) {
-	// // first check in local, otherwise in class
-	// return this.localVariables.get(variableName).peek();
-	// }
-
-	// private Object getLastValue(String variableName) {
-	// List<Object> values = this.localVariables.get(variableName);
-	// int size = (values.size() > 0) ? values.size() - 1 : values.size();
-	// return values.get(size);
-	// }
 
 	private boolean isSameType(Type paramType, Object objectFromStack) {
 		try {
@@ -196,7 +184,6 @@ public class MethodVisitor extends EmptyVisitor implements
 
 	private boolean visitInstruction(Instruction i) {
 		short opcode = i.getOpcode();
-
 		return ((InstructionConstants.INSTRUCTIONS[opcode] != null)
 				&& !(i instanceof ConstantPushInstruction) && !(i instanceof ReturnInstruction));
 	}
@@ -240,7 +227,7 @@ public class MethodVisitor extends EmptyVisitor implements
 		}
 		// add edge
 		boolean result = addSource(source, target);
-		System.err.println("\t\t\t\t-----START MEHOD: " + source + " -- > "
+		System.err.println("\t\t\t\t-----START METHOD: " + source + " -- > "
 				+ target + " -----\n");
 		if (!result) {
 			if (methodGen.isAbstract() || methodGen.isNative())
@@ -251,27 +238,34 @@ public class MethodVisitor extends EmptyVisitor implements
 					.getNext()) {
 				Instruction i = ihInstructionHandle.getInstruction();
 				System.out.println(i.getName());
+				System.out.println("\t\tBefore\n-------------------");
+				System.out.println("\t\tStack: " + this.temporalVariables);
+				System.out.println("\t\tLocal:" + this.localVariables);
+				System.out.println("\t\tField:" + this.classVisitor.fields);
+
 				if (!visitInstruction(i)) {
-					System.out.println("\t\tBefore\n-------------------");
-					System.out.println("\t\tStack: " + this.temporalVariables);
-					System.out.println("\t\tLocal:" + this.localVariables);
-					System.out.println("\t\tField:" + this.classVisitor.fields);
-
 					i.accept(this);
-
-					System.out.println("\t\tAfter\n-------------------");
-					System.out.println("\t\tStack: " + this.temporalVariables);
-					System.out.println("\t\tLocal:" + this.localVariables);
-					System.out.println("\t\tField:" + this.classVisitor.fields);
+				} else {
+					if (i.getName().equalsIgnoreCase("aconst_null")) {
+						this.temporalVariables.add(Description.NULL);
+						System.err.println("\t\t\t\t\tNULL");
+					}
+					// else {
+					// this.temporalVariables.add(Description.UNKNOWN);
+					// System.err.println("\t\t\t\t\tUNKNOWN");
+					// }
 				}
-				String a1 = "";
+				System.out.println("\t\tAfter\n-------------------");
+				System.out.println("\t\tStack: " + this.temporalVariables);
+				System.out.println("\t\tLocal:" + this.localVariables);
+				System.out.println("\t\tField:" + this.classVisitor.fields);
 			}
 		}
-		System.err.println("\t\t\t\t-----END MEHOD: " + source + " -- > "
+		System.err.println("\t\t\t\t-----END METHOD: " + source + " -- > "
 				+ target + " -----\n");
 	}
 
-	public boolean addSource(String source, String target) {
+	private boolean addSource(String source, String target) {
 		if (source != null) {
 			Description.addEdge(source, target);
 		}
@@ -360,32 +354,12 @@ public class MethodVisitor extends EmptyVisitor implements
 	}
 
 	@Override
-	public void visitNEW(NEW obj) {
-		// System.out.println(obj + "   --->   "
-		// + obj.getLoadClassType(constantPoolGen).getClassName());
-
-	}
-
-	@Override
 	public void visitALOAD(ALOAD obj) {
-		// System.out.println("\t\t" + obj.getName() + "   --->   "
-		// + obj.getType(constantPoolGen).getSignature());
-		// System.out.println("\t\t" + lv[obj.getIndex()]);
 		String name = this.localVariableGens[obj.getIndex()].getName();
 		System.out.println("LOAD: " + name + "   "
 				+ this.localVariableGens[obj.getIndex()].getType());
 		loadValues("ALOAD", name,
 				this.localVariableGens[obj.getIndex()].getType());
-		// try {
-		// Object object = getLocalVariableByVarialbleName(name);
-		// if (object != null) {
-		// this.temporalVariables.add(object);
-		// }
-		// } catch (Exception e) {
-		// this.temporalVariables.add(this.localVariableGens[obj.getIndex()]
-		// .getType());
-		// }
-		// System.out.println("STACK: " + this.temporalVariables);
 	}
 
 	@Override
@@ -393,24 +367,8 @@ public class MethodVisitor extends EmptyVisitor implements
 		String name = this.localVariableGens[obj.getIndex()].getName();
 		System.out.println("STORE: " + name + "   "
 				+ this.localVariableGens[obj.getIndex()].getType());
-		// Object object;
-		// try {
-		// object = this.temporalVariables.pop();
-		// } catch (Exception e) {
-		// object = this.localVariableGens[obj.getIndex()].getType();
-		// }
 		storeValues("ASTORE", name,
 				this.localVariableGens[obj.getIndex()].getType());
-		// System.out.println("STACK: " + this.temporalVariables);
-		// if (object instanceof Description) {
-		// addToLoaclVariable(name, object);
-		// } else {
-		// maybe required for param value
-		// }
-		// if (currentValue != null) {
-		// addValues(name, currentValue);
-		// }
-		// currentValue = null;
 	}
 
 	@Override
@@ -492,12 +450,6 @@ public class MethodVisitor extends EmptyVisitor implements
 		System.out.println(String.format(format, "O",
 				i.getReferenceType(constantPoolGen), methodName)
 				+ " " + type);
-
-		// return type: i.getReturnType(constantPoolGen)
-
-		// System.out.println(i.getArgumentTypes(constantPoolGen));
-
-		// Stack<Object> params = new Stack<Object>();
 		List<Object> params = new ArrayList<Object>();
 		int c = types.length;
 		if (length > 0) {
@@ -528,23 +480,11 @@ public class MethodVisitor extends EmptyVisitor implements
 				.getReferenceType(constantPoolGen).toString());
 		MethodVisitor methodVisitor = null;
 		if (description != null) {
-			// this.currentValue = description.copy();
-			// this.temporalVariables.add(description.copy());
-			// System.out.println("STACK: " + this.temporalVariables);
-			// Description copiedDescription = ((Description)
-			// this.temporalVariables
-			// .peek());
 			Description copiedDescription = description.copy();
 			this.temporalVariables.add(copiedDescription);
 			System.out.println("STACK: " + this.temporalVariables);
 			methodVisitor = copiedDescription
 					.getMethodVisitorByNameAndTypeArgs(methodName, types);
-			// copiedDescription.getClassVisitor().start();
-
-			// MethodVisitor m = copiedDescription
-			// .getMethodVisitorByNameAndTypeArgs("<clinit>", types);
-			// m.start(this.node, params);
-
 			if (!this.description.isSuperClassObjectInitiated) {
 				String current = this.description.getSuperClassDescription()
 						.toString();
@@ -557,8 +497,6 @@ public class MethodVisitor extends EmptyVisitor implements
 				}
 			}
 			methodVisitor.start(this.node, params);
-			// first time for super class initialization
-
 		} else {
 			this.temporalVariables.add(i.getReferenceType(constantPoolGen));
 		}
@@ -573,5 +511,4 @@ public class MethodVisitor extends EmptyVisitor implements
 				i.getMethodName(constantPoolGen)));
 		System.out.println("------------------------");
 	}
-
 }

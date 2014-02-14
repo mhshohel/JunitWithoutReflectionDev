@@ -38,7 +38,7 @@ import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.Type;
 
-public class Description implements Comparable<Description> {
+public final class Description implements Comparable<Description> {
 	public enum ClassCategory {
 		GENERATED("Generated Code"), REGULAR("Regular Class"), TEST(
 				"Test Class");
@@ -81,8 +81,9 @@ public class Description implements Comparable<Description> {
 	public Map<String, Stack<Object>> staticFields = new LinkedHashMap<String, Stack<Object>>();
 	private static List<String> nodes = new ArrayList<String>();
 	private static List<String> edges = new ArrayList<String>();
-	public static final String UNKNOWN = "Unknown";
+	public static final String UNKNOWN = "unknown";
 	public static final String THIS = "this";
+	public static final String NULL = "null";
 	public boolean isSuperClassObjectInitiated = false;
 
 	private Description() {
@@ -177,7 +178,7 @@ public class Description implements Comparable<Description> {
 		}
 	}
 
-	public void initializeInterfacesAndSuperClasses() throws Exception {
+	public final void initializeInterfacesAndSuperClasses() throws Exception {
 		Description description = null;
 		for (Class<?> cls : this.clas.getInterfaces()) {
 			description = this.classDescriptions.get(cls.getName());
@@ -197,7 +198,7 @@ public class Description implements Comparable<Description> {
 	}
 
 	// make new copy
-	public Description copy() {
+	public final Description copy() {
 		Description dummy = new Description();
 		dummy.clas = this.clas;
 		dummy.javaClass = this.javaClass;
@@ -213,13 +214,8 @@ public class Description implements Comparable<Description> {
 		dummy.isSuperClassObjectInitiated = (this.superClass == null) ? true
 				: false;
 		initializeMethodVisitor(dummy, true);
-		// dummy.nodes = this.nodes;
-		// dummy.edges = this.edges;
-		dummy.spc = this.superClass;
 		return dummy;
 	}
-
-	public Description spc = null;
 
 	public void addValueToStaticField(Description description,
 			String fieldName, Object value) {
@@ -229,7 +225,7 @@ public class Description implements Comparable<Description> {
 		}
 	}
 
-	public Stack<Object> getStaticFieldValues(String key) {
+	public final Stack<Object> getStaticFieldValues(String key) {
 		return this.staticFields.get(key);
 	}
 
@@ -245,7 +241,7 @@ public class Description implements Comparable<Description> {
 		return fields;
 	}
 
-	public Object getValueFromStaticField(Description description,
+	public final Object getValueFromStaticField(Description description,
 			String fieldName) {
 		Stack<Object> fields = getValuesFromStaticField(description, fieldName);
 		if (fields != null) {
@@ -254,11 +250,11 @@ public class Description implements Comparable<Description> {
 		return fields;
 	}
 
-	public static List<String> getNodes() {
+	public final static List<String> getNodes() {
 		return nodes;
 	}
 
-	public static boolean addEdge(String source, String target) {
+	public final static boolean addEdge(String source, String target) {
 		String edge = source.concat(" -- > ").concat(target).trim();
 		System.out.println("\t\t\tEdge: " + edge);
 		if (edges.contains(edge)) {
@@ -268,28 +264,28 @@ public class Description implements Comparable<Description> {
 		return false;
 	}
 
-	public static List<String> getSortedEdges() {
+	public final static List<String> getSortedEdges() {
 		Collections.sort(edges);
 		return edges;
 	}
 
-	public static List<String> getUnsortedEdges() {
+	public final static List<String> getUnsortedEdges() {
 		return edges;
 	}
 
-	public List<Description> getInterfaces() {
+	public final List<Description> getInterfaces() {
 		return this.interfaces;
 	}
 
-	public void setSuperClassDescription(Description description) {
+	public final void setSuperClassDescription(Description description) {
 		this.superClass = description;
 	}
 
-	public Description getSuperClassDescription() {
+	public final Description getSuperClassDescription() {
 		return this.superClass;
 	}
 
-	public Description getDescriptionByJavaClass(JavaClass jc) {
+	public final Description getDescriptionByJavaClass(JavaClass jc) {
 		for (Entry<String, Description> entry : this.classDescriptions
 				.entrySet()) {
 			if (entry.getValue().getJavaClass().equals(jc)) {
@@ -299,7 +295,7 @@ public class Description implements Comparable<Description> {
 		return null;
 	}
 
-	public Description getDescriptionByClass(Class<?> cls) {
+	public final Description getDescriptionByClass(Class<?> cls) {
 		for (Entry<String, Description> entry : this.classDescriptions
 				.entrySet()) {
 			if (entry.getValue().getActualClass().equals(cls)) {
@@ -309,7 +305,7 @@ public class Description implements Comparable<Description> {
 		return null;
 	}
 
-	public Description getDescriptionByClassName(String name) {
+	public final Description getDescriptionByClassName(String name) {
 		for (Entry<String, Description> entry : this.classDescriptions
 				.entrySet()) {
 			if (entry.getValue().getActualClass().getName()
@@ -326,43 +322,43 @@ public class Description implements Comparable<Description> {
 				.compareTo(description.getActualClass().getName());
 	}
 
-	public ClassVisitor getClassVisitor() {
+	public final ClassVisitor getClassVisitor() {
 		return this.classVisitor;
 	}
 
-	public ConstantPoolGen getConstantPoolGen() {
+	public final ConstantPoolGen getConstantPoolGen() {
 		return this.constants;
 	}
 
-	public Class<?> getActualClass() {
+	public final Class<?> getActualClass() {
 		return this.clas;
 	}
 
-	public void setClassCategory(ClassCategory classCategory) {
+	public final void setClassCategory(ClassCategory classCategory) {
 		this.classCategory = classCategory;
 	}
 
-	public ClassCategory getClassCategory() {
+	public final ClassCategory getClassCategory() {
 		return this.classCategory;
 	}
 
-	public InputStream getClassInputStream() {
+	public final InputStream getClassInputStream() {
 		return classInputStream;
 	}
 
-	public String getClassName() {
+	public final String getClassName() {
 		return clas.getName();
 	}
 
-	public ClassType getClassType() {
+	public final ClassType getClassType() {
 		return this.classType;
 	}
 
-	public JavaClass getJavaClass() {
+	public final JavaClass getJavaClass() {
 		return javaClass;
 	}
 
-	public Method getMethodByNameAndTypeArgs(String methodName,
+	public final Method getMethodByNameAndTypeArgs(String methodName,
 			Type[] methodTypeArgs) {
 		String name = null;
 		Type[] types = null;
@@ -384,8 +380,8 @@ public class Description implements Comparable<Description> {
 		return null;
 	}
 
-	public MethodVisitor getMethodVisitorByNameAndTypeArgs(String methodName,
-			Type[] methodTypeArgs) {
+	public final MethodVisitor getMethodVisitorByNameAndTypeArgs(
+			String methodName, Type[] methodTypeArgs) {
 		String name = null;
 		Type[] types = null;
 		Method method = null;
@@ -406,7 +402,7 @@ public class Description implements Comparable<Description> {
 		return null;
 	}
 
-	public List<MethodVisitor> getMethodVisitorByName(String methodName) {
+	public final List<MethodVisitor> getMethodVisitorByName(String methodName) {
 		String name = null;
 		List<MethodVisitor> methods = new ArrayList<MethodVisitor>();
 
@@ -421,36 +417,36 @@ public class Description implements Comparable<Description> {
 		return methods;
 	}
 
-	public String getMethodFullName(Method method) {
+	public final String getMethodFullName(Method method) {
 		return method.toString().substring(0,
 				(method.toString().indexOf(')') + 1));
 	}
 
-	public String getMethodName(Method method) {
+	public final String getMethodName(Method method) {
 		return method.getName();
 	}
 
-	public Map<Method, MethodVisitor> getMethods() {
+	public final Map<Method, MethodVisitor> getMethods() {
 		return this.methods;
 	}
 
-	public MethodVisitor getMethodVisitorByMethod(Method method) {
+	public final MethodVisitor getMethodVisitorByMethod(Method method) {
 		return this.methods.get(method);
 	}
 
-	public boolean isGeneratedCode() {
+	public final boolean isGeneratedCode() {
 		return (this.classCategory == ClassCategory.GENERATED);
 	}
 
-	public boolean isRegularClass() {
+	public final boolean isRegularClass() {
 		return (this.classCategory == ClassCategory.REGULAR);
 	}
 
-	public boolean isTestClass() {
+	public final boolean isTestClass() {
 		return (this.classCategory == ClassCategory.TEST);
 	}
 
-	public String toString() {
+	public final String toString() {
 		return this.getActualClass().getName();
 	}
 }

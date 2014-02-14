@@ -1,13 +1,14 @@
 package callgraphstat.superclass;
 
 public class G {
-	protected int num;
+	protected int num = 0;
+	public H hVal = null;
 
 	public G(int a) {
 		num = a;
 	}
 
-	public G(int a, int b) {
-
+	public G(H a, int b) {
+		hVal = a;
 	}
 }

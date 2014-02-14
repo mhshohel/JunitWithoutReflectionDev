@@ -3,7 +3,7 @@ package callgraphstat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GenerateCallGraph {
+public final class GenerateCallGraph {
 	private Description mainClass = null;
 	private MethodVisitor mainMethod = null;
 

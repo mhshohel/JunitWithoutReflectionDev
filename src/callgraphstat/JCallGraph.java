@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public class JCallGraph {
+public final class JCallGraph {
 
 	public static void main(String[] args) {
 		try {
