@@ -85,6 +85,7 @@ public final class Description implements Comparable<Description> {
 	public static final String THIS = "this";
 	public static final String NULL = "null";
 	public boolean isSuperClassObjectInitiated = false;
+	public boolean isVisitedToCheckStaticField = false;
 
 	private Description() {
 		initialize();
@@ -105,12 +106,11 @@ public final class Description implements Comparable<Description> {
 	}
 
 	private void initialize() {
+		this.isVisitedToCheckStaticField = false;
 		this.classDescriptions = new LinkedHashMap<String, Description>();
 		this.methods = new LinkedHashMap<Method, MethodVisitor>();
 		this.interfaces = new ArrayList<Description>();
 		this.superClass = null;
-		// this.nodes = new ArrayList<String>();
-		// this.edges = new ArrayList<String>();
 	}
 
 	private void initialize(Class<?> clas,
@@ -214,6 +214,7 @@ public final class Description implements Comparable<Description> {
 		dummy.isSuperClassObjectInitiated = (this.superClass == null) ? true
 				: false;
 		initializeMethodVisitor(dummy, true);
+		dummy.isVisitedToCheckStaticField = this.isVisitedToCheckStaticField;
 		return dummy;
 	}
 
@@ -444,6 +445,10 @@ public final class Description implements Comparable<Description> {
 
 	public final boolean isTestClass() {
 		return (this.classCategory == ClassCategory.TEST);
+	}
+
+	public final Map<String, Description> getListOfClassDescriptions() {
+		return this.classDescriptions;
 	}
 
 	public final String toString() {

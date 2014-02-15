@@ -188,7 +188,26 @@ public final class MethodVisitor extends EmptyVisitor implements
 				&& !(i instanceof ConstantPushInstruction) && !(i instanceof ReturnInstruction));
 	}
 
-	public void start(String source, List<Object> params) {
+	private boolean isStaticCall = false;
+
+	public void start(String source, List<Object> params, boolean isStaticCall) {
+		// if (!isStaticCall)
+		if (!this.description.isVisitedToCheckStaticField) {
+			this.description.isVisitedToCheckStaticField = true;
+			try {
+				List<MethodVisitor> list = this.description
+						.getMethodVisitorByName("<clinit>");
+				if (list.get(0) != null) {
+					System.err.println("\t\t\t\t STATIC VALS FOUND: "
+							+ this.description);
+					this.description.getMethodVisitorByName("<clinit>").get(0)
+							.start(null, new ArrayList<Object>(), true);
+				}
+			} catch (Exception e) {
+				// Do Nothing
+			}
+		}
+		this.isStaticCall = isStaticCall;
 		this.temporalVariables = new Stack<Object>();
 		Type returnType = this.method.getReturnType();
 		int length = params.size();
@@ -226,51 +245,61 @@ public final class MethodVisitor extends EmptyVisitor implements
 			target = this.node;
 		}
 		// add edge
-		boolean result = addSource(source, target);
-		System.err.println("\t\t\t\t-----START METHOD: " + source + " -- > "
-				+ target + " -----\n");
-		if (!result) {
-			if (methodGen.isAbstract() || methodGen.isNative())
-				return;
-			// InstructionList instructionList = methodGen.getInstructionList();
-			for (InstructionHandle ihInstructionHandle = methodGen
-					.getInstructionList().getStart(); ihInstructionHandle != null; ihInstructionHandle = ihInstructionHandle
-					.getNext()) {
-				Instruction i = ihInstructionHandle.getInstruction();
-				System.out.println(i.getName());
-				System.out.println("\t\tBefore\n-------------------");
-				System.out.println("\t\tStack: " + this.temporalVariables);
-				System.out.println("\t\tLocal:" + this.localVariables);
-				System.out.println("\t\tField:" + this.classVisitor.fields);
-
-				if (!visitInstruction(i)) {
-					i.accept(this);
-				} else {
-					if (i.getName().equalsIgnoreCase("aconst_null")) {
-						this.temporalVariables.add(Description.NULL);
-						System.err.println("\t\t\t\t\tNULL");
-					}
-					// else {
-					// this.temporalVariables.add(Description.UNKNOWN);
-					// System.err.println("\t\t\t\t\tUNKNOWN");
-					// }
-				}
-				System.out.println("\t\tAfter\n-------------------");
-				System.out.println("\t\tStack: " + this.temporalVariables);
-				System.out.println("\t\tLocal:" + this.localVariables);
-				System.out.println("\t\tField:" + this.classVisitor.fields);
+		// boolean result = false;
+		if (!isStaticCall) {
+			// result = addSource(source, target);
+			if (source != null) {
+				Description.addEdge(source, target);
 			}
 		}
+		System.err.println("\t\t\t\t-----START METHOD: " + source + " -- > "
+				+ target + " -----\n");
+		// if (!result) {
+		if (methodGen.isAbstract() || methodGen.isNative())
+			return;
+		// InstructionList instructionList = methodGen.getInstructionList();
+		for (InstructionHandle ihInstructionHandle = methodGen
+				.getInstructionList().getStart(); ihInstructionHandle != null; ihInstructionHandle = ihInstructionHandle
+				.getNext()) {
+			Instruction i = ihInstructionHandle.getInstruction();
+			System.out.println(i.getName());
+			System.out.println("\t\tBefore\n-------------------");
+			System.out.println("\t\tStack: " + this.temporalVariables);
+			System.out.println("\t\tLocal:" + this.localVariables);
+			System.out.println("\t\tField:" + this.classVisitor.fields);
+			System.out.println("\t\tStaticField:"
+					+ this.description.staticFields);
+
+			if (!visitInstruction(i)) {
+				i.accept(this);
+			} else {
+				if (i.getName().equalsIgnoreCase("aconst_null")) {
+					this.temporalVariables.add(Description.NULL);
+					System.err.println("\t\t\t\t\tNULL");
+				}
+				// else {
+				// this.temporalVariables.add(Description.UNKNOWN);
+				// System.err.println("\t\t\t\t\tUNKNOWN");
+				// }
+			}
+			System.out.println("\t\tAfter\n-------------------");
+			System.out.println("\t\tStack: " + this.temporalVariables);
+			System.out.println("\t\tLocal:" + this.localVariables);
+			System.out.println("\t\tField:" + this.classVisitor.fields);
+			System.out.println("\t\tStaticField:"
+					+ this.description.staticFields);
+		}
+		// }
 		System.err.println("\t\t\t\t-----END METHOD: " + source + " -- > "
 				+ target + " -----\n");
 	}
 
-	private boolean addSource(String source, String target) {
-		if (source != null) {
-			Description.addEdge(source, target);
-		}
-		return false;
-	}
+	// private boolean addSource(String source, String target) {
+	// if (source != null) {
+	// Description.addEdge(source, target);
+	// }
+	// return false;
+	// }
 
 	private void addToLoaclVariable(String variableName, Object currentValue) {
 		try {
@@ -320,8 +349,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 					value);
 			break;
 		case "PUTSTATIC":
-			// this.description.addValueToStaticField(this.description,
-			// variableName, value);
+			this.description.addValueToStaticField(this.description,
+					variableName, value);
 			break;
 		}
 		System.out.println("STACK: " + this.temporalVariables);
@@ -339,9 +368,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 						variableName);
 				break;
 			case "GETSTATIC":
-				// value =
-				// this.description.getValueFromStaticField(this.description,
-				// variableName);
+				value = this.description.getValueFromStaticField(
+						this.description, variableName);
 				break;
 			}
 		} catch (Exception e) {
@@ -394,21 +422,23 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	@Override
 	public void visitPUTSTATIC(PUTSTATIC obj) {
-		// System.out.println("\t\t" + obj.getName() + "   --->   "
-		// + obj.getType(constantPoolGen).getSignature());
-		//
-		// System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
-		// System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
-		// addValues("PUTSTATIC", obj.getFieldName(constantPoolGen),
-		// obj.getFieldType(constantPoolGen));
+		System.out.println("\t\t" + obj.getName() + "   --->   "
+				+ obj.getType(constantPoolGen).getSignature());
+
+		System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
+		System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
+		storeValues("PUTSTATIC", obj.getFieldName(constantPoolGen),
+				obj.getFieldType(constantPoolGen));
 	}
 
 	@Override
 	public void visitGETSTATIC(GETSTATIC obj) {
-		// System.out.println("\t\t" + obj.getName() + "   --->   "
-		// + obj.getType(constantPoolGen).getSignature());
-		// System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
-		// System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
+		System.out.println("\t\t" + obj.getName() + "   --->   "
+				+ obj.getType(constantPoolGen).getSignature());
+		System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
+		System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
+		loadValues("GETSTATIC", obj.getFieldName(constantPoolGen),
+				obj.getFieldType(constantPoolGen));
 	}
 
 	@Override
@@ -486,9 +516,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 			methodVisitor = copiedDescription
 					.getMethodVisitorByNameAndTypeArgs(methodName, types);
 			if (!this.description.isSuperClassObjectInitiated) {
-				String current = this.description.getSuperClassDescription()
-						.toString();
-				String superClass = copiedDescription.toString();
 				if (this.description.getSuperClassDescription().toString()
 						.equalsIgnoreCase(copiedDescription.toString())) {
 					this.description.isSuperClassObjectInitiated = true;
@@ -496,7 +523,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 							.setSuperClassDescription(copiedDescription);
 				}
 			}
-			methodVisitor.start(this.node, params);
+			methodVisitor.start(this.node, params, this.isStaticCall);
 		} else {
 			this.temporalVariables.add(i.getReferenceType(constantPoolGen));
 		}

@@ -31,8 +31,20 @@ public final class GenerateCallGraph {
 		// in class visitor pass params, maybe static var too, check that
 		// this.mainClass.getClassVisitor().start();
 		// pass source and params
-		this.mainMethod.start(null, new ArrayList<Object>());
+		// initiateStaticFieldOfEachDescribedClass();
+		// this.mainClass.getMethodVisitorByName("<clinit>").get(0)
+		// .start(null, new ArrayList<Object>(), false);
+
+		this.mainMethod.start(null, new ArrayList<Object>(), false);
 		this.mainMethod = null;
 		this.mainClass = null;
+	}
+
+	private void initiateStaticFieldOfEachDescribedClass() {
+		for (Description description : this.mainClass
+				.getListOfClassDescriptions().values()) {
+			// do traverse for Static fields by checking TRUE - FALSE
+
+		}
 	}
 }

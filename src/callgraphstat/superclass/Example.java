@@ -19,11 +19,13 @@
  */
 package callgraphstat.superclass;
 
-
 public class Example {
+	static H valsH = new H();
+	static J valsJ = new J();
 
 	public static void main(String[] args) {
-		F f = new F(4);
+		new I(5, null);
+		// F f = new F(4);
 		// na = new A();
 		// new C().foo();
 		// B.st();

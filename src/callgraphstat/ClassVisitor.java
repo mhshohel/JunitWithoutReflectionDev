@@ -23,8 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Stack;
 
-import org.apache.bcel.classfile.Constant;
-import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.EmptyVisitor;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
@@ -109,18 +107,18 @@ public final class ClassVisitor extends EmptyVisitor {
 		}
 	}
 
-	public void visitConstantPool(ConstantPool constantPool) {
-		for (int i = 0; i < constantPool.getLength(); i++) {
-			Constant constant = constantPool.getConstant(i);
-			if (constant == null)
-				continue;
-			if (constant.getTag() == 7) {
-				constantPool.constantToString(constant);
-			}
-		}
-	}
-
-	public void start() {
-		this.javaClass.getConstantPool().accept(this);
-	}
+	// public void visitConstantPool(ConstantPool constantPool) {
+	// for (int i = 0; i < constantPool.getLength(); i++) {
+	// Constant constant = constantPool.getConstant(i);
+	// if (constant == null)
+	// continue;
+	// if (constant.getTag() == 7) {
+	// constantPool.constantToString(constant);
+	// }
+	// }
+	// }
+	//
+	// public void start() {
+	// // this.javaClass.getConstantPool().accept(this);
+	// }
 }
