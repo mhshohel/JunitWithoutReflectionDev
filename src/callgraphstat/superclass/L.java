@@ -1,6 +1,6 @@
 package callgraphstat.superclass;
 
-public class J extends L {
+public class L {
 	void foo() {
 	}
 }

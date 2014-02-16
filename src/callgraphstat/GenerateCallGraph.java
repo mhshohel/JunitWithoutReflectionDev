@@ -39,12 +39,4 @@ public final class GenerateCallGraph {
 		this.mainMethod = null;
 		this.mainClass = null;
 	}
-
-	private void initiateStaticFieldOfEachDescribedClass() {
-		for (Description description : this.mainClass
-				.getListOfClassDescriptions().values()) {
-			// do traverse for Static fields by checking TRUE - FALSE
-
-		}
-	}
 }

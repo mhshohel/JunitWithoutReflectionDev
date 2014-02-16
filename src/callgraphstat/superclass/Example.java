@@ -20,11 +20,39 @@
 package callgraphstat.superclass;
 
 public class Example {
-	static H valsH = new H();
-	static J valsJ = new J();
+	// static H valsH = new H();
+	// static J valsJ = new J();
 
 	public static void main(String[] args) {
-		new I(5, null);
+		// check multi dimension array
+		K k = new K();
+		k.v = 100;
+		L lVal = new L();
+		L lvals = lVal;
+		L[] arr;
+		arr = new L[100];
+		arr[0] = new J();
+		arr[1] = new K();
+		arr[2] = new J();
+		arr[3] = k;
+
+		// L[] arr2 = arr;
+
+		Object kkk = (K) arr[3];
+		L kk = arr[3];
+
+		// arr[13].foo();
+		// L[] arrOne = new L[1000000];
+		// for (int i = 0; i < 1000000; i++) {
+		// arrOne[i] = new J();
+		// }
+		// arr[1] = new K();
+		// arr[0].foo();
+		// arr[1].foo();
+		// int[] arr = new int[100];
+		// arr[0] = 5;
+		// arr[1] = 10;
+		// new I(5, null);
 		// F f = new F(4);
 		// na = new A();
 		// new C().foo();

@@ -41,6 +41,14 @@ public class B extends A {
 		// String v = "s";
 	}
 
+	public B(A v, K vl) {
+		// valA = v;
+		// valB = valA;
+		// this.valB = c;
+		// valC = g;
+		// A localV = d;
+	}
+
 	public B(A v, A vl, A c, A d, A f, A g) {
 		// valA = v;
 		// valB = valA;
