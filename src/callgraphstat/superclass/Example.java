@@ -24,22 +24,48 @@ public class Example {
 	// static J valsJ = new J();
 
 	public static void main(String[] args) {
-		// check multi dimension array
-		K k = new K();
-		k.v = 100;
-		L lVal = new L();
-		L lvals = lVal;
-		L[] arr;
-		arr = new L[100];
-		arr[0] = new J();
-		arr[1] = new K();
-		arr[2] = new J();
-		arr[3] = k;
+		A b = new B(new M());
+		E em = b.foos(new E(), 5, new M());
 
-		// L[] arr2 = arr;
+		// List<K> list = new ArrayList<K>();
+		// list.add(new K());
+		//
+		// ArrayList<K> n = (ArrayList<K>) list;
+		// K kval = new K();
+		// ArrayList<Integer> nnn = new ArrayList();
+		// nnn.add(5);
+		//
+		// ArrayList<K> nn = new ArrayList<K>();
+		// nn.add(kval);
+		// nn.add(kval);
+		// nn.add(kval);
+		// nn.add(kval);
+		// K val1 = nn.get(0);
+		// K val2 = nn.get(1);
+		// K val3 = nn.get(2);
+		//
+		// nn.get(0).foo();
 
-		Object kkk = (K) arr[3];
-		L kk = arr[3];
+		// // check multi dimension array
+		// K k = new K();
+		// k.v = 100;
+		// L lVal = new L();
+		// L lvals = lVal;
+		// L[] arr;
+		// arr = new L[100];
+		// arr[0] = new J();
+		// arr[1] = new K();
+		// arr[2] = new J();
+		// arr[3] = k;
+		//
+		// // L[] arr2 = arr;
+		//
+		// Object kkk = (K) arr[3];
+		// L kk = arr[3];
+		// kk.foo();
+		//
+		// IInterface m = new M();
+		// m.foo();
 
 		// arr[13].foo();
 		// L[] arrOne = new L[1000000];

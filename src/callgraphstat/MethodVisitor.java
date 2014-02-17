@@ -20,6 +20,7 @@
 package callgraphstat;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -72,6 +73,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 	private Stack<Object> temporalVariables;
 	// String: key=var name, value=Description
 	private Map<String, Stack<Object>> localVariables = null;
+	private String castType = null;
 
 	public MethodVisitor(Description description, ClassVisitor classVisitor,
 			Method method, MethodGen methodGen) {
@@ -133,6 +135,24 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	public final String getNode() {
 		return this.node;
+	}
+
+	private boolean isSameType(String classType, String stackType) {
+		try {
+			if (!classType.equalsIgnoreCase(stackType)) {
+				Class<?> param = Class.forName(classType);
+				Class<?> stack = Class.forName(stackType);
+				if (param.isAssignableFrom(stack)
+						|| stack.isAssignableFrom(param)) {
+					return true;
+				}
+			} else {
+				return true;
+			}
+		} catch (Exception e) {
+			return false;
+		}
+		return false;
 	}
 
 	private boolean isSameType(Type paramType, Object objectFromStack) {
@@ -198,7 +218,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	private boolean isStaticCall = false;
 
-	public void start(String source, List<Object> params, boolean isStaticCall) {
+	public Object start(String source, List<Object> params, boolean isStaticCall) {
+		this.castType = null;
 		// if (!isStaticCall)
 		if (!this.description.isVisitedToCheckStaticField) {
 			this.description.isVisitedToCheckStaticField = true;
@@ -260,11 +281,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 				Description.addEdge(source, target);
 			}
 		}
-		System.err.println("\t\t\t\t-----START METHOD: " + source + " -- > "
-				+ target + " -----\n");
+		System.err.println("\t\t\t\t-----START METHOD: " + target + " -----\n");
 		// if (!result) {
-		if (methodGen.isAbstract() || methodGen.isNative())
-			return;
+		if (methodGen.isAbstract() || methodGen.isNative()) {
+			return returnType;
+		}
 		// InstructionList instructionList = methodGen.getInstructionList();
 		for (InstructionHandle ihInstructionHandle = methodGen
 				.getInstructionList().getStart(); ihInstructionHandle != null; ihInstructionHandle = ihInstructionHandle
@@ -280,11 +301,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 			// boolean sssss = visitInstruction(i);
 
-			if (i.getName().equalsIgnoreCase("aaload")) {
-				i.accept(this);
-			}
-
-			if (i.getName().equalsIgnoreCase("aastore")) {
+			if (i.getName().equalsIgnoreCase("aaload")
+					|| i.getName().equalsIgnoreCase("aastore")) {
 				i.accept(this);
 			} else if (!visitInstruction(i)) {
 				i.accept(this);
@@ -306,8 +324,18 @@ public final class MethodVisitor extends EmptyVisitor implements
 					+ this.description.staticFields);
 		}
 		// }
-		System.err.println("\t\t\t\t-----END METHOD: " + source + " -- > "
-				+ target + " -----\n");
+		System.err.println("\t\t\t\t-----END METHOD: " + target + " -----\n");
+
+		if (returnType.toString() != "void") {
+			System.out.println(returnType);
+			Object stackObject = this.temporalVariables.peek();
+			String classType = returnType.toString();
+			String stackType = stackObject.toString();
+			if (isSameType(classType, stackType)) {
+				return this.temporalVariables.pop();
+			}
+		}
+		return returnType;
 	}
 
 	// private boolean addSource(String source, String target) {
@@ -345,9 +373,30 @@ public final class MethodVisitor extends EmptyVisitor implements
 		return null;
 	}
 
+	private boolean isCollectionsOrMap(String classWithPackage) {
+		try {
+			Class<?> cls = Class.forName(classWithPackage);
+			if (Collection.class.isAssignableFrom(cls)
+					|| Map.class.isAssignableFrom(cls)) {
+				System.out.println("\t\t\t\tCollections or Map type: TRUE");
+				return true;
+			} else {
+				System.out.println("\t\t\t\tCollections or Map type: FALSE");
+				return false;
+			}
+		} catch (ClassNotFoundException e1) {
+			return false;
+		}
+	}
+
 	private void storeValues(String flag, String variableName, Object type) {
 		Object value = null;
-		boolean isArrayType = type.toString().contains("[]");
+		boolean isArrayType = false;
+		if (type.toString().contains("[]")) {
+			isArrayType = true;
+		} else {
+			isArrayType = isCollectionsOrMap(type.toString());
+		}
 		try {
 			if (this.description.getDescriptionByClassName(type.toString()) == null) {
 				if (!isArrayType) {
@@ -449,13 +498,12 @@ public final class MethodVisitor extends EmptyVisitor implements
 		} catch (Exception e) {
 			value = type;
 		}
+		// verify by array instance and others core factor
 		if (value != null) {
 			this.temporalVariables.add(value);
 		}
 		System.out.println("STACK: " + this.temporalVariables);
 	}
-
-	private String castType = null;
 
 	@Override
 	public void visitCHECKCAST(CHECKCAST obj) {
@@ -500,9 +548,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	@Override
 	public void visitARETURN(ARETURN obj) {
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(constantPoolGen).getSignature());
-		System.out.println("\t\t" + obj.getType(constantPoolGen));
+		// System.out.println("\t\t" + obj.getName() + "   --->   "
+		// + obj.getType(constantPoolGen).getSignature());
+		// System.out.println("\t\t" + obj.getType(constantPoolGen));
 	}
 
 	@Override
@@ -600,21 +648,184 @@ public final class MethodVisitor extends EmptyVisitor implements
 	}
 
 	@Override
-	public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i) {
-		System.out.println(String.format(format, "M",
-				i.getReferenceType(constantPoolGen),
+	public void visitINVOKEINTERFACE(INVOKEINTERFACE i) {
+		Type type = i.getReferenceType(constantPoolGen);
+		boolean isCollectionOrMap = isCollectionsOrMap(type.toString());
+		boolean isStackCollectionOrMap = false;
+		Object object = null;
+		try {
+			object = this.temporalVariables.peek();
+			if (object instanceof ArrayObjectProvider) {
+				isStackCollectionOrMap = true;
+			}
+		} catch (Exception e) {
+			isStackCollectionOrMap = false;
+		}
+		if (isCollectionOrMap && isStackCollectionOrMap) {
+			// this.temporalVariables.add(e)
+		}
+		// String s = i.getType()(constantPoolGen).toString();
+		LocalVariableGen[] f = methodGen.getLocalVariables();
+		LineNumberGen[] lns = methodGen.getLineNumbers();
+		System.out.println(String.format(format, "I", type,
 				i.getMethodName(constantPoolGen)));
 		System.out.println("------------------------");
 	}
 
 	@Override
-	public void visitINVOKEINTERFACE(INVOKEINTERFACE i) {
-		// String s = i.getType()(constantPoolGen).toString();
-		LocalVariableGen[] f = methodGen.getLocalVariables();
-		LineNumberGen[] lns = methodGen.getLineNumbers();
-		System.out.println(String.format(format, "I",
-				i.getReferenceType(constantPoolGen),
-				i.getMethodName(constantPoolGen)));
+	public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i) {
+		// Type type = i.getReferenceType(constantPoolGen);
+		// Type[] argType = i.getArgumentTypes(constantPoolGen);
+		// boolean isCollectionOrMap = isCollectionsOrMap(type.toString());
+		// boolean isStackCollectionOrMap = false;
+		// Object object = null;
+		// try {
+		// object = this.temporalVariables.peek();
+		// if (object instanceof ArrayObjectProvider) {
+		// isStackCollectionOrMap = true;
+		// }
+		// } catch (Exception e) {
+		// isStackCollectionOrMap = false;
+		// }
+		// if (isCollectionOrMap && isStackCollectionOrMap) {
+		// // this.temporalVariables.add(e)
+		// }
+
+		// Type[] types = i.getArgumentTypes(constantPoolGen);//
+		// this.method.getArgumentTypes();
+		// int length = types.length;
+		// String type = "(";
+		// for (int j = 0; j < length; j++) {
+		// type += ((j + 1) == length) ? types[j] : types[j] + ",";
+		// }
+		// type += ")";
+		// String methodName = i.getMethodName(constantPoolGen);
+		// System.out.println(String.format(format, "O",
+		// i.getReferenceType(constantPoolGen), methodName)
+		// + " " + type);
+		// List<Object> params = new ArrayList<Object>();
+		// int c = types.length;
+		// if (length > 0) {
+		// // keep in params, reverse order from temp stack
+		// Object object;
+		// boolean result;
+		// for (int j = 0; j < length; j++) {
+		// c--;
+		// try {
+		// // object = this.temporalVariables.pop();
+		// object = this.temporalVariables.peek();
+		// result = isSameType(types[c], object);
+		// if (result) {
+		// object = this.temporalVariables.pop();
+		// } else {
+		// object = types[c];
+		// }
+		// } catch (Exception e) {
+		// object = types[c];
+		// }
+		// params.add(object);
+		// }
+		// }
+		// if (params.size() > 1) {
+		// Collections.reverse(params);
+		// }
+		// // verify class from stack
+		// // System.out.println(String.format(format, "M", type,
+		// // i.getMethodName(constantPoolGen)));
+		// System.out.println(i.consumeStack(constantPoolGen));
+		// System.out.println(i.getIndex());
+		// System.out.println(i.getLength());
+		// System.out.println(i.getMethodName(constantPoolGen));
+		// System.out.println(i.getName());
+		// System.out.println(i.getName(constantPoolGen));
+		// System.out.println(i.getSignature(constantPoolGen));
+		// System.out.println(i.produceStack(constantPoolGen));
+		// System.out.println(i.toString());
+		// System.out.println(i.getLoadClassType(constantPoolGen));
+		// System.out.println(i.getOpcode());
+		// System.out.println(i.getReferenceType(constantPoolGen));
+		// System.out.println(i.getReturnType(constantPoolGen));
+		// System.out.println(i.getType(constantPoolGen));
+		//
+		// System.out.println("------------------------");
+
+		Type[] types = i.getArgumentTypes(constantPoolGen);// this.method.getArgumentTypes();
+		int length = types.length;
+		String type = "(";
+		for (int j = 0; j < length; j++) {
+			type += ((j + 1) == length) ? types[j] : types[j] + ",";
+		}
+		type += ")";
+		String methodName = i.getMethodName(constantPoolGen);
+		System.out.println(String.format(format, "O",
+				i.getReferenceType(constantPoolGen), methodName)
+				+ " " + type);
+		List<Object> params = new ArrayList<Object>();
+		int c = types.length;
+		if (length > 0) {
+			// keep in params, reverse order from temp stack
+			Object object;
+			boolean result;
+			for (int j = 0; j < length; j++) {
+				c--;
+				try {
+					// object = this.temporalVariables.pop();
+					object = this.temporalVariables.peek();
+					// result = isSameType(types[c], object);
+					result = isSameType(types[c].toString(), object.toString());
+					if (result) {
+						object = this.temporalVariables.pop();
+					} else {
+						object = types[c];
+					}
+				} catch (Exception e) {
+					object = types[c];
+				}
+				params.add(object);
+			}
+		}
+		if (params.size() > 1) {
+			Collections.reverse(params);
+		}
+
+		Object stackObject = this.temporalVariables.peek();
+		String classType = i.getReferenceType(constantPoolGen).toString();
+		String stackType = stackObject.toString();
+		if (isSameType(classType, stackType)) {
+			classType = stackType;
+		}
+
+		Description description = null;
+		try {
+			if (stackObject instanceof Description) {
+				description = (Description) stackObject;
+			}
+		} catch (Exception e) {
+
+		}
+		MethodVisitor methodVisitor = null;
+		Object returnType = null;
+		if (description != null) {
+			// Description copiedDescription = description.copy();
+			// this.temporalVariables.add(copiedDescription);
+			// System.out.println("STACK: " + this.temporalVariables);
+			methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
+					description, methodName, types, true);
+			// if (!this.description.isSuperClassObjectInitiated) {
+			// if (this.description.getSuperClassDescription().toString()
+			// .equalsIgnoreCase(description.toString())) {
+			// this.description.isSuperClassObjectInitiated = true;
+			// this.description.setSuperClassDescription(description);
+			// }
+			// }
+			returnType = methodVisitor.start(this.node, params, false);
+		} else {
+			// this.temporalVariables.add(i.getReferenceType(constantPoolGen));
+		}
+		if (!returnType.toString().equalsIgnoreCase("void")) {
+			this.temporalVariables.add(returnType);
+		}
+
 		System.out.println("------------------------");
 	}
 
@@ -649,7 +860,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 				try {
 					// object = this.temporalVariables.pop();
 					object = this.temporalVariables.peek();
-					result = isSameType(types[c], object);
+					// result = isSameType(types[c], object);
+					result = isSameType(types[c].toString(), object.toString());
 					if (result) {
 						object = this.temporalVariables.pop();
 					} else {
@@ -672,7 +884,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 			this.temporalVariables.add(copiedDescription);
 			System.out.println("STACK: " + this.temporalVariables);
 			methodVisitor = copiedDescription
-					.getMethodVisitorByNameAndTypeArgs(methodName, types);
+					.getMethodVisitorByNameAndTypeArgs(copiedDescription,
+							methodName, types, false);
 			if (!this.description.isSuperClassObjectInitiated) {
 				if (this.description.getSuperClassDescription().toString()
 						.equalsIgnoreCase(copiedDescription.toString())) {
@@ -681,7 +894,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 							.setSuperClassDescription(copiedDescription);
 				}
 			}
-			methodVisitor.start(this.node, params, this.isStaticCall);
+			if (methodVisitor != null) {
+				methodVisitor.start(this.node, params, this.isStaticCall);
+			}
 		} else {
 			this.temporalVariables.add(i.getReferenceType(constantPoolGen));
 		}

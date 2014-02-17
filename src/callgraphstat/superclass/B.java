@@ -57,12 +57,28 @@ public class B extends A {
 		// A localV = d;
 	}
 
-	public B() {
-		System.out.println("SD");
+	void B(A v, int i, K vl) {
+		// valA = v;
+		// valB = valA;
+		// this.valB = c;
+		// valC = g;
+		// A localV = d;
+
 	}
 
-	void foos(A v, A a) {
+	public M mValue = null;
 
+	public B(M m) {
+		mValue = m;
+	}
+
+	public B() {
+		// System.out.println("SD");
+	}
+
+	E foos(A v, int i, M m) {
+		mValue = m;
+		return new E();
 	}
 
 	void foo() {

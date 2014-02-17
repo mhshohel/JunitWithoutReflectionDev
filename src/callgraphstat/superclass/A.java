@@ -25,6 +25,10 @@ public class A {
 	public A valAOfA;
 	protected A valAOfB;
 
+	E foos(A v, int i, M a) {
+		return null;
+	}
+
 	void foo() {
 		// dval = new E();
 		// int a = dval.val();

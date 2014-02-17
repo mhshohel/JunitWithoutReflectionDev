@@ -382,26 +382,66 @@ public final class Description implements Comparable<Description> {
 	}
 
 	public final MethodVisitor getMethodVisitorByNameAndTypeArgs(
-			String methodName, Type[] methodTypeArgs) {
+			Description description, String methodName, Type[] methodTypeArgs,
+			boolean isDeepSearch) {
 		String name = null;
 		Type[] types = null;
 		Method method = null;
-		for (Entry<Method, MethodVisitor> entry : this.methods.entrySet()) {
-			if (methodName != null) {
-				method = entry.getKey();
-				name = method.getName();
-				types = method.getArgumentTypes();
-				if (methodName.equalsIgnoreCase(name)) {
-					if (Arrays.deepEquals(methodTypeArgs, types)) {
-						return entry.getValue();
-					}
+		if (methodName == null) {
+			return null;
+		}
+		for (Entry<Method, MethodVisitor> entry : description.methods
+				.entrySet()) {
+			method = entry.getKey();
+			name = method.getName();
+			types = method.getArgumentTypes();
+			if (methodName.equalsIgnoreCase(name)) {
+				if (Arrays.deepEquals(methodTypeArgs, types)) {
+					return entry.getValue();
 				}
-			} else {
-				return null;
 			}
 		}
-		return null;
+		MethodVisitor methodVisitor = null;
+		if (isDeepSearch) {
+			if (description.superClass != null) {
+				methodVisitor = getMethodVisitorByNameAndTypeArgs(
+						description.superClass, methodName, methodTypeArgs,
+						isDeepSearch);
+			}
+			if (methodVisitor == null && !description.interfaces.isEmpty()) {
+				for (Description des : description.interfaces) {
+					methodVisitor = getMethodVisitorByNameAndTypeArgs(des,
+							methodName, methodTypeArgs, isDeepSearch);
+					if (methodVisitor != null) {
+						return methodVisitor;
+					}
+				}
+			}
+		}
+		return methodVisitor;
 	}
+
+	// private MethodVisitor getMethodVisitorByNameAndTypeArgs(
+	// Description description, String methodName, Type[] methodTypeArgs) {
+	// String name = null;
+	// Type[] types = null;
+	// Method method = null;
+	// if (methodName == null) {
+	// return null;
+	// }
+	// for (Entry<Method, MethodVisitor> entry : description.methods
+	// .entrySet()) {
+	// method = entry.getKey();
+	// name = method.getName();
+	// types = method.getArgumentTypes();
+	// if (methodName.equalsIgnoreCase(name)) {
+	// if (Arrays.deepEquals(methodTypeArgs, types)) {
+	// return entry.getValue();
+	// }
+	// }
+	// }
+	// return null;
+	// }
 
 	public final List<MethodVisitor> getMethodVisitorByName(String methodName) {
 		String name = null;
