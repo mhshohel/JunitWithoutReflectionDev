@@ -27,6 +27,7 @@ import org.apache.bcel.classfile.EmptyVisitor;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.ReferenceType;
 
 public final class ClassVisitor extends EmptyVisitor {
 	private JavaClass javaClass;
@@ -51,7 +52,7 @@ public final class ClassVisitor extends EmptyVisitor {
 		Field[] fields = javaClass.getFields();
 		for (Field field : fields) {
 			if (field.isStatic()) {
-				description.staticFields.put(field.getName(),
+				description.addStaticFieldsValue(field.getName(),
 						new Stack<Object>());
 			} else {
 				this.fields.put(field.getName(), new Stack<Object>());
@@ -79,31 +80,91 @@ public final class ClassVisitor extends EmptyVisitor {
 
 	public final Stack<Object> getValuesFromField(ClassVisitor classVisitor,
 			String fieldName) {
-		Stack<Object> fields = classVisitor.fields.get(fieldName);
-		if (fields == null) {
-			if (classVisitor.description.getSuperClassDescription() != null) {
-				fields = getValuesFromField(classVisitor.description
-						.getSuperClassDescription().getClassVisitor(),
-						fieldName);
+		Stack<Object> fields = null;
+		try {
+			fields = classVisitor.fields.get(fieldName);
+			if (fields == null) {
+				if (classVisitor.description.getSuperClassDescription() != null) {
+					fields = getValuesFromField(classVisitor.description
+							.getSuperClassDescription().getClassVisitor(),
+							fieldName);
+				}
 			}
+		} catch (Exception e) {
 		}
 		return fields;
 	}
 
 	public final Object getValueFromField(ClassVisitor classVisitor,
-			String fieldName) {
-		Stack<Object> fields = getValuesFromField(classVisitor, fieldName);
-		if (fields != null) {
-			return fields.peek();
+			String fieldName, ReferenceType referenceType, Object object) {
+		boolean isSame = (referenceType.toString()
+				.equalsIgnoreCase(classVisitor.description.getClassName())) ? true
+				: false;
+		Stack<Object> fields = null;
+		try {
+			if (isSame) {
+				fields = getValuesFromField(classVisitor, fieldName);
+			} else {
+				if (referenceType.toString()
+						.equalsIgnoreCase(object.toString())) {
+					if (object instanceof Description) {
+						Description description = (Description) object;
+						fields = description.getClassVisitor()
+								.getValuesFromField(
+										description.getClassVisitor(),
+										fieldName);
+					}
+				}
+			}
+			if (fields != null && !fields.isEmpty()) {
+				return fields.peek();
+			}
+		} catch (Exception e) {
 		}
 		return fields;
 	}
 
+	public final Object getValueFromFieldByFieldName(String key) {
+		Object value = null;
+		try {
+			Stack<Object> values = this.fields.get(key);
+			if (values != null && !values.isEmpty()) {
+				return values.peek();
+			}
+		} catch (Exception e) {
+		}
+		return value;
+	}
+
+	// public final Stack<Object> getValuesFromFieldByFieldName(String key) {
+	// Stack<Object> values = null;
+	// try {
+	// values = this.fields.get(key);
+	// } catch (Exception e) {
+	// }
+	// return values;
+	// }
+
 	public void addValueToField(ClassVisitor classVisitor, String fieldName,
-			Object value) {
-		Stack<Object> fields = getValuesFromField(classVisitor, fieldName);
-		if (fields != null) {
-			fields.add(value);
+			Object value, ReferenceType referenceType, Object object) {
+		boolean isSame = (referenceType.toString()
+				.equalsIgnoreCase(classVisitor.description.getClassName())) ? true
+				: false;
+		Stack<Object> fields = null;
+		try {
+			if (isSame) {
+				fields = getValuesFromField(classVisitor, fieldName);
+			} else {
+				if (object instanceof Description) {
+					Description description = (Description) object;
+					fields = description.getClassVisitor().getValuesFromField(
+							description.getClassVisitor(), fieldName);
+				}
+			}
+			if (fields != null) {
+				fields.add(value);
+			}
+		} catch (Exception e) {
 		}
 	}
 

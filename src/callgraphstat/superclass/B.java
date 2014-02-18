@@ -78,10 +78,13 @@ public class B extends A {
 
 	E foos(A v, int i, M m) {
 		mValue = m;
+		mValue.foo();
+		this.foo();
 		return new E();
 	}
 
 	void foo() {
+		L l = new L();
 	}
 
 	static void st() {

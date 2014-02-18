@@ -36,6 +36,7 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.MethodGen;
+import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.Type;
 
 public final class Description implements Comparable<Description> {
@@ -219,18 +220,42 @@ public final class Description implements Comparable<Description> {
 	}
 
 	public void addValueToStaticField(Description description,
-			String fieldName, Object value) {
-		Stack<Object> fields = getValuesFromStaticField(description, fieldName);
-		if (fields != null) {
-			fields.add(value);
+			String fieldName, Object value, ReferenceType referenceType) {
+		try {
+			Stack<Object> fields = getValuesFromStaticField(description,
+					fieldName);
+			if (fields != null) {
+				fields.add(value);
+			} else {
+				if (referenceType != null) {
+					try {
+						this.classDescriptions.get(referenceType.toString())
+								.addStaticFieldsValue(fieldName, value);
+					} catch (Exception e) {
+					}
+				}
+			}
+		} catch (Exception e) {
 		}
+	}
+
+	public void addStaticFieldsValue(String key, Object value) {
+		if (!this.staticFields.containsKey(key)) {
+			this.staticFields.put(key, new Stack<Object>());
+		} else {
+			this.staticFields.get(key).add(value);
+		}
+	}
+
+	public Map<String, Stack<Object>> getStaticFields() {
+		return this.staticFields;
 	}
 
 	public final Stack<Object> getStaticFieldValues(String key) {
 		return this.staticFields.get(key);
 	}
 
-	public Stack<Object> getValuesFromStaticField(Description description,
+	private Stack<Object> getValuesFromStaticField(Description description,
 			String fieldName) {
 		Stack<Object> fields = description.getStaticFieldValues(fieldName);
 		if (fields == null) {
@@ -243,10 +268,19 @@ public final class Description implements Comparable<Description> {
 	}
 
 	public final Object getValueFromStaticField(Description description,
-			String fieldName) {
+			String fieldName, ReferenceType referenceType) {
 		Stack<Object> fields = getValuesFromStaticField(description, fieldName);
-		if (fields != null) {
+		if (fields != null && !fields.isEmpty()) {
 			return fields.peek();
+		} else if (referenceType != null) {
+			try {
+				fields = this.classDescriptions.get(referenceType.toString())
+						.getStaticFieldValues(fieldName);
+				if (!fields.isEmpty()) {
+					return fields.peek();
+				}
+			} catch (Exception e) {
+			}
 		}
 		return fields;
 	}

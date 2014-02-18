@@ -36,6 +36,10 @@ public class A {
 		// E ev = dval.valA();
 	}
 
+	public E foos(Object object, int i, double d, M m) {
+		return new P().getE();
+	}
+
 	// static A na = null;
 	// static int i;
 	// E dval;

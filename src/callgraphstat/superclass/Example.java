@@ -22,10 +22,32 @@ package callgraphstat.superclass;
 public class Example {
 	// static H valsH = new H();
 	// static J valsJ = new J();
+	// static M bba = null;
 
 	public static void main(String[] args) {
-		A b = new B(new M());
-		E em = b.foos(new E(), 5, new M());
+		// new R();
+		// new G(2);
+		// M bba = new M();
+		// A ba = G.valueOfB;
+		// ba = new E();
+		// G.valueOfB = new D();
+		// new G(5, 6);
+		//
+		double val = 0.0;
+		// int a = 5;
+		// new F(8);
+		// F fval = new F(5);
+		// N nval = fval.getN(val);
+		// F fval = new F(5);
+		M mval = new M();
+		// O oval = new O();
+
+		// M fava = new F(5).getN(val).getM(new O());
+
+		// A b = new B(new F(5).getN(val).getM(new O()));
+		// E em = b.foos(null, 4, 1.5, new M(new N(new O(new P(bba)))));
+		// int v = em.val();
+		// E em = b.foos(new E(), 5, new M());
 
 		// List<K> list = new ArrayList<K>();
 		// list.add(new K());

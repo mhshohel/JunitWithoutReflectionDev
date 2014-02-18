@@ -29,6 +29,8 @@ import java.util.Map.Entry;
 import java.util.Stack;
 
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.LocalVariable;
+import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.AALOAD;
 import org.apache.bcel.generic.AASTORE;
@@ -38,6 +40,7 @@ import org.apache.bcel.generic.ASTORE;
 import org.apache.bcel.generic.CHECKCAST;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.ConstantPushInstruction;
+import org.apache.bcel.generic.DSTORE;
 import org.apache.bcel.generic.EmptyVisitor;
 import org.apache.bcel.generic.GETFIELD;
 import org.apache.bcel.generic.GETSTATIC;
@@ -54,6 +57,7 @@ import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.PUTFIELD;
 import org.apache.bcel.generic.PUTSTATIC;
 import org.apache.bcel.generic.RETURN;
+import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.Type;
 
@@ -69,6 +73,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 	private String format = "";
 	private String node = "";
 	private LocalVariableGen[] localVariableGens = null;
+	private LocalVariableTable localVariableTable = null;
 	// private ExtractMethod extractMethod = null;
 	private Stack<Object> temporalVariables;
 	// String: key=var name, value=Description
@@ -84,9 +89,14 @@ public final class MethodVisitor extends EmptyVisitor implements
 		this.javaClass = this.description.getJavaClass();
 		this.constantPoolGen = methodGen.getConstantPool();
 		initialize();
-		this.format = "M:" + this.javaClass.getClassName() + ":"
-				+ methodGen.getName() + " " + "(%s)%s:%s";
+		this.format = "\n------------------------------------------------------------------------------------------\nM:"
+				+ this.javaClass.getClassName()
+				+ ":"
+				+ methodGen.getName()
+				+ " " + "(%s)%s:%s";
 		this.localVariableGens = methodGen.getLocalVariables();
+		this.localVariableTable = methodGen
+				.getLocalVariableTable(constantPoolGen);
 		for (LocalVariableGen localVariableGen : this.localVariableGens) {
 			if (localVariableGen.getName().equalsIgnoreCase(Description.THIS)) {
 				Stack<Object> object = new Stack<Object>();
@@ -155,6 +165,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 		return false;
 	}
 
+	// TODO: remove me if not required or used by anyone
 	private boolean isSameType(Type paramType, Object objectFromStack) {
 		try {
 			if (objectFromStack instanceof Description) {
@@ -208,10 +219,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	private boolean visitInstruction(Instruction i) {
 		short opcode = i.getOpcode();
-		// if ((InstructionConstants.INSTRUCTIONS[opcode] != null)
-		// && i instanceof ArrayInstruction) {
-		// return false;
-		// }
 		return ((InstructionConstants.INSTRUCTIONS[opcode] != null)
 				&& !(i instanceof ConstantPushInstruction) && !(i instanceof ReturnInstruction));
 	}
@@ -220,20 +227,22 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	public Object start(String source, List<Object> params, boolean isStaticCall) {
 		this.castType = null;
-		// if (!isStaticCall)
 		if (!this.description.isVisitedToCheckStaticField) {
 			this.description.isVisitedToCheckStaticField = true;
+			// set value to the parent, because its for static field
+			this.description.getDescriptionByJavaClass(this.javaClass).isVisitedToCheckStaticField = true;
 			try {
 				List<MethodVisitor> list = this.description
 						.getMethodVisitorByName("<clinit>");
-				if (list.get(0) != null) {
+				if (list != null && !list.isEmpty() && list.get(0) != null) {
 					System.err.println("\t\t\t\t STATIC VALS FOUND: "
 							+ this.description);
 					this.description.getMethodVisitorByName("<clinit>").get(0)
 							.start(null, new ArrayList<Object>(), true);
 				}
 			} catch (Exception e) {
-				// Do Nothing
+				System.err
+						.println("SOME ERROR FOUND: public Object start(String source, List<Object> params, boolean isStaticCall");
 			}
 		}
 		this.isStaticCall = isStaticCall;
@@ -281,7 +290,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 				Description.addEdge(source, target);
 			}
 		}
-		System.err.println("\t\t\t\t-----START METHOD: " + target + " -----\n");
+		System.err.println("\t\tSTART METHOD:\n\t\t\t-----" + source
+				+ "\n\t\t\t\t--->" + target + "\n");
 		// if (!result) {
 		if (methodGen.isAbstract() || methodGen.isNative()) {
 			return returnType;
@@ -297,7 +307,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 			System.out.println("\t\tLocal:" + this.localVariables);
 			System.out.println("\t\tField:" + this.classVisitor.fields);
 			System.out.println("\t\tStaticField:"
-					+ this.description.staticFields);
+					+ this.description.getStaticFields());
 
 			// boolean sssss = visitInstruction(i);
 
@@ -321,10 +331,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 			System.out.println("\t\tLocal:" + this.localVariables);
 			System.out.println("\t\tField:" + this.classVisitor.fields);
 			System.out.println("\t\tStaticField:"
-					+ this.description.staticFields);
+					+ this.description.getStaticFields());
 		}
 		// }
-		System.err.println("\t\t\t\t-----END METHOD: " + target + " -----\n");
+		System.err.println("\t\t-----END METHOD:\n\t\t\t" + source
+				+ "\n\t\t\t\t--->" + target + "\n");
 
 		if (returnType.toString() != "void") {
 			System.out.println(returnType);
@@ -338,6 +349,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 		return returnType;
 	}
 
+	public void visitDSTORE(DSTORE obj) {
+		int v = obj.getIndex();
+		String name = this.localVariableGens[obj.getIndex()].getName();
+	}
+
 	// private boolean addSource(String source, String target) {
 	// if (source != null) {
 	// Description.addEdge(source, target);
@@ -345,7 +361,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 	// return false;
 	// }
 
-	private void addToLoaclVariable(String variableName, Object currentValue) {
+	private void addToLoaclVariable(String variableName, Object currentValue,
+			ReferenceType referenceType) {
 		try {
 			List<Object> values = this.localVariables.get(variableName);
 			if (values != null) {
@@ -365,9 +382,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 		return objects;
 	}
 
-	private Object getLocalVariableByVarialbleName(String variableName) {
+	private Object getLocalVariableValueByVarialbleName(String variableName,
+			ReferenceType referenceType) {
 		Stack<Object> objects = getLocalVariablesByVarialbleName(variableName);
-		if (objects != null) {
+		if (objects != null && !objects.isEmpty()) {
 			return objects.peek();
 		}
 		return null;
@@ -384,125 +402,151 @@ public final class MethodVisitor extends EmptyVisitor implements
 				System.out.println("\t\t\t\tCollections or Map type: FALSE");
 				return false;
 			}
-		} catch (ClassNotFoundException e1) {
+		} catch (ClassNotFoundException e) {
 			return false;
 		}
 	}
 
-	private void storeValues(String flag, String variableName, Object type) {
-		Object value = null;
-		boolean isArrayType = false;
-		if (type.toString().contains("[]")) {
-			isArrayType = true;
-		} else {
-			isArrayType = isCollectionsOrMap(type.toString());
-		}
+	private void storeValues(String flag, String variableName, Object type,
+			ReferenceType referenceType) {
 		try {
-			if (this.description.getDescriptionByClassName(type.toString()) == null) {
-				if (!isArrayType) {
+			Object value = null;
+			boolean isArrayType = false;
+			if (type.toString().contains("[]")) {
+				isArrayType = true;
+			} else {
+				isArrayType = isCollectionsOrMap(type.toString());
+			}
+			try {
+				if (this.description.getDescriptionByClassName(type.toString()) == null) {
+					if (!isArrayType) {
+						if (this.castType != null
+								&& this.temporalVariables.peek() instanceof ArrayObjectProvider) {
+							ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) this.temporalVariables
+									.peek();
+							value = arrayObjectProvider.arrayObjects
+									.get(this.castType);
+						} else if (value == null) {
+							value = type;
+						}
+
+					} else {
+						if (this.temporalVariables.peek() instanceof ArrayObjectProvider) {
+							String arrayType = ((ArrayObjectProvider) this.temporalVariables
+									.peek()).arrayType;
+							String currentType = type.toString();
+							if (arrayType.equalsIgnoreCase(currentType)) {
+								value = this.temporalVariables.pop();
+							} else {
+								try {
+									Description desOne = this.description
+											.getDescriptionByClassName(arrayType
+													.replace("[]", ""));
+									Description desTwo = this.description
+											.getDescriptionByClassName(currentType
+													.replace("[]", ""));
+									if ((desOne != null && desTwo != null)
+											&& (desOne.getActualClass()
+													.isAssignableFrom(desTwo
+															.getActualClass()))
+											|| (desTwo.getActualClass()
+													.isAssignableFrom(desOne
+															.getActualClass()))) {
+										value = this.temporalVariables.pop();
+									} else {
+										value = new ArrayObjectProvider(
+												type.toString());
+									}
+								} catch (Exception e) {
+									value = new ArrayObjectProvider(
+											type.toString());
+								}
+							}
+						} else {
+							value = new ArrayObjectProvider(type.toString());
+						}
+					}
+				} else {
 					if (this.castType != null
 							&& this.temporalVariables.peek() instanceof ArrayObjectProvider) {
 						ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) this.temporalVariables
 								.peek();
 						value = arrayObjectProvider.arrayObjects
 								.get(this.castType);
-					} else if (value == null) {
-						value = type;
-					}
-
-				} else {
-					if (this.temporalVariables.peek() instanceof ArrayObjectProvider) {
-						String arrayType = ((ArrayObjectProvider) this.temporalVariables
-								.peek()).arrayType;
-						String currentType = type.toString();
-						if (arrayType.equalsIgnoreCase(currentType)) {
+						if (value == null) {
 							value = this.temporalVariables.pop();
-						} else {
-							try {
-								Description desOne = this.description
-										.getDescriptionByClassName(arrayType
-												.replace("[]", ""));
-								Description desTwo = this.description
-										.getDescriptionByClassName(currentType
-												.replace("[]", ""));
-								if ((desOne != null && desTwo != null)
-										&& (desOne.getActualClass()
-												.isAssignableFrom(desTwo
-														.getActualClass()))
-										|| (desTwo.getActualClass()
-												.isAssignableFrom(desOne
-														.getActualClass()))) {
-									value = this.temporalVariables.pop();
-								} else {
-									value = new ArrayObjectProvider(
-											type.toString());
-								}
-							} catch (Exception e) {
-								value = new ArrayObjectProvider(type.toString());
-							}
 						}
 					} else {
-						value = new ArrayObjectProvider(type.toString());
-					}
-				}
-			} else {
-				if (this.castType != null
-						&& this.temporalVariables.peek() instanceof ArrayObjectProvider) {
-					ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) this.temporalVariables
-							.peek();
-					value = arrayObjectProvider.arrayObjects.get(this.castType);
-					if (value == null) {
 						value = this.temporalVariables.pop();
 					}
-				} else {
-					value = this.temporalVariables.pop();
 				}
+			} catch (Exception e) {
+				value = type;
 			}
+			switch (flag) {
+			case "ASTORE":
+				addToLoaclVariable(variableName, value, referenceType);
+				break;
+			case "PUTFIELD":
+				this.classVisitor
+						.addValueToField(
+								this.classVisitor,
+								variableName,
+								value,
+								referenceType,
+								((this.temporalVariables != null && !this.temporalVariables
+										.isEmpty()) ? this.temporalVariables
+										.peek() : null));
+				break;
+			case "PUTSTATIC":
+				this.description.addValueToStaticField(this.description,
+						variableName, value, referenceType);
+				break;
+			}
+			this.castType = null;
+			System.out.println("STACK: " + this.temporalVariables);
 		} catch (Exception e) {
-			value = type;
 		}
-		switch (flag) {
-		case "ASTORE":
-			addToLoaclVariable(variableName, value);
-			break;
-		case "PUTFIELD":
-			this.classVisitor.addValueToField(this.classVisitor, variableName,
-					value);
-			break;
-		case "PUTSTATIC":
-			this.description.addValueToStaticField(this.description,
-					variableName, value);
-			break;
-		}
-		this.castType = null;
-		System.out.println("STACK: " + this.temporalVariables);
 	}
 
-	private void loadValues(String flag, String variableName, Object type) {
-		Object value = null;
-		// boolean isArrayType = type.toString().contains("[]");
+	private void loadValues(String flag, String variableName, Object type,
+			ReferenceType referenceType) {
 		try {
-			switch (flag) {
-			case "ALOAD":
-				value = getLocalVariableByVarialbleName(variableName);
-				break;
-			case "GETFIELD":
-				value = this.classVisitor.getValueFromField(this.classVisitor,
-						variableName);
-				break;
-			case "GETSTATIC":
-				value = this.description.getValueFromStaticField(
-						this.description, variableName);
-				break;
+			Object value = null;
+			// boolean isArrayType = type.toString().contains("[]");
+			try {
+				switch (flag) {
+				case "ALOAD":
+					value = getLocalVariableValueByVarialbleName(variableName,
+							referenceType);
+					break;
+				case "GETFIELD":
+					value = this.classVisitor
+							.getValueFromField(
+									this.classVisitor,
+									variableName,
+									referenceType,
+									((this.temporalVariables != null && !this.temporalVariables
+											.isEmpty()) ? this.temporalVariables
+											.peek() : null));
+					break;
+				case "GETSTATIC":
+					value = this.description.getValueFromStaticField(
+							this.description, variableName, referenceType);
+					break;
+				}
+			} catch (Exception e) {
+				value = type;
 			}
+			// TODO: verify by array instance and others core factor
+			if (value != null) {
+				this.temporalVariables.add(value);
+			}
+			// TODO: may not required
+			this.castType = null;
+			System.out.println("STACK: " + this.temporalVariables);
 		} catch (Exception e) {
-			value = type;
 		}
-		// verify by array instance and others core factor
-		if (value != null) {
-			this.temporalVariables.add(value);
-		}
-		System.out.println("STACK: " + this.temporalVariables);
 	}
 
 	@Override
@@ -524,6 +568,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 				ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) arrayObjcet;
 				arrayObjectProvider.arrayObjects.put(dataObject.toString(),
 						dataObject);
+				// TODO: verify me
 				this.temporalVariables.pop();
 				this.temporalVariables.pop();
 			}
@@ -593,16 +638,31 @@ public final class MethodVisitor extends EmptyVisitor implements
 		System.out.println("LOAD: " + name + "   "
 				+ this.localVariableGens[obj.getIndex()].getType());
 		loadValues("ALOAD", name,
-				this.localVariableGens[obj.getIndex()].getType());
+				this.localVariableGens[obj.getIndex()].getType(), null);
 	}
 
 	@Override
 	public void visitASTORE(ASTORE obj) {
-		String name = this.localVariableGens[obj.getIndex()].getName();
-		System.out.println("STORE: " + name + "   "
-				+ this.localVariableGens[obj.getIndex()].getType());
-		storeValues("ASTORE", name,
-				this.localVariableGens[obj.getIndex()].getType());
+		try {
+			int v = obj.getIndex();
+			String s = obj.getName();
+
+			LocalVariableTable lvt = methodGen
+					.getLocalVariableTable(constantPoolGen);
+
+			LocalVariable[] lll = lvt.getLocalVariableTable();
+			int hhh = lll[2].getIndex();
+
+			String name = this.localVariableGens[obj.getIndex()].getName();
+
+			System.out.println("STORE: " + name + "   "
+					+ this.localVariableGens[obj.getIndex()].getType());
+
+			storeValues("ASTORE", name,
+					this.localVariableGens[obj.getIndex()].getType(), null);
+		} catch (Exception e) {
+			System.err.println("FOUND");
+		}
 	}
 
 	@Override
@@ -613,7 +673,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 		System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
 		System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
 		storeValues("PUTFIELD", obj.getFieldName(constantPoolGen),
-				obj.getFieldType(constantPoolGen));
+				obj.getFieldType(constantPoolGen),
+				obj.getReferenceType(constantPoolGen));
 	}
 
 	@Override
@@ -623,28 +684,32 @@ public final class MethodVisitor extends EmptyVisitor implements
 		System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
 		System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
 		loadValues("GETFIELD", obj.getFieldName(constantPoolGen),
-				obj.getFieldType(constantPoolGen));
+				obj.getFieldType(constantPoolGen),
+				obj.getReferenceType(constantPoolGen));
 	}
 
 	@Override
 	public void visitPUTSTATIC(PUTSTATIC obj) {
 		System.out.println("\t\t" + obj.getName() + "   --->   "
 				+ obj.getType(constantPoolGen).getSignature());
-
+		System.out.println("\t\t" + obj.getReferenceType(constantPoolGen));
 		System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
 		System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
 		storeValues("PUTSTATIC", obj.getFieldName(constantPoolGen),
-				obj.getFieldType(constantPoolGen));
+				obj.getFieldType(constantPoolGen),
+				obj.getReferenceType(constantPoolGen));
 	}
 
 	@Override
 	public void visitGETSTATIC(GETSTATIC obj) {
 		System.out.println("\t\t" + obj.getName() + "   --->   "
 				+ obj.getType(constantPoolGen).getSignature());
+		System.out.println("\t\t" + obj.getReferenceType(constantPoolGen));
 		System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
 		System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
 		loadValues("GETSTATIC", obj.getFieldName(constantPoolGen),
-				obj.getFieldType(constantPoolGen));
+				obj.getFieldType(constantPoolGen),
+				obj.getReferenceType(constantPoolGen));
 	}
 
 	@Override
@@ -667,166 +732,104 @@ public final class MethodVisitor extends EmptyVisitor implements
 		// String s = i.getType()(constantPoolGen).toString();
 		LocalVariableGen[] f = methodGen.getLocalVariables();
 		LineNumberGen[] lns = methodGen.getLineNumbers();
-		System.out.println(String.format(format, "I", type,
-				i.getMethodName(constantPoolGen)));
+		System.out
+				.println(String.format(format, "I", type,
+						i.getMethodName(constantPoolGen))
+						+ "\n------------------------------------------------------------------------------------------\n");
 		System.out.println("------------------------");
 	}
 
 	@Override
 	public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i) {
-		// Type type = i.getReferenceType(constantPoolGen);
-		// Type[] argType = i.getArgumentTypes(constantPoolGen);
-		// boolean isCollectionOrMap = isCollectionsOrMap(type.toString());
-		// boolean isStackCollectionOrMap = false;
-		// Object object = null;
-		// try {
-		// object = this.temporalVariables.peek();
-		// if (object instanceof ArrayObjectProvider) {
-		// isStackCollectionOrMap = true;
-		// }
-		// } catch (Exception e) {
-		// isStackCollectionOrMap = false;
-		// }
-		// if (isCollectionOrMap && isStackCollectionOrMap) {
-		// // this.temporalVariables.add(e)
-		// }
-
-		// Type[] types = i.getArgumentTypes(constantPoolGen);//
-		// this.method.getArgumentTypes();
-		// int length = types.length;
-		// String type = "(";
-		// for (int j = 0; j < length; j++) {
-		// type += ((j + 1) == length) ? types[j] : types[j] + ",";
-		// }
-		// type += ")";
-		// String methodName = i.getMethodName(constantPoolGen);
-		// System.out.println(String.format(format, "O",
-		// i.getReferenceType(constantPoolGen), methodName)
-		// + " " + type);
-		// List<Object> params = new ArrayList<Object>();
-		// int c = types.length;
-		// if (length > 0) {
-		// // keep in params, reverse order from temp stack
-		// Object object;
-		// boolean result;
-		// for (int j = 0; j < length; j++) {
-		// c--;
-		// try {
-		// // object = this.temporalVariables.pop();
-		// object = this.temporalVariables.peek();
-		// result = isSameType(types[c], object);
-		// if (result) {
-		// object = this.temporalVariables.pop();
-		// } else {
-		// object = types[c];
-		// }
-		// } catch (Exception e) {
-		// object = types[c];
-		// }
-		// params.add(object);
-		// }
-		// }
-		// if (params.size() > 1) {
-		// Collections.reverse(params);
-		// }
-		// // verify class from stack
-		// // System.out.println(String.format(format, "M", type,
-		// // i.getMethodName(constantPoolGen)));
-		// System.out.println(i.consumeStack(constantPoolGen));
-		// System.out.println(i.getIndex());
-		// System.out.println(i.getLength());
-		// System.out.println(i.getMethodName(constantPoolGen));
-		// System.out.println(i.getName());
-		// System.out.println(i.getName(constantPoolGen));
-		// System.out.println(i.getSignature(constantPoolGen));
-		// System.out.println(i.produceStack(constantPoolGen));
-		// System.out.println(i.toString());
-		// System.out.println(i.getLoadClassType(constantPoolGen));
-		// System.out.println(i.getOpcode());
-		// System.out.println(i.getReferenceType(constantPoolGen));
-		// System.out.println(i.getReturnType(constantPoolGen));
-		// System.out.println(i.getType(constantPoolGen));
-		//
-		// System.out.println("------------------------");
-
-		Type[] types = i.getArgumentTypes(constantPoolGen);// this.method.getArgumentTypes();
-		int length = types.length;
-		String type = "(";
-		for (int j = 0; j < length; j++) {
-			type += ((j + 1) == length) ? types[j] : types[j] + ",";
-		}
-		type += ")";
-		String methodName = i.getMethodName(constantPoolGen);
-		System.out.println(String.format(format, "O",
-				i.getReferenceType(constantPoolGen), methodName)
-				+ " " + type);
-		List<Object> params = new ArrayList<Object>();
-		int c = types.length;
-		if (length > 0) {
-			// keep in params, reverse order from temp stack
-			Object object;
-			boolean result;
+		try {
+			Type[] types = i.getArgumentTypes(constantPoolGen);// this.method.getArgumentTypes();
+			int length = types.length;
+			String type = "(";
 			for (int j = 0; j < length; j++) {
-				c--;
-				try {
-					// object = this.temporalVariables.pop();
-					object = this.temporalVariables.peek();
-					// result = isSameType(types[c], object);
-					result = isSameType(types[c].toString(), object.toString());
-					if (result) {
-						object = this.temporalVariables.pop();
-					} else {
+				type += ((j + 1) == length) ? types[j] : types[j] + ",";
+			}
+			type += ")";
+			String methodName = i.getMethodName(constantPoolGen);
+			System.out
+					.println(String.format(format, "O",
+							i.getReferenceType(constantPoolGen), methodName)
+							+ " "
+							+ type
+							+ "\n------------------------------------------------------------------------------------------\n");
+			List<Object> params = new ArrayList<Object>();
+			int c = types.length;
+			if (length > 0) {
+				// keep in params, reverse order from temp stack
+				Object object;
+				boolean result;
+				for (int j = 0; j < length; j++) {
+					c--;
+					try {
+						// object = this.temporalVariables.pop();
+						object = this.temporalVariables.peek();
+						// result = isSameType(types[c], object);
+						result = isSameType(types[c].toString(),
+								object.toString());
+						if (result) {
+							object = this.temporalVariables.pop();
+						} else {
+							object = types[c];
+						}
+					} catch (Exception e) {
 						object = types[c];
 					}
-				} catch (Exception e) {
-					object = types[c];
+					params.add(object);
 				}
-				params.add(object);
 			}
-		}
-		if (params.size() > 1) {
-			Collections.reverse(params);
-		}
-
-		Object stackObject = this.temporalVariables.peek();
-		String classType = i.getReferenceType(constantPoolGen).toString();
-		String stackType = stackObject.toString();
-		if (isSameType(classType, stackType)) {
-			classType = stackType;
-		}
-
-		Description description = null;
-		try {
-			if (stackObject instanceof Description) {
-				description = (Description) stackObject;
+			if (params.size() > 1) {
+				Collections.reverse(params);
 			}
+
+			Object stackObject = this.temporalVariables.peek();
+			String classType = i.getReferenceType(constantPoolGen).toString();
+			String stackType = stackObject.toString();
+			if (isSameType(classType, stackType)) {
+				classType = stackType;
+			}
+
+			Description description = null;
+			try {
+				if (stackObject instanceof Description) {
+					description = (Description) stackObject;
+				}
+			} catch (Exception e) {
+
+			}
+			MethodVisitor methodVisitor = null;
+			Object returnType = null;
+			if (description != null) {
+				// Description copiedDescription = description.copy();
+				// this.temporalVariables.add(copiedDescription);
+				// System.out.println("STACK: " + this.temporalVariables);
+				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
+						description, methodName, types, true);
+				// if (!this.description.isSuperClassObjectInitiated) {
+				// if (this.description.getSuperClassDescription().toString()
+				// .equalsIgnoreCase(description.toString())) {
+				// this.description.isSuperClassObjectInitiated = true;
+				// this.description.setSuperClassDescription(description);
+				// }
+				// }
+				if (methodVisitor != null) {
+					returnType = methodVisitor.start(this.node, params, false);
+				}
+			} else {
+				// this.temporalVariables.add(i.getReferenceType(constantPoolGen));
+			}
+			if (!returnType.toString().equalsIgnoreCase("void")) {
+				this.temporalVariables.add(returnType);
+			}
+
+			System.out.println("------------------------");
 		} catch (Exception e) {
-
+			System.err
+					.println("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
 		}
-		MethodVisitor methodVisitor = null;
-		Object returnType = null;
-		if (description != null) {
-			// Description copiedDescription = description.copy();
-			// this.temporalVariables.add(copiedDescription);
-			// System.out.println("STACK: " + this.temporalVariables);
-			methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
-					description, methodName, types, true);
-			// if (!this.description.isSuperClassObjectInitiated) {
-			// if (this.description.getSuperClassDescription().toString()
-			// .equalsIgnoreCase(description.toString())) {
-			// this.description.isSuperClassObjectInitiated = true;
-			// this.description.setSuperClassDescription(description);
-			// }
-			// }
-			returnType = methodVisitor.start(this.node, params, false);
-		} else {
-			// this.temporalVariables.add(i.getReferenceType(constantPoolGen));
-		}
-		if (!returnType.toString().equalsIgnoreCase("void")) {
-			this.temporalVariables.add(returnType);
-		}
-
-		System.out.println("------------------------");
 	}
 
 	// @Override
@@ -838,77 +841,93 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	@Override
 	public void visitINVOKESPECIAL(INVOKESPECIAL i) {
-		Type[] types = i.getArgumentTypes(constantPoolGen);// this.method.getArgumentTypes();
-		int length = types.length;
-		String type = "(";
-		for (int j = 0; j < length; j++) {
-			type += ((j + 1) == length) ? types[j] : types[j] + ",";
-		}
-		type += ")";
-		String methodName = i.getMethodName(constantPoolGen);
-		System.out.println(String.format(format, "O",
-				i.getReferenceType(constantPoolGen), methodName)
-				+ " " + type);
-		List<Object> params = new ArrayList<Object>();
-		int c = types.length;
-		if (length > 0) {
-			// keep in params, reverse order from temp stack
-			Object object;
-			boolean result;
+		try {
+			Type[] types = i.getArgumentTypes(constantPoolGen);// this.method.getArgumentTypes();
+			int length = types.length;
+			String type = "(";
 			for (int j = 0; j < length; j++) {
-				c--;
-				try {
-					// object = this.temporalVariables.pop();
-					object = this.temporalVariables.peek();
-					// result = isSameType(types[c], object);
-					result = isSameType(types[c].toString(), object.toString());
-					if (result) {
-						object = this.temporalVariables.pop();
-					} else {
+				type += ((j + 1) == length) ? types[j] : types[j] + ",";
+			}
+			type += ")";
+			String methodName = i.getMethodName(constantPoolGen);
+			System.out
+					.println(String.format(format, "O",
+							i.getReferenceType(constantPoolGen), methodName)
+							+ " "
+							+ type
+							+ "\n------------------------------------------------------------------------------------------\n");
+			List<Object> params = new ArrayList<Object>();
+			int c = types.length;
+			if (length > 0) {
+				// keep in params, reverse order from temp stack
+				Object object;
+				boolean result;
+				for (int j = 0; j < length; j++) {
+					c--;
+					try {
+						// object = this.temporalVariables.pop();
+						object = this.temporalVariables.peek();
+						// result = isSameType(types[c], object);
+						result = isSameType(types[c].toString(),
+								object.toString());
+						if (result) {
+							object = this.temporalVariables.pop();
+						} else {
+							object = types[c];
+						}
+					} catch (Exception e) {
 						object = types[c];
 					}
-				} catch (Exception e) {
-					object = types[c];
-				}
-				params.add(object);
-			}
-		}
-		if (params.size() > 1) {
-			Collections.reverse(params);
-		}
-		Description description = this.description.getDescriptionByClassName(i
-				.getReferenceType(constantPoolGen).toString());
-		MethodVisitor methodVisitor = null;
-		if (description != null) {
-			Description copiedDescription = description.copy();
-			this.temporalVariables.add(copiedDescription);
-			System.out.println("STACK: " + this.temporalVariables);
-			methodVisitor = copiedDescription
-					.getMethodVisitorByNameAndTypeArgs(copiedDescription,
-							methodName, types, false);
-			if (!this.description.isSuperClassObjectInitiated) {
-				if (this.description.getSuperClassDescription().toString()
-						.equalsIgnoreCase(copiedDescription.toString())) {
-					this.description.isSuperClassObjectInitiated = true;
-					this.description
-							.setSuperClassDescription(copiedDescription);
+					params.add(object);
 				}
 			}
-			if (methodVisitor != null) {
-				methodVisitor.start(this.node, params, this.isStaticCall);
+			if (params.size() > 1) {
+				Collections.reverse(params);
 			}
-		} else {
-			this.temporalVariables.add(i.getReferenceType(constantPoolGen));
-		}
+			Description description = this.description
+					.getDescriptionByClassName(i.getReferenceType(
+							constantPoolGen).toString());
+			// if (methodName.equalsIgnoreCase("<clinit>")
+			// && description.isVisitedToCheckStaticField) {
+			// return;
+			// }
+			MethodVisitor methodVisitor = null;
+			if (description != null) {
+				Description copiedDescription = description.copy();
+				this.temporalVariables.add(copiedDescription);
+				System.out.println("STACK: " + this.temporalVariables);
+				methodVisitor = copiedDescription
+						.getMethodVisitorByNameAndTypeArgs(copiedDescription,
+								methodName, types, false);
+				if (!this.description.isSuperClassObjectInitiated) {
+					if (this.description.getSuperClassDescription().toString()
+							.equalsIgnoreCase(copiedDescription.toString())) {
+						this.description.isSuperClassObjectInitiated = true;
+						this.description
+								.setSuperClassDescription(copiedDescription);
+					}
+				}
+				if (methodVisitor != null) {
+					methodVisitor.start(this.node, params, this.isStaticCall);
+				}
+			} else {
+				this.temporalVariables.add(i.getReferenceType(constantPoolGen));
+			}
 
-		System.out.println("------------------------");
+			System.out.println("------------------------");
+		} catch (Exception e) {
+			System.err
+					.println("SOME ERROR FOUND: public void visitINVOKESPECIAL(INVOKESPECIAL i) ");
+		}
 	}
 
 	@Override
 	public void visitINVOKESTATIC(INVOKESTATIC i) {
-		System.out.println(String.format(format, "S",
-				i.getReferenceType(constantPoolGen),
-				i.getMethodName(constantPoolGen)));
+		System.out
+				.println(String.format(format, "S",
+						i.getReferenceType(constantPoolGen),
+						i.getMethodName(constantPoolGen))
+						+ "\n------------------------------------------------------------------------------------------\n");
 		System.out.println("------------------------");
 	}
 }
