@@ -23,27 +23,57 @@ public class Example {
 	// static H valsH = new H();
 	// static J valsJ = new J();
 	// static M bba = null;
+	// static V v;
 
 	public static void main(String[] args) {
+		// U u = new R();
+		// v = u.getV();
 		// new R();
 		// new G(2);
-		M bba = new M();
 		// A ba = G.valueOfB;
 		// ba = new E();
 		// G.valueOfB = new D();
 		// new G(5, 6);
 		//
-		double val = 0.0;
-		int a = 5;
+
+		// byte b1 = 0;
+		// short s1 = 0;
+		int i1 = 0;
+		// boolean bo1 = false;
+		// float f1 = 0.0f;
+		// double d1 = 0.0d;
+		// double d2 = 0.0;
+		//
+		// float f2 = (float) 0.5;
+
+		double d3 = 5;
+		// long l1 = 0L;
+		// long l2 = 555;
+		//
+		// char c1 = 'c';
+		// String st1 = null;
+		// String st2 = "Hi";
+
+		M bba = new M();
+		// double val = 0.0;
+		// int a = 5;
 		// F fval = new F(5);
 		// N nval = fval.getN(val);
 		// M mval = new M();
 		// O oval = new O();
 
-		// M fava = new F(5).getN(val).getM(new O());
+		// M mava = new F(5).getN(val).getM(new O());
 
-		A b = new B(new F(5).getN(val).getM(new O()));
-		E em = b.foos(null, 4, 1.5, new M(new N(new O(new P(bba)))));
+		// A b = new B(new F(5).getN(val).getM(new O()));
+		// P p = new P(bba, 5, "KO", new M(), d3);
+		// A bb = new B();
+		A b = new B();
+		String vvv = "J";
+		// E emm = bb.foos(null, 4, 1.5, null);
+		// T nu = emm.valA();
+		int a = 5;
+		double d = 4.5;
+		E em = b.foos(null, a, d, new M(new N(new O(new P(bba)))), vvv);
 		// int v = em.val();
 		// E em = b.foos(new E(), 5, new M());
 

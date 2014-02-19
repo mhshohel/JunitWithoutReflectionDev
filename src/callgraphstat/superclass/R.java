@@ -4,6 +4,10 @@ public class R extends U {
 	T tval = null;
 	S sval = null;
 
+	V getV() {
+		return null;
+	}
+
 	public R() {
 		sval = new S();
 		// U v = new U();

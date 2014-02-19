@@ -55,6 +55,7 @@ import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.PUTFIELD;
 import org.apache.bcel.generic.PUTSTATIC;
+import org.apache.bcel.generic.PushInstruction;
 import org.apache.bcel.generic.RETURN;
 import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ReturnInstruction;
@@ -317,11 +318,22 @@ public final class MethodVisitor extends EmptyVisitor implements
 					|| i.getName().equalsIgnoreCase("aastore")) {
 				i.accept(this);
 			} else if (!visitInstruction(i)) {
+				System.out
+						.println("\t\t\tPUSH INSTRUCTIONS: "
+								+ InstructionConstants.INSTRUCTIONS[i
+										.getOpcode()]
+								+ ((i instanceof PushInstruction) ? " TRUE"
+										: " FALSE"));
+
+				if (i instanceof PushInstruction) {
+					this.temporalVariables.add(Description.UNKNOWN);
+				}
+
 				i.accept(this);
 			} else {
 				if (i.getName().equalsIgnoreCase("aconst_null")) {
-					this.temporalVariables.add(Description.NULL);
-					System.err.println("\t\t\t\t\tNULL");
+					this.temporalVariables.add(Description.UNKNOWN);
+					System.err.println("\t\t\t\t\t" + Description.UNKNOWN);
 				}
 				// else {
 				// this.temporalVariables.add(Description.UNKNOWN);
@@ -555,32 +567,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 		this.castType = obj.getType(constantPoolGen).toString();
 	}
 
-	@Override
-	public void visitAASTORE(AASTORE obj) {
-		try {
-			int size = this.temporalVariables.size();
-			Object dataObject = this.temporalVariables.peek();
-			Object arrayObjcet = this.temporalVariables.get(size - 2);
-			if (arrayObjcet instanceof ArrayObjectProvider) {
-				ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) arrayObjcet;
-				arrayObjectProvider.arrayObjects.put(dataObject.toString(),
-						dataObject);
-				// TODO: verify me
-				this.temporalVariables.pop();
-				this.temporalVariables.pop();
-			}
-		} catch (Exception e) {
-
-		}
-	}
-
-	@Override
-	public void visitAALOAD(AALOAD obj) {
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(constantPoolGen).getSignature());
-		System.out.println("\t\t" + obj.getType(constantPoolGen));
-	}
-
 	// @Override
 	// public void visitANEWARRAY(ANEWARRAY obj) {
 	// System.out.println("\t\t" + obj.getName() + "   --->   "
@@ -638,11 +624,61 @@ public final class MethodVisitor extends EmptyVisitor implements
 		return -1;
 	}
 
+	// use this carefully, from start unknown added is push instruction found,
+	// but is data loaded by push instruction implemented class then pop unknown
+	private void removeUnknownValueIfPushInstruction(Class<?> cls) {
+		if (PushInstruction.class.isAssignableFrom(cls)) {
+			try {
+				if (this.temporalVariables != null
+						&& !this.temporalVariables.isEmpty()
+						|| this.temporalVariables.peek().toString()
+								.equalsIgnoreCase(Description.UNKNOWN)) {
+					this.temporalVariables.pop();
+					System.err.println("\t\t\tUNKNOWN VALUE FOUND AND REMOVED");
+				}
+			} catch (Exception e) {
+			}
+		}
+	}
+
+	@Override
+	public void visitAASTORE(AASTORE obj) {
+		try {
+			removeUnknownValueIfPushInstruction(AASTORE.class);
+			int size = this.temporalVariables.size();
+			Object dataObject = this.temporalVariables.peek();
+			Object arrayObjcet = this.temporalVariables.get(size - 2);
+			if (arrayObjcet instanceof ArrayObjectProvider) {
+				ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) arrayObjcet;
+				arrayObjectProvider.arrayObjects.put(dataObject.toString(),
+						dataObject);
+				// TODO: verify me
+				this.temporalVariables.pop();
+				this.temporalVariables.pop();
+			}
+		} catch (Exception e) {
+			System.err.println("FOUND IN AASTORE");
+		}
+	}
+
+	@Override
+	public void visitAALOAD(AALOAD obj) {
+		try {
+			removeUnknownValueIfPushInstruction(AALOAD.class);
+			System.out.println("\t\t" + obj.getName() + "   --->   "
+					+ obj.getType(constantPoolGen).getSignature());
+			System.out.println("\t\t" + obj.getType(constantPoolGen));
+		} catch (Exception e) {
+			System.err.println("FOUND IN AALOAD");
+		}
+	}
+
 	// obj.getIndex()
 	@Override
 	public void visitALOAD(ALOAD obj) {
 		// String name = this.localVariableGens[obj.getIndex()].getName();
 		try {
+			removeUnknownValueIfPushInstruction(ALOAD.class);
 			int index = getLocalVariablesIndex(obj.getIndex());
 			if (index != -1) {
 				String name = this.localVariableGens[index].getName();// localVariable.getName();
@@ -659,6 +695,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 	@Override
 	public void visitASTORE(ASTORE obj) {
 		try {
+			removeUnknownValueIfPushInstruction(ASTORE.class);
 			int index = getLocalVariablesIndex(obj.getIndex());
 			if (index != -1) {
 				String name = this.localVariableGens[index].getName();// localVariable.getName();
@@ -674,49 +711,69 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	@Override
 	public void visitPUTFIELD(PUTFIELD obj) {
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(constantPoolGen).getSignature());
+		try {
+			removeUnknownValueIfPushInstruction(PUTFIELD.class);
+			System.out.println("\t\t" + obj.getName() + "   --->   "
+					+ obj.getType(constantPoolGen).getSignature());
 
-		System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
-		System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
-		storeValues("PUTFIELD", obj.getFieldName(constantPoolGen),
-				obj.getFieldType(constantPoolGen),
-				obj.getReferenceType(constantPoolGen));
+			System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
+			System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
+			storeValues("PUTFIELD", obj.getFieldName(constantPoolGen),
+					obj.getFieldType(constantPoolGen),
+					obj.getReferenceType(constantPoolGen));
+		} catch (Exception e) {
+			System.err.println("FOUND IN PUTFIELD");
+		}
 	}
 
 	@Override
 	public void visitGETFIELD(GETFIELD obj) {
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(constantPoolGen).getSignature());
-		System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
-		System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
-		loadValues("GETFIELD", obj.getFieldName(constantPoolGen),
-				obj.getFieldType(constantPoolGen),
-				obj.getReferenceType(constantPoolGen));
+		try {
+			removeUnknownValueIfPushInstruction(GETFIELD.class);
+			System.out.println("\t\t" + obj.getName() + "   --->   "
+					+ obj.getType(constantPoolGen).getSignature());
+			System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
+			System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
+			loadValues("GETFIELD", obj.getFieldName(constantPoolGen),
+					obj.getFieldType(constantPoolGen),
+					obj.getReferenceType(constantPoolGen));
+		} catch (Exception e) {
+			System.err.println("FOUND IN GETFIELD");
+		}
 	}
 
 	@Override
 	public void visitPUTSTATIC(PUTSTATIC obj) {
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(constantPoolGen).getSignature());
-		System.out.println("\t\t" + obj.getReferenceType(constantPoolGen));
-		System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
-		System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
-		storeValues("PUTSTATIC", obj.getFieldName(constantPoolGen),
-				obj.getFieldType(constantPoolGen),
-				obj.getReferenceType(constantPoolGen));
+		try {
+			removeUnknownValueIfPushInstruction(PUTSTATIC.class);
+			System.out.println("\t\t" + obj.getName() + "   --->   "
+					+ obj.getType(constantPoolGen).getSignature());
+			System.out.println("\t\t" + obj.getReferenceType(constantPoolGen));
+			System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
+			System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
+			storeValues("PUTSTATIC", obj.getFieldName(constantPoolGen),
+					obj.getFieldType(constantPoolGen),
+					obj.getReferenceType(constantPoolGen));
+		} catch (Exception e) {
+			System.err.println("FOUND IN PUTSTATIC");
+		}
 	}
 
 	@Override
 	public void visitGETSTATIC(GETSTATIC obj) {
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(constantPoolGen).getSignature());
-		System.out.println("\t\t" + obj.getReferenceType(constantPoolGen));
-		System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
-		System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
-		loadValues("GETSTATIC", obj.getFieldName(constantPoolGen),
-				obj.getFieldType(constantPoolGen),
-				obj.getReferenceType(constantPoolGen));
+		try {
+			removeUnknownValueIfPushInstruction(GETSTATIC.class);
+			System.out.println("\t\t" + obj.getName() + "   --->   "
+					+ obj.getType(constantPoolGen).getSignature());
+			System.out.println("\t\t" + obj.getReferenceType(constantPoolGen));
+			System.out.println("\t\t" + obj.getFieldName(constantPoolGen));
+			System.out.println("\t\t" + obj.getFieldType(constantPoolGen));
+			loadValues("GETSTATIC", obj.getFieldName(constantPoolGen),
+					obj.getFieldType(constantPoolGen),
+					obj.getReferenceType(constantPoolGen));
+		} catch (Exception e) {
+			System.err.println("FOUND IN GETSTATIC");
+		}
 	}
 
 	@Override
@@ -780,6 +837,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 						if (result) {
 							object = this.temporalVariables.pop();
 						} else {
+							if (object.toString().equalsIgnoreCase(
+									Description.UNKNOWN)) {
+								this.temporalVariables.pop();
+							}
 							object = types[c];
 						}
 					} catch (Exception e) {
@@ -792,7 +853,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 				Collections.reverse(params);
 			}
 
+			// TODO: VERIFY MUST remove Description.NULL from stack
 			Object stackObject = this.temporalVariables.peek();
+
 			String classType = i.getReferenceType(constantPoolGen).toString();
 			String stackType = stackObject.toString();
 			if (isSameType(classType, stackType)) {
@@ -828,7 +891,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 			} else {
 				// this.temporalVariables.add(i.getReferenceType(constantPoolGen));
 			}
-			if (!returnType.toString().equalsIgnoreCase("void")) {
+			if (returnType != null
+					&& !returnType.toString().equalsIgnoreCase("void")) {
 				this.temporalVariables.add(returnType);
 			}
 
@@ -849,6 +913,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 	@Override
 	public void visitINVOKESPECIAL(INVOKESPECIAL i) {
 		try {
+			Object returnType = null;
 			Type[] types = i.getArgumentTypes(constantPoolGen);// this.method.getArgumentTypes();
 			int length = types.length;
 			String type = "(";
@@ -880,6 +945,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 						if (result) {
 							object = this.temporalVariables.pop();
 						} else {
+							if (object.toString().equalsIgnoreCase(
+									Description.UNKNOWN)) {
+								this.temporalVariables.pop();
+							}
 							object = types[c];
 						}
 					} catch (Exception e) {
@@ -915,7 +984,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 					}
 				}
 				if (methodVisitor != null) {
-					methodVisitor.start(this.node, params, this.isStaticCall);
+					returnType = methodVisitor.start(this.node, params,
+							this.isStaticCall);
 				}
 			} else {
 				this.temporalVariables.add(i.getReferenceType(constantPoolGen));

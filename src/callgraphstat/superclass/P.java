@@ -7,6 +7,10 @@ public class P {
 		this.m = m;
 	}
 
+	P(M m, int m1, String m2, M m3, double m4) {
+
+	}
+
 	P() {
 	}
 

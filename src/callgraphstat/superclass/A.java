@@ -36,7 +36,7 @@ public class A {
 		// E ev = dval.valA();
 	}
 
-	public E foos(Object object, int i, double d, M m) {
+	public E foos(Object object, int i, double d, M m, String stv) {
 		return new P().getE();
 	}
 

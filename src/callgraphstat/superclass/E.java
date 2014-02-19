@@ -5,7 +5,7 @@ public class E extends A {
 		return 0;
 	}
 
-	// E valA() {
-	// return new E();
-	// }
+	T valA() {
+		return new T();
+	}
 }
