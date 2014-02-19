@@ -50,7 +50,6 @@ import org.apache.bcel.generic.INVOKEVIRTUAL;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionConstants;
 import org.apache.bcel.generic.InstructionHandle;
-import org.apache.bcel.generic.LineNumberGen;
 import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.PUTFIELD;
@@ -778,29 +777,105 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	@Override
 	public void visitINVOKEINTERFACE(INVOKEINTERFACE i) {
-		Type type = i.getReferenceType(constantPoolGen);
-		boolean isCollectionOrMap = isCollectionsOrMap(type.toString());
-		boolean isStackCollectionOrMap = false;
-		Object object = null;
 		try {
-			object = this.temporalVariables.peek();
-			if (object instanceof ArrayObjectProvider) {
-				isStackCollectionOrMap = true;
+			Type[] types = i.getArgumentTypes(constantPoolGen);// this.method.getArgumentTypes();
+			int length = types.length;
+			String type = "(";
+			for (int j = 0; j < length; j++) {
+				type += ((j + 1) == length) ? types[j] : types[j] + ",";
 			}
+			type += ")";
+			String methodName = i.getMethodName(constantPoolGen);
+			System.out
+					.println(String.format(format, "O",
+							i.getReferenceType(constantPoolGen), methodName)
+							+ " "
+							+ type
+							+ "\n------------------------------------------------------------------------------------------\n");
+			List<Object> params = new ArrayList<Object>();
+			int c = types.length;
+			if (length > 0) {
+				// keep in params, reverse order from temp stack
+				Object object;
+				boolean result;
+				for (int j = 0; j < length; j++) {
+					c--;
+					try {
+						// object = this.temporalVariables.pop();
+						object = this.temporalVariables.peek();
+						// result = isSameType(types[c], object);
+						result = isSameType(types[c].toString(),
+								object.toString());
+						if (result) {
+							object = this.temporalVariables.pop();
+						} else {
+							if (object.toString().equalsIgnoreCase(
+									Description.UNKNOWN)) {
+								this.temporalVariables.pop();
+							}
+							object = types[c];
+						}
+					} catch (Exception e) {
+						object = types[c];
+					}
+					params.add(object);
+				}
+			}
+			if (params.size() > 1) {
+				Collections.reverse(params);
+			}
+
+			// TODO: VERIFY MUST remove Description.NULL from stack and EMPTY
+			// STAFF
+			Object stackObject = (this.temporalVariables != null && !this.temporalVariables
+					.isEmpty()) ? this.temporalVariables.peek()
+					: Description.NULL;
+
+			String classType = i.getReferenceType(constantPoolGen).toString();
+			String stackType = stackObject.toString();
+			if (isSameType(classType, stackType)) {
+				classType = stackType;
+			}
+
+			Description description = null;
+			try {
+				if (stackObject instanceof Description) {
+					description = (Description) stackObject;
+				}
+			} catch (Exception e) {
+
+			}
+			MethodVisitor methodVisitor = null;
+			Object returnType = null;
+			if (description != null) {
+				// Description copiedDescription = description.copy();
+				// this.temporalVariables.add(copiedDescription);
+				// System.out.println("STACK: " + this.temporalVariables);
+				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
+						description, methodName, types, true);
+				// if (!this.description.isSuperClassObjectInitiated) {
+				// if (this.description.getSuperClassDescription().toString()
+				// .equalsIgnoreCase(description.toString())) {
+				// this.description.isSuperClassObjectInitiated = true;
+				// this.description.setSuperClassDescription(description);
+				// }
+				// }
+				if (methodVisitor != null) {
+					returnType = methodVisitor.start(this.node, params, false);
+				}
+			} else {
+				// this.temporalVariables.add(i.getReferenceType(constantPoolGen));
+			}
+			if (returnType != null
+					&& !returnType.toString().equalsIgnoreCase("void")) {
+				this.temporalVariables.add(returnType);
+			}
+
+			System.out.println("------------------------");
 		} catch (Exception e) {
-			isStackCollectionOrMap = false;
+			System.err
+					.println("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
 		}
-		if (isCollectionOrMap && isStackCollectionOrMap) {
-			// this.temporalVariables.add(e)
-		}
-		// String s = i.getType()(constantPoolGen).toString();
-		LocalVariableGen[] f = methodGen.getLocalVariables();
-		LineNumberGen[] lns = methodGen.getLineNumbers();
-		System.out
-				.println(String.format(format, "I", type,
-						i.getMethodName(constantPoolGen))
-						+ "\n------------------------------------------------------------------------------------------\n");
-		System.out.println("------------------------");
 	}
 
 	@Override
@@ -854,7 +929,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 			}
 
 			// TODO: VERIFY MUST remove Description.NULL from stack
-			Object stackObject = this.temporalVariables.peek();
+			Object stackObject = (this.temporalVariables != null && !this.temporalVariables
+					.isEmpty()) ? this.temporalVariables.peek()
+					: Description.NULL;
 
 			String classType = i.getReferenceType(constantPoolGen).toString();
 			String stackType = stackObject.toString();
@@ -1000,22 +1077,89 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	@Override
 	public void visitINVOKESTATIC(INVOKESTATIC i) {
-		System.out
-				.println(String.format(format, "S",
-						i.getReferenceType(constantPoolGen),
-						i.getMethodName(constantPoolGen))
-						+ "\n------------------------------------------------------------------------------------------\n");
-		System.out.println("------------------------");
+		try {
+			Type[] types = i.getArgumentTypes(constantPoolGen);// this.method.getArgumentTypes();
+			int length = types.length;
+			String type = "(";
+			for (int j = 0; j < length; j++) {
+				type += ((j + 1) == length) ? types[j] : types[j] + ",";
+			}
+			type += ")";
+			String methodName = i.getMethodName(constantPoolGen);
+			System.out
+					.println(String.format(format, "O",
+							i.getReferenceType(constantPoolGen), methodName)
+							+ " "
+							+ type
+							+ "\n------------------------------------------------------------------------------------------\n");
+			List<Object> params = new ArrayList<Object>();
+			int c = types.length;
+			if (length > 0) {
+				// keep in params, reverse order from temp stack
+				Object object;
+				boolean result;
+				for (int j = 0; j < length; j++) {
+					c--;
+					try {
+						// object = this.temporalVariables.pop();
+						object = this.temporalVariables.peek();
+						// result = isSameType(types[c], object);
+						result = isSameType(types[c].toString(),
+								object.toString());
+						if (result) {
+							object = this.temporalVariables.pop();
+						} else {
+							if (object.toString().equalsIgnoreCase(
+									Description.UNKNOWN)) {
+								this.temporalVariables.pop();
+							}
+							object = types[c];
+						}
+					} catch (Exception e) {
+						object = types[c];
+					}
+					params.add(object);
+				}
+			}
+			if (params.size() > 1) {
+				Collections.reverse(params);
+			}
+
+			String classType = i.getReferenceType(constantPoolGen).toString();
+			Description description = this.description
+					.getDescriptionByKey(classType);
+			MethodVisitor methodVisitor = null;
+			Object returnType = null;
+			if (description != null) {
+				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
+						description, methodName, types, true);
+				if (methodVisitor != null) {
+					returnType = methodVisitor.start(this.node, params, false);
+				}
+			} else {
+				// this.temporalVariables.add(i.getReferenceType(constantPoolGen));
+			}
+			if (returnType != null
+					&& !returnType.toString().equalsIgnoreCase("void")) {
+				this.temporalVariables.add(returnType);
+			}
+
+			System.out.println("------------------------");
+		} catch (Exception e) {
+			System.err
+					.println("SOME ERROR FOUND: public void visitINVOKESTATIC(INVOKESTATIC i)");
+		}
 	}
-}
 
-class ArrayObjectProvider {
-	// change key as object instead of string to keep all objects -- not done
-	// here
-	public Map<String, Object> arrayObjects = new LinkedHashMap<String, Object>();
-	public String arrayType = "";
+	final class ArrayObjectProvider {
+		// change key as object instead of string to keep all objects -- not
+		// done
+		// here
+		public Map<String, Object> arrayObjects = new LinkedHashMap<String, Object>();
+		public String arrayType = "";
 
-	public ArrayObjectProvider(String arrayType) {
-		this.arrayType = arrayType;
+		public ArrayObjectProvider(String arrayType) {
+			this.arrayType = arrayType;
+		}
 	}
 }

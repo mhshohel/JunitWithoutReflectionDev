@@ -24,8 +24,29 @@ public class Example {
 	// static J valsJ = new J();
 	// static M bba = null;
 	// static V v;
+	// public static M m;
+	// static T tt;
+	//
+	// public static void setVal(int a, V vv, M mm, float f, T t, String sv,
+	// String dn) {
+	// T tv = t;
+	// tt = tv;
+	// v = vv;
+	// m = mm;
+	// int aa = a;
+	// float ff = f;
+	// String svv = sv;
+	// svv = null;
+	// }
 
 	public static void main(String[] args) {
+		IInterface inter = new W();
+		inter.foo();
+
+		// T tval = R.getT();
+		// int n = 5;
+		// M m = new M();
+		// setVal(n, new V(), m, 5.2f, R.getT(), "Hi", null);
 		// U u = new R();
 		// v = u.getV();
 		// new R();
@@ -38,7 +59,7 @@ public class Example {
 
 		// byte b1 = 0;
 		// short s1 = 0;
-		int i1 = 0;
+		// int i1 = 0;
 		// boolean bo1 = false;
 		// float f1 = 0.0f;
 		// double d1 = 0.0d;
@@ -46,7 +67,7 @@ public class Example {
 		//
 		// float f2 = (float) 0.5;
 
-		double d3 = 5;
+		// double d3 = 5;
 		// long l1 = 0L;
 		// long l2 = 555;
 		//
@@ -54,7 +75,7 @@ public class Example {
 		// String st1 = null;
 		// String st2 = "Hi";
 
-		M bba = new M();
+		// M bba = new M();
 		// double val = 0.0;
 		// int a = 5;
 		// F fval = new F(5);
@@ -67,13 +88,13 @@ public class Example {
 		// A b = new B(new F(5).getN(val).getM(new O()));
 		// P p = new P(bba, 5, "KO", new M(), d3);
 		// A bb = new B();
-		A b = new B();
-		String vvv = "J";
+		// A b = new B();
+		// String vvv = "J";
 		// E emm = bb.foos(null, 4, 1.5, null);
 		// T nu = emm.valA();
-		int a = 5;
-		double d = 4.5;
-		E em = b.foos(null, a, d, new M(new N(new O(new P(bba)))), vvv);
+		// int a = 5;
+		// double d = 4.5;
+		// E em = b.foos(null, a, d, new M(new N(new O(new P(bba)))), vvv);
 		// int v = em.val();
 		// E em = b.foos(new E(), 5, new M());
 

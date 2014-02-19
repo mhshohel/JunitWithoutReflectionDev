@@ -351,6 +351,10 @@ public final class Description implements Comparable<Description> {
 		return null;
 	}
 
+	public final Description getDescriptionByKey(String key) {
+		return this.classDescriptions.get(key);
+	}
+
 	@Override
 	public int compareTo(Description description) {
 		return this.getActualClass().getName()
