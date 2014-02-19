@@ -40,7 +40,6 @@ import org.apache.bcel.generic.ASTORE;
 import org.apache.bcel.generic.CHECKCAST;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.ConstantPushInstruction;
-import org.apache.bcel.generic.DSTORE;
 import org.apache.bcel.generic.EmptyVisitor;
 import org.apache.bcel.generic.GETFIELD;
 import org.apache.bcel.generic.GETSTATIC;
@@ -74,6 +73,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 	private String node = "";
 	private LocalVariableGen[] localVariableGens = null;
 	private LocalVariableTable localVariableTable = null;
+	private LocalVariable[] localVariableArray = null;
 	// private ExtractMethod extractMethod = null;
 	private Stack<Object> temporalVariables;
 	// String: key=var name, value=Description
@@ -97,6 +97,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 		this.localVariableGens = methodGen.getLocalVariables();
 		this.localVariableTable = methodGen
 				.getLocalVariableTable(constantPoolGen);
+		this.localVariableArray = this.localVariableTable
+				.getLocalVariableTable();
 		for (LocalVariableGen localVariableGen : this.localVariableGens) {
 			if (localVariableGen.getName().equalsIgnoreCase(Description.THIS)) {
 				Stack<Object> object = new Stack<Object>();
@@ -347,11 +349,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 			}
 		}
 		return returnType;
-	}
-
-	public void visitDSTORE(DSTORE obj) {
-		int v = obj.getIndex();
-		String name = this.localVariableGens[obj.getIndex()].getName();
 	}
 
 	// private boolean addSource(String source, String target) {
@@ -632,36 +629,46 @@ public final class MethodVisitor extends EmptyVisitor implements
 	// System.out.println("\t\t" + obj.getType(constantPoolGen));
 	// }
 
+	public final int getLocalVariablesIndex(int index) {
+		for (int i = 0; i < this.localVariableArray.length; i++) {
+			if (this.localVariableArray[i].getIndex() == index) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	// obj.getIndex()
 	@Override
 	public void visitALOAD(ALOAD obj) {
-		String name = this.localVariableGens[obj.getIndex()].getName();
-		System.out.println("LOAD: " + name + "   "
-				+ this.localVariableGens[obj.getIndex()].getType());
-		loadValues("ALOAD", name,
-				this.localVariableGens[obj.getIndex()].getType(), null);
+		// String name = this.localVariableGens[obj.getIndex()].getName();
+		try {
+			int index = getLocalVariablesIndex(obj.getIndex());
+			if (index != -1) {
+				String name = this.localVariableGens[index].getName();// localVariable.getName();
+				System.out.println("LOAD: " + name + "   "
+						+ this.localVariableGens[index].getType());
+				loadValues("ALOAD", name,
+						this.localVariableGens[index].getType(), null);
+			}
+		} catch (Exception e) {
+			System.err.println("FOUND IN ALOAD");
+		}
 	}
 
 	@Override
 	public void visitASTORE(ASTORE obj) {
 		try {
-			int v = obj.getIndex();
-			String s = obj.getName();
-
-			LocalVariableTable lvt = methodGen
-					.getLocalVariableTable(constantPoolGen);
-
-			LocalVariable[] lll = lvt.getLocalVariableTable();
-			int hhh = lll[2].getIndex();
-
-			String name = this.localVariableGens[obj.getIndex()].getName();
-
-			System.out.println("STORE: " + name + "   "
-					+ this.localVariableGens[obj.getIndex()].getType());
-
-			storeValues("ASTORE", name,
-					this.localVariableGens[obj.getIndex()].getType(), null);
+			int index = getLocalVariablesIndex(obj.getIndex());
+			if (index != -1) {
+				String name = this.localVariableGens[index].getName();// localVariable.getName();
+				System.out.println("STORE: " + name + "   "
+						+ this.localVariableGens[index].getType());
+				storeValues("ASTORE", name,
+						this.localVariableGens[index].getType(), null);
+			}
 		} catch (Exception e) {
-			System.err.println("FOUND");
+			System.err.println("FOUND IN ASTORE");
 		}
 	}
 
