@@ -50,7 +50,24 @@ public class Example {
 		return val;
 	}
 
+	static void getVal(IInterface val) {
+
+	}
+
+	static int sval = 0;
+
 	public static void main(String[] args) {
+		int a = 10;
+		int b = a;
+		sval = 5;
+		new W().pushval(sval);
+		new W().pushval(8);
+		getVal(new W());
+		getVal(new W());
+		getVal(new W());
+		getVal(new X());
+		// W w = new W();
+		// w.pushval(sval);
 		// Object obj = getVal(null);
 		// aa = 5;
 		// long i = 500000000;
@@ -60,8 +77,8 @@ public class Example {
 		// R.getT();
 		// setVval(R.getT());
 
-		// IInterface inter = new W();
-		// inter.foo();
+		IInterface inter = new W();
+		inter.foo();
 
 		// T tval = R.getT();
 		// int n = 5;
@@ -109,29 +126,29 @@ public class Example {
 		// int con = (int) d1;
 
 		// int kks = getVal();
-		M bba = new M();
-		double val = 0.0;
-		int a = 5;
-		F fval = new F(5);
-		N nval = fval.getN(val);
-		M mval = new M();
-		O oval = new O();
-
-		M mava = new F(5).getN(val).getM(new O());
-		double d3 = 5;
-		A b = new B(new F(5).getN(val).getM(new O()));
-		P p = new P(bba, 5, "KO", new M(), d3);
-		A bb = new B();
-		// A b = new B();
-		String vvv = "J";
-		E emm = bb.foos(null, 4, 1.5, null, "J");
-
-		T nu = emm.valA();
-		int aaaa = 5;
-		double d = 4.5;
-		E em = b.foos(null, a, d, new M(new N(new O(new P(bba)))), vvv);
-		int v = em.val();
-		E ems = b.foos(new E(), 5, new M());
+		// M bba = new M();
+		// double val = 0.0;
+		// int a = 5;
+		// F fval = new F(5);
+		// N nval = fval.getN(val);
+		// M mval = new M();
+		// O oval = new O();
+		//
+		// M mava = new F(5).getN(val).getM(new O());
+		// double d3 = 5;
+		// A b = new B(new F(5).getN(val).getM(new O()));
+		// P p = new P(bba, 5, "KO", new M(), d3);
+		// A bb = new B();
+		// // A b = new B();
+		// String vvv = "J";
+		// E emm = bb.foos(null, 4, 1.5, null, "J");
+		//
+		// T nu = emm.valA();
+		// int aaaa = 5;
+		// double d = 4.5;
+		// E em = b.foos(null, a, d, new M(new N(new O(new P(bba)))), vvv);
+		// int v = em.val();
+		// E ems = b.foos(new E(), 5, new M());
 
 		// List<K> list = new ArrayList<K>();
 		// list.add(new K());

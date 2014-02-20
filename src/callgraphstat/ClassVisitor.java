@@ -77,7 +77,7 @@ public final class ClassVisitor extends EmptyVisitor {
 		return classVisitor;
 	}
 
-	public final Stack<Object> getValuesFromField(ClassVisitor classVisitor,
+	private final Stack<Object> getValuesFromField(ClassVisitor classVisitor,
 			String fieldName) {
 		Stack<Object> fields = null;
 		try {
@@ -135,15 +135,6 @@ public final class ClassVisitor extends EmptyVisitor {
 		return value;
 	}
 
-	// public final Stack<Object> getValuesFromFieldByFieldName(String key) {
-	// Stack<Object> values = null;
-	// try {
-	// values = this.fields.get(key);
-	// } catch (Exception e) {
-	// }
-	// return values;
-	// }
-
 	public void addValueToField(ClassVisitor classVisitor, String fieldName,
 			Object value, ReferenceType referenceType, Object object) {
 		boolean isSame = (referenceType.toString()
@@ -166,19 +157,4 @@ public final class ClassVisitor extends EmptyVisitor {
 		} catch (Exception e) {
 		}
 	}
-
-	// public void visitConstantPool(ConstantPool constantPool) {
-	// for (int i = 0; i < constantPool.getLength(); i++) {
-	// Constant constant = constantPool.getConstant(i);
-	// if (constant == null)
-	// continue;
-	// if (constant.getTag() == 7) {
-	// constantPool.constantToString(constant);
-	// }
-	// }
-	// }
-	//
-	// public void start() {
-	// // this.javaClass.getConstantPool().accept(this);
-	// }
 }

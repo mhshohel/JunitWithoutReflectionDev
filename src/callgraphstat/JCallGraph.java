@@ -98,9 +98,6 @@ public final class JCallGraph {
 	private Map<String, Description> classDescriptions = new LinkedHashMap<String, Description>();
 	private File file = null;
 
-	// String as src node
-	// private Map<String, Edge> edges = new LinkedHashMap<String, Edge>();
-
 	public JCallGraph(File file, String pack) throws Exception {
 		this.file = file;
 		readFiles(this.file, pack);

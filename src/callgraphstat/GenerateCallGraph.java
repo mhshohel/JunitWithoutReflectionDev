@@ -26,17 +26,13 @@ public final class GenerateCallGraph {
 		}
 	}
 
-	private void start() {
-		// // try to keep values from start --- not done
-		// in class visitor pass params, maybe static var too, check that
-		// this.mainClass.getClassVisitor().start();
-		// pass source and params
-		// initiateStaticFieldOfEachDescribedClass();
-		// this.mainClass.getMethodVisitorByName("<clinit>").get(0)
-		// .start(null, new ArrayList<Object>(), false);
-
-		this.mainMethod.start(null, new ArrayList<Object>(), false);
-		this.mainMethod = null;
-		this.mainClass = null;
+	private void start() throws Exception {
+		try {
+			this.mainMethod.start(null, new ArrayList<Object>(), false);
+			this.mainMethod = null;
+			this.mainClass = null;
+		} catch (Exception e) {
+			throw new Exception(e.getMessage());
+		}
 	}
 }

@@ -355,6 +355,10 @@ public final class Description implements Comparable<Description> {
 		return this.classDescriptions.get(key);
 	}
 
+	public boolean hasDescription(String key) {
+		return this.classDescriptions.containsKey(key);
+	}
+
 	@Override
 	public int compareTo(Description description) {
 		return this.getActualClass().getName()
@@ -458,28 +462,6 @@ public final class Description implements Comparable<Description> {
 		}
 		return methodVisitor;
 	}
-
-	// private MethodVisitor getMethodVisitorByNameAndTypeArgs(
-	// Description description, String methodName, Type[] methodTypeArgs) {
-	// String name = null;
-	// Type[] types = null;
-	// Method method = null;
-	// if (methodName == null) {
-	// return null;
-	// }
-	// for (Entry<Method, MethodVisitor> entry : description.methods
-	// .entrySet()) {
-	// method = entry.getKey();
-	// name = method.getName();
-	// types = method.getArgumentTypes();
-	// if (methodName.equalsIgnoreCase(name)) {
-	// if (Arrays.deepEquals(methodTypeArgs, types)) {
-	// return entry.getValue();
-	// }
-	// }
-	// }
-	// return null;
-	// }
 
 	public final List<MethodVisitor> getMethodVisitorByName(String methodName) {
 		String name = null;
