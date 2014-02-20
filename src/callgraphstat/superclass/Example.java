@@ -38,10 +38,23 @@ public class Example {
 	// String svv = sv;
 	// svv = null;
 	// }
+	//
+	// static V vval;
+	//
+	// static void setVval(V v) {
+	// vval = v;
+	// }
 
 	public static void main(String[] args) {
-		IInterface inter = new W();
-		inter.foo();
+		// long i = 500000000;
+		// int[] arr = new int[50];
+		// arr[48] = 5;
+
+		// R.getT();
+		// setVval(R.getT());
+
+		// IInterface inter = new W();
+		// inter.foo();
 
 		// T tval = R.getT();
 		// int n = 5;
@@ -57,23 +70,20 @@ public class Example {
 		// new G(5, 6);
 		//
 
-		// byte b1 = 0;
-		// short s1 = 0;
-		// int i1 = 0;
-		// boolean bo1 = false;
-		// float f1 = 0.0f;
-		// double d1 = 0.0d;
-		// double d2 = 0.0;
-		//
-		// float f2 = (float) 0.5;
-
-		// double d3 = 5;
-		// long l1 = 0L;
-		// long l2 = 555;
-		//
-		// char c1 = 'c';
-		// String st1 = null;
-		// String st2 = "Hi";
+		byte b1 = 0;
+		short s1 = 0;
+		int i1 = 0;
+		boolean bo1 = false;
+		float f1 = 0.0f;
+		double d1 = 0.0d;
+		double d2 = 0.0;
+		float f2 = (float) 0.5;
+		double d3 = 5;
+		long l1 = 0L;
+		long l2 = 555;
+		char c1 = 'c';
+		String st1 = null;
+		String st2 = "Hi";
 
 		// M bba = new M();
 		// double val = 0.0;

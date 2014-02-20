@@ -23,7 +23,6 @@ import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -66,11 +65,12 @@ public final class JCallGraph {
 			// d.getClassVisitor().num = 100;
 			// des.getClassVisitor().print();
 			// print nodes
-			System.out.println("NODES\n_____________________");
-			List<String> nodes = Description.getNodes();
-			for (String node : nodes) {
-				System.out.println(node);
-			}
+
+			// System.out.println("NODES\n_____________________");
+			// List<String> nodes = Description.getNodes();
+			// for (String node : nodes) {
+			// System.out.println(node);
+			// }
 			// print edges
 			System.out.println("EDGES\n_____________________");
 			java.util.List<String> edges = Description.getUnsortedEdges();

@@ -50,6 +50,9 @@ import org.apache.bcel.generic.INVOKEVIRTUAL;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionConstants;
 import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.LDC;
+import org.apache.bcel.generic.LDC2_W;
+import org.apache.bcel.generic.LDC_W;
 import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.PUTFIELD;
@@ -325,6 +328,19 @@ public final class MethodVisitor extends EmptyVisitor implements
 										: " FALSE"));
 
 				if (i instanceof PushInstruction) {
+					if (i instanceof ConstantPushInstruction) {
+						ConstantPushInstruction icon = (ConstantPushInstruction) i;
+						System.out.println(icon.getValue());
+					} else if (i instanceof LDC) {
+						LDC icon = (LDC) i;
+						System.out.println(icon.getValue(constantPoolGen));
+					} else if (i instanceof LDC_W) {
+						LDC_W icon = (LDC_W) i;
+						System.out.println(icon.getValue(constantPoolGen));
+					} else if (i instanceof LDC2_W) {
+						LDC2_W icon = (LDC2_W) i;
+						System.out.println(icon.getValue(constantPoolGen));
+					}
 					this.temporalVariables.add(Description.UNKNOWN);
 				}
 

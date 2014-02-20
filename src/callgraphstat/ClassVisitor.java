@@ -32,13 +32,11 @@ import org.apache.bcel.generic.ReferenceType;
 public final class ClassVisitor extends EmptyVisitor {
 	private JavaClass javaClass;
 	private ConstantPoolGen constants;
-	private String classReferenceFormat;
 	private Description description = null;
+	// TODO: make me private
 	public Map<String, Stack<Object>> fields = null;
-
-	// public Map<String, List<Description>> values = new LinkedHashMap<String,
-	// List<Description>>();
-	// keep static var for each class
+	// TODO: remove me
+	private String classReferenceFormat;
 
 	public ClassVisitor() {
 
@@ -58,6 +56,7 @@ public final class ClassVisitor extends EmptyVisitor {
 				this.fields.put(field.getName(), new Stack<Object>());
 			}
 		}
+		// TODO remove me
 		this.classReferenceFormat = "C:" + this.javaClass.getClassName() + "  "
 				+ " %s";
 	}
