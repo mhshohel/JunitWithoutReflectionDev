@@ -2,6 +2,12 @@ package callgraphstat.superclass;
 
 public class W implements IInterface {
 	static V val = null;
+	int ival = 5;
+	static int iiv = 10;
+
+	void set(int o) {
+		ival = o;
+	}
 
 	@Override
 	public void foo() {

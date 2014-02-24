@@ -37,17 +37,28 @@ import org.apache.bcel.generic.AASTORE;
 import org.apache.bcel.generic.ACONST_NULL;
 import org.apache.bcel.generic.ALOAD;
 import org.apache.bcel.generic.ASTORE;
+import org.apache.bcel.generic.ArrayInstruction;
+import org.apache.bcel.generic.BALOAD;
+import org.apache.bcel.generic.BASTORE;
+import org.apache.bcel.generic.CALOAD;
+import org.apache.bcel.generic.CASTORE;
 import org.apache.bcel.generic.CHECKCAST;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.ConstantPushInstruction;
+import org.apache.bcel.generic.DALOAD;
+import org.apache.bcel.generic.DASTORE;
 import org.apache.bcel.generic.DLOAD;
 import org.apache.bcel.generic.DSTORE;
 import org.apache.bcel.generic.EmptyVisitor;
+import org.apache.bcel.generic.FALOAD;
+import org.apache.bcel.generic.FASTORE;
 import org.apache.bcel.generic.FLOAD;
 import org.apache.bcel.generic.FSTORE;
 import org.apache.bcel.generic.FieldInstruction;
 import org.apache.bcel.generic.GETFIELD;
 import org.apache.bcel.generic.GETSTATIC;
+import org.apache.bcel.generic.IALOAD;
+import org.apache.bcel.generic.IASTORE;
 import org.apache.bcel.generic.ILOAD;
 import org.apache.bcel.generic.INVOKEINTERFACE;
 import org.apache.bcel.generic.INVOKESPECIAL;
@@ -57,6 +68,8 @@ import org.apache.bcel.generic.ISTORE;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionConstants;
 import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.LALOAD;
+import org.apache.bcel.generic.LASTORE;
 import org.apache.bcel.generic.LDC;
 import org.apache.bcel.generic.LDC2_W;
 import org.apache.bcel.generic.LDC_W;
@@ -67,9 +80,10 @@ import org.apache.bcel.generic.LocalVariableGen;
 import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.PUTFIELD;
 import org.apache.bcel.generic.PUTSTATIC;
-import org.apache.bcel.generic.PushInstruction;
 import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ReturnInstruction;
+import org.apache.bcel.generic.SALOAD;
+import org.apache.bcel.generic.SASTORE;
 import org.apache.bcel.generic.StoreInstruction;
 import org.apache.bcel.generic.Type;
 
@@ -165,6 +179,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	private boolean isSameType(String classType, String stackType) {
 		try {
+			classType = classType.replace("[]", "");
 			if (!classType.equalsIgnoreCase(stackType)) {
 				Class<?> param = Class.forName(classType);
 				Class<?> stack = Class.forName(stackType);
@@ -281,37 +296,42 @@ public final class MethodVisitor extends EmptyVisitor implements
 					+ this.description.getStaticFields());
 
 			// TODO change it to instance of
-			if (i.getName().equalsIgnoreCase("aaload")
-					|| i.getName().equalsIgnoreCase("aastore")) {
-				i.accept(this);
-			} else if (!visitInstruction(i)) {
-				// TODO Remove me
-				System.out
-						.println("\t\t\tPUSH INSTRUCTIONS: "
-								+ InstructionConstants.INSTRUCTIONS[i
-										.getOpcode()]
-								+ ((i instanceof PushInstruction) ? " TRUE"
-										: " FALSE"));
-				if (i instanceof ConstantPushInstruction) {
-					ConstantPushInstruction icon = (ConstantPushInstruction) i;
-					this.temporalVariables.add(icon.getValue());
-					// TODO Remove me
-					System.out.println(icon.getValue());
-				} else if (i instanceof LDC) {
-					LDC icon = (LDC) i;
-					this.temporalVariables.add(icon.getValue(constantPoolGen));
-					// TODO Remove me
-					System.out.println(icon.getValue(constantPoolGen));
-				} else if (i instanceof LDC_W) {
-					LDC_W icon = (LDC_W) i;
-					this.temporalVariables.add(icon.getValue(constantPoolGen));
-					// TODO Remove me
-					System.out.println(icon.getValue(constantPoolGen));
-				} else if (i instanceof LDC2_W) {
-					LDC2_W icon = (LDC2_W) i;
-					this.temporalVariables.add(icon.getValue(constantPoolGen));
-					// TODO Remove me
-					System.out.println(icon.getValue(constantPoolGen));
+			// if (i.getName().equalsIgnoreCase("aaload")
+			// || i.getName().equalsIgnoreCase("aastore")) {
+			// i.accept(this);
+			// } else
+			if (!visitInstruction(i)) {
+				// // TODO Remove me
+				// if (i instanceof ConstantPushInstruction) {
+				// // ConstantPushInstruction icon = (ConstantPushInstruction)
+				// // i;
+				// // this.temporalVariables.add(icon.getValue());
+				// // TODO Remove me
+				// // System.out.println(icon.getValue());
+				// } else if (i instanceof LDC) {
+				// // LDC icon = (LDC) i;
+				// //
+				// this.temporalVariables.add(icon.getValue(constantPoolGen));
+				// // TODO Remove me
+				// // System.out.println(icon.getValue(constantPoolGen));
+				// } else if (i instanceof LDC_W) {
+				// // LDC_W icon = (LDC_W) i;
+				// //
+				// this.temporalVariables.add(icon.getValue(constantPoolGen));
+				// // TODO Remove me
+				// // System.out.println(icon.getValue(constantPoolGen));
+				// } else if (i instanceof LDC2_W) {
+				// // LDC2_W icon = (LDC2_W) i;
+				// //
+				// this.temporalVariables.add(icon.getValue(constantPoolGen));
+				// // TODO Remove me
+				// // System.out.println(icon.getValue(constantPoolGen));
+				// }
+
+				if (i instanceof ConstantPushInstruction || i instanceof LDC
+						|| i instanceof LDC_W || i instanceof LDC2_W) {
+					this.temporalVariables.add(Description.PRIMITIVE);
+					System.out.println(Description.PRIMITIVE);
 				} else if (i instanceof StoreInstruction) {
 					storeValueToLocalVariable((StoreInstruction) i);
 				} else if (i instanceof LoadInstruction) {
@@ -324,6 +344,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 			} else {
 				if (i instanceof ACONST_NULL) {
 					this.temporalVariables.add(Description.NULL);
+				} else if (i instanceof ArrayInstruction) {
+					arrayInstructions((ArrayInstruction) i);
 				}
 			}
 			// TODO:Remove me
@@ -337,6 +359,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 		System.err.println("\t\t-----END METHOD:\n\t\t\t" + source
 				+ "\n\t\t\t\t--->" + target + "\n");
 
+		// TODO verify return type
 		if (returnType.toString() != "void") {
 			Object value = (this.temporalVariables != null && !this.temporalVariables
 					.isEmpty()) ? this.temporalVariables.peek() : null;
@@ -567,9 +590,12 @@ public final class MethodVisitor extends EmptyVisitor implements
 			if (index != -1) {
 				String name = this.localVariableGens[index].getName();// localVariable.getName();
 				System.out.println("STORE: " + name + "   "
-						+ this.localVariableGens[index].getType());
+						+ this.localVariableGens[index].getType()
+						+ "\t\tIs ArrayType: "
+						+ obj.getType(constantPoolGen).getClass().isArray());
 				storeValues("ASTORE", name,
 						this.localVariableGens[index].getType(), null);
+				removePrimitiveData();
 			}
 		} catch (Exception e) {
 			System.err.println("FOUND IN ASTORE");
@@ -645,65 +671,67 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
-	@Override
-	public void visitCHECKCAST(CHECKCAST obj) {
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(constantPoolGen).getSignature());
-		System.out.println("\t\t" + obj.getType(constantPoolGen));
-		System.out.println("\t\t" + obj.getLoadClassType(constantPoolGen));
-		this.castType = obj.getType(constantPoolGen).toString();
+	private boolean arrayInstructions(ArrayInstruction obj) {
+		if (obj instanceof IALOAD || obj instanceof CALOAD
+				|| obj instanceof BALOAD || obj instanceof SALOAD
+				|| obj instanceof LALOAD || obj instanceof DALOAD
+				|| obj instanceof FALOAD || obj instanceof AALOAD) {
+			visitArrayLoad(obj);
+			return true;
+		} else if (obj instanceof IASTORE || obj instanceof CASTORE
+				|| obj instanceof BASTORE || obj instanceof SASTORE
+				|| obj instanceof LASTORE || obj instanceof DASTORE
+				|| obj instanceof FASTORE || obj instanceof AASTORE) {
+			visitArrayStore(obj);
+			return true;
+		}
+		return false;
 	}
 
-	// @Override
-	// public void visitANEWARRAY(ANEWARRAY obj) {
-	// System.out.println("\t\t" + obj.getName() + "   --->   "
-	// + obj.getLength());
-	// System.out.println("\t\t" + obj.getLoadClassType(constantPoolGen));
-	// }
-
-	// @Override
-	// public void visitARRAYLENGTH(ARRAYLENGTH obj) {
-	// System.out.println("\t\t" + obj.getName() + "   --->   "
-	// + obj.getLength());
-	// }
-
-	// @Override
-	// public void visitMULTIANEWARRAY(MULTIANEWARRAY obj) {
-	// System.out.println("\t\t" + obj.getName() + "   --->   "
-	// + obj.getType(constantPoolGen).getSignature());
-	// System.out.println("\t\t" + obj.getType(constantPoolGen));
-	// }
-
-	@Override
-	public void visitAASTORE(AASTORE obj) {
+	private void visitArrayStore(ArrayInstruction obj) {
 		try {
-			// removeUnknownValueIfPushInstruction(AASTORE.class);
-			int size = this.temporalVariables.size();
-			Object dataObject = this.temporalVariables.peek();
-			Object arrayObjcet = this.temporalVariables.get(size - 2);
+			Object dataObject = this.temporalVariables.pop();
+			removePrimitiveData();
+			Object arrayObjcet = this.temporalVariables.peek();
 			if (arrayObjcet instanceof ArrayObjectProvider) {
 				ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) arrayObjcet;
-				arrayObjectProvider.arrayObjects.put(dataObject.toString(),
-						dataObject);
-				// TODO: verify me
-				this.temporalVariables.pop();
-				this.temporalVariables.pop();
+				// by check data type remove it from stack
+				arrayObjectProvider.add(dataObject.toString(), dataObject,
+						this.temporalVariables);
 			}
 		} catch (Exception e) {
 			System.err.println("FOUND IN AASTORE");
 		}
 	}
 
-	@Override
-	public void visitAALOAD(AALOAD obj) {
+	private void visitArrayLoad(ArrayInstruction obj) {
 		try {
-			// removeUnknownValueIfPushInstruction(AALOAD.class);
+			// first remove primitives
+			// then load one data only
+			removePrimitiveData();
+			Object object = this.temporalVariables.peek();
+			if (object instanceof ArrayObjectProvider) {
+				ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) object;
+				Object data = Description.UNKNOWN;// arrayObjectProvider.getByKey(key)
+				this.temporalVariables.pop();
+				this.temporalVariables.add(data);
+			}
 			System.out.println("\t\t" + obj.getName() + "   --->   "
 					+ obj.getType(constantPoolGen).getSignature());
 			System.out.println("\t\t" + obj.getType(constantPoolGen));
+			//
 		} catch (Exception e) {
 			System.err.println("FOUND IN AALOAD");
 		}
+	}
+
+	private boolean isPrimitiveType(Type type) {
+		if (type == Type.BOOLEAN || type == Type.BYTE || type == Type.CHAR
+				|| type == Type.DOUBLE || type == Type.FLOAT
+				|| type == Type.INT || type == Type.LONG || type == Type.SHORT) {
+			return true;
+		}
+		return false;
 	}
 
 	private List<Object> getParameters(Type[] types, String methodName) {
@@ -712,22 +740,96 @@ public final class MethodVisitor extends EmptyVisitor implements
 			int length = types.length;
 			int c = types.length;
 			if (length > 0) {
-				Object object;
+				Object object = null;
 				boolean result = false;
 				for (int j = 0; j < length; j++) {
 					c--;
 					try {
-						object = this.temporalVariables.peek();
-						if (object != null) {
-							result = isSameType(types[c].toString(),
-									object.toString());
-						}
-						if (result) {
-							object = this.temporalVariables.pop();
+						// XXX find out what is actually the type is!
+						// for type check types, null, description, array, list,
+						// primitive including String as primitive
+						// for value first check null, description, array, list
+						// primitive including String as primitive
+						// remove all primitive data from stack until it's find
+						// any non primitive data, before adding as parameter
+						Type type = types[c];
+						Object value = (this.temporalVariables != null && !this.temporalVariables
+								.isEmpty()) ? this.temporalVariables.peek()
+								: null;
+						if (value == null) {
+							object = types[c];
+						} else if (type.toString().contains("[]")) {
+							if (value instanceof ArrayObjectProvider) {
+								if (isSameType(type.toString(),
+										((ArrayObjectProvider) value).getType())) {
+									object = value;
+								} else {
+									object = type;
+								}
+							} else if (value.toString().equalsIgnoreCase(
+									Description.NULL)) {
+								object = value;
+							} else {
+								object = type;
+							}
+						} else if (isPrimitiveType(type)) {
+							if (value.toString().equalsIgnoreCase(
+									Description.PRIMITIVE)) {
+								object = value;
+							} else if (value instanceof Boolean
+									|| value instanceof Byte
+									|| value instanceof Character
+									|| value instanceof Double
+									|| value instanceof Float
+									|| value instanceof Integer
+									|| value instanceof Long
+									|| value instanceof Short
+									|| value instanceof Number) {
+								object = value;
+							} else {
+								object = Description.PRIMITIVE;
+							}
+						} else if (type.equals(Type.STRING)
+								|| type.equals(Type.STRINGBUFFER)) {
+							if (value.toString().equalsIgnoreCase(
+									Description.NULL)) {
+								object = value;
+							} else if (value.toString().equalsIgnoreCase(
+									Description.PRIMITIVE)) {
+								object = value;
+							} else if (value instanceof String) {
+								object = Description.PRIMITIVE;
+							} else {
+								object = Description.PRIMITIVE;
+							}
+						} else if (type.equals(Type.CLASS)) {
+							if (value.toString().equalsIgnoreCase(
+									Description.NULL)) {
+								object = value;
+							} else if (value.toString().equalsIgnoreCase(
+									Description.PRIMITIVE)) {
+								object = value;
+							} else {
+								object = Description.PRIMITIVE;
+							}
+						} else if (type.equals(Type.OBJECT)) {
+							object = value;
 						} else {
-							this.temporalVariables.pop();
+							result = isSameType(type.toString(),
+									object.toString());
+							if (result) {
+								object = value;
+							} else {
+								if (value.toString().equalsIgnoreCase(
+										Description.NULL)) {
+									object = value;
+								}
+							}
 						}
+						this.temporalVariables.pop();
 					} catch (Exception e) {
+						System.err
+								.println("SOME ERROR IN PARAM getParameters()");
 						object = types[c];
 					}
 					params.add(object);
@@ -741,6 +843,21 @@ public final class MethodVisitor extends EmptyVisitor implements
 		// TODO Remove me
 		System.out.println("\t\t\t\tParams:   " + params);
 		return params;
+	}
+
+	// remove primitive type data from stack until the last value is other type
+	private void removePrimitiveData() {
+		try {
+			if (this.temporalVariables != null
+					&& !this.temporalVariables.isEmpty()) {
+				if (this.temporalVariables.peek().toString()
+						.equalsIgnoreCase(Description.PRIMITIVE)) {
+					this.temporalVariables.pop();
+					removePrimitiveData();
+				}
+			}
+		} catch (Exception e) {
+		}
 	}
 
 	private void printObjectInvoke(Type[] types, ReferenceType referenceType,
@@ -775,6 +892,15 @@ public final class MethodVisitor extends EmptyVisitor implements
 			return null;
 		}
 		return null;
+	}
+
+	@Override
+	public void visitCHECKCAST(CHECKCAST obj) {
+		System.out.println("\t\t" + obj.getName() + "   --->   "
+				+ obj.getType(constantPoolGen).getSignature());
+		System.out.println("\t\t" + obj.getType(constantPoolGen));
+		System.out.println("\t\t" + obj.getLoadClassType(constantPoolGen));
+		this.castType = obj.getType(constantPoolGen).toString();
 	}
 
 	@Override
@@ -917,8 +1043,30 @@ public final class MethodVisitor extends EmptyVisitor implements
 		// change key as object instead of string to keep all objects -- not
 		// done
 		// here
-		public Map<String, Object> arrayObjects = new LinkedHashMap<String, Object>();
-		public String arrayType = "";
+		private Map<String, Object> arrayObjects = new LinkedHashMap<String, Object>();
+		private String arrayType = "";
+
+		public String getArrayType() {
+			return this.arrayType;
+		}
+
+		public String getType() {
+			return this.arrayType.replace("[]", "");
+		}
+
+		public void add(String type, Object object, Stack<Object> temp) {
+			// check type before add
+			this.arrayObjects.put(type, object);
+			temp.pop();
+		}
+
+		public Object getByKey(String key) {
+			Object object = this.arrayObjects.get(key);
+			if (object == null) {
+				object = Description.NULL;
+			}
+			return object;
+		}
 
 		public ArrayObjectProvider(String arrayType) {
 			this.arrayType = arrayType;

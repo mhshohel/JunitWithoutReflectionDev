@@ -19,53 +19,115 @@
  */
 package callgraphstat.superclass;
 
+import callgraphstat.superclass.Enam.EnamCat;
+
 public class Example {
-	// static H valsH = new H();
+	// // static H valsH = new H();
 	// static J valsJ = new J();
-	// static M bba = null;
-	// static V v;
-	// public static M m;
-	// static T tt;
 	//
-	// public static void setVal(int a, V vv, M mm, float f, T t, String sv,
-	// String dn) {
-	// T tv = t;
-	// tt = tv;
-	// v = vv;
-	// m = mm;
-	// int aa = a;
-	// float ff = f;
-	// String svv = sv;
-	// svv = null;
+	// // static M bba = null;
+	// // static V v;
+	// // public static M m;
+	// // static T tt;
+	// //
+	// // public static void setVal(int a, V vv, M mm, float f, T t, String sv,
+	// // String dn) {
+	// // T tv = t;
+	// // tt = tv;
+	// // v = vv;
+	// // m = mm;
+	// // int aa = a;
+	// // float ff = f;
+	// // String svv = sv;
+	// // svv = null;
+	// // }
+	// //
+	// // static V vval;
+	// //
+	// // static void setVval(V v) {
+	// // vval = v;
+	// // }
+	// // static int aa;
+	//
+	// // static Object getVal(Object val) {
+	// // return val;
+	// // }
+	// static Object getVal() {
+	// return valsJ;
 	// }
 	//
-	// static V vval;
-	//
-	// static void setVval(V v) {
-	// vval = v;
-	// }
-	// static int aa;
+	// //
+	// // static void getVal(IInterface val) {
+	// //
+	// // }
+	// //
+	// // static int sval = 0;
 
-	static Object getVal(Object val) {
-		return val;
-	}
-
-	static void getVal(IInterface val) {
+	static void ma(int a, M m, String v, EnamCat c, int[] ai, M[] mi, int fi) {
 
 	}
 
-	static int sval = 0;
+	static void av(int s, M o, Object oo, int[] aa, String p) {
+
+	}
+
+	// static M mals[] = new M[10];
 
 	public static void main(String[] args) {
-		int a = 10;
-		int b = a;
-		sval = 5;
-		new W().pushval(sval);
-		new W().pushval(8);
-		getVal(new W());
-		getVal(new W());
-		getVal(new W());
-		getVal(new X());
+		int s = 5;
+		int[] v = new int[s];
+		int[][] sss = new int[4][];
+		M[] mm = new M[3];
+
+		M[][] mmmm = new M[3][s];
+		// av(new Integer(8), new M(), new Object(), null, "");
+		// av(String.class);
+		// M mals[] = new M[10];
+		// for (int i = 0; i < 5; i++) {
+		// mals[i] = new M();
+		// }
+		// av(5);
+		// String v = null;
+		// String vs = v;
+		// int[][] iii = new int[10][];
+		// String vv = "";
+		// int i[] = new int[5];
+		// i[0] = 10;
+		// M mal[] = new M[10];
+		// mal[0] = null;
+		// mals[0] = new M();
+		// mals[1] = mals[0];
+		// M[] mmm = mals;
+		// i[0] = 9;
+		// int ii[][] = new int[2][2];
+		// ii[0][0] = i[0];
+		// int[][][] mm = new int[2][2][2];
+		// mm[0][0][0] = ii[0][0];
+		// ma(5, null, "SD", EnamCat.REGULAR, i, new M[5], i[0]);
+		// M m = new M();
+		// M[] arr1 = new M[5];
+		// arr1[0] = m;
+		// M mm = arr1[0];
+		// // arr1[1] = m;
+		// ma(5, arr1[0], null);
+		// int[] arr = new int[10];
+		// // // for (int i = 0; i < 10; i++) {
+		// // // arr[i] = i + 1;
+		// // // }
+		// arr[0] = 1;
+		// arr[1] = 2;
+		// arr[2] = 3;
+		// int val = arr[8];
+
+		// int a = 10;
+		// int b = a;
+		// sval = 5;
+		// new W().pushval(sval);
+		// new W().pushval(8);
+		// getVal(new W());
+		// getVal(new W());
+		// getVal(new W());
+		// getVal(new X());
 		// W w = new W();
 		// w.pushval(sval);
 		// Object obj = getVal(null);
@@ -77,8 +139,8 @@ public class Example {
 		// R.getT();
 		// setVval(R.getT());
 
-		IInterface inter = new W();
-		inter.foo();
+		// IInterface inter = new W();
+		// inter.foo();
 
 		// T tval = R.getT();
 		// int n = 5;
@@ -125,7 +187,7 @@ public class Example {
 		// String st4 = st2;
 		// int con = (int) d1;
 
-		// int kks = getVal();
+		// Object kks = getVal();
 		// M bba = new M();
 		// double val = 0.0;
 		// int a = 5;
@@ -133,13 +195,13 @@ public class Example {
 		// N nval = fval.getN(val);
 		// M mval = new M();
 		// O oval = new O();
-		//
+		// //
 		// M mava = new F(5).getN(val).getM(new O());
 		// double d3 = 5;
 		// A b = new B(new F(5).getN(val).getM(new O()));
 		// P p = new P(bba, 5, "KO", new M(), d3);
 		// A bb = new B();
-		// // A b = new B();
+		// b = new B();
 		// String vvv = "J";
 		// E emm = bb.foos(null, 4, 1.5, null, "J");
 		//
@@ -149,86 +211,87 @@ public class Example {
 		// E em = b.foos(null, a, d, new M(new N(new O(new P(bba)))), vvv);
 		// int v = em.val();
 		// E ems = b.foos(new E(), 5, new M());
-
-		// List<K> list = new ArrayList<K>();
-		// list.add(new K());
 		//
-		// ArrayList<K> n = (ArrayList<K>) list;
-		// K kval = new K();
-		// ArrayList<Integer> nnn = new ArrayList();
-		// nnn.add(5);
+		// // List<K> list = new ArrayList<K>();
+		// // list.add(new K());
+		// //
+		// // ArrayList<K> n = (ArrayList<K>) list;
+		// // K kval = new K();
+		// // ArrayList<Integer> nnn = new ArrayList();
+		// // nnn.add(5);
+		// //
+		// // ArrayList<K> nn = new ArrayList<K>();
+		// // nn.add(kval);
+		// // nn.add(kval);
+		// // nn.add(kval);
+		// // nn.add(kval);
+		// // K val1 = nn.get(0);
+		// // K val2 = nn.get(1);
+		// // K val3 = nn.get(2);
+		// //
+		// // nn.get(0).foo();
 		//
-		// ArrayList<K> nn = new ArrayList<K>();
-		// nn.add(kval);
-		// nn.add(kval);
-		// nn.add(kval);
-		// nn.add(kval);
-		// K val1 = nn.get(0);
-		// K val2 = nn.get(1);
-		// K val3 = nn.get(2);
+		// // // check multi dimension array
+		// // K k = new K();
+		// // k.v = 100;
+		// // L lVal = new L();
+		// // L lvals = lVal;
+		// // L[] arr;
+		// // arr = new L[100];
+		// // arr[0] = new J();
+		// // arr[1] = new K();
+		// // arr[2] = new J();
+		// // arr[3] = k;
+		// //
+		// // // L[] arr2 = arr;
+		// //
+		// // Object kkk = (K) arr[3];
+		// // L kk = arr[3];
+		// // kk.foo();
+		// //
+		// // IInterface m = new M();
+		// // m.foo();
 		//
-		// nn.get(0).foo();
-
-		// // check multi dimension array
-		// K k = new K();
-		// k.v = 100;
-		// L lVal = new L();
-		// L lvals = lVal;
-		// L[] arr;
-		// arr = new L[100];
-		// arr[0] = new J();
-		// arr[1] = new K();
-		// arr[2] = new J();
-		// arr[3] = k;
-		//
-		// // L[] arr2 = arr;
-		//
-		// Object kkk = (K) arr[3];
-		// L kk = arr[3];
-		// kk.foo();
-		//
-		// IInterface m = new M();
-		// m.foo();
-
-		// arr[13].foo();
-		// L[] arrOne = new L[1000000];
-		// for (int i = 0; i < 1000000; i++) {
-		// arrOne[i] = new J();
-		// }
-		// arr[1] = new K();
-		// arr[0].foo();
-		// arr[1].foo();
-		// int[] arr = new int[100];
-		// arr[0] = 5;
-		// arr[1] = 10;
-		// new I(5, null);
-		// F f = new F(4);
-		// na = new A();
-		// new C().foo();
-		// B.st();
-		// new B().st();
-		// A v = new B().val();
-		// A n = new B();
-		// n.foo();
-		// A a = null;
-		// new C();
-		// E ee = e;
-		// String s = "sd";
-		// new B(5, new A(), "", new A());
-		// new B(5, new A(), "", new A());
-		// String s = "sd";
+		// // arr[13].foo();
+		// // L[] arrOne = new L[1000000];
+		// // for (int i = 0; i < 1000000; i++) {
+		// // arrOne[i] = new J();
+		// // }
+		// // arr[1] = new K();
+		// // arr[0].foo();
+		// // arr[1].foo();
+		// // int[] arr = new int[100];
+		// // arr[0] = 5;
+		// // arr[1] = 10;
+		// // new I(5, null);
+		// // F f = new F(4);
 		// // na = new A();
-		// new A();
+		// // new C().foo();
+		// // B.st();
+		// // new B().st();
+		// // A v = new B().val();
+		// // A n = new B();
+		// // n.foo();
+		// // A a = null;
+		// // new C();
+		// // E ee = e;
+		// // String s = "sd";
+		// // new B(5, new A(), "", new A());
+		// // new B(5, new A(), "", new A());
+		// // String s = "sd";
+		// // // na = new A();
 		// // new A();
-		// A c1 = new C(
-		// new B(new A(), new D(), new C(), new A(), new A(), new A()), s,
-		// new D(), new Object());
-		// A c2 = new B();
-		// A a2 = new A();
-		// B b1 = new B(new A(), new D(), new C(), c2, c2, a2);
-		// // b1.foos(new B(), c1);
-		//
-		// // A a3 = new C();
+		// // // new A();
+		// // A c1 = new C(
+		// // new B(new A(), new D(), new C(), new A(), new A(), new A()), s,
+		// // new D(), new Object());
+		// // A c2 = new B();
+		// // A a2 = new A();
+		// // B b1 = new B(new A(), new D(), new C(), c2, c2, a2);
+		// // // b1.foos(new B(), c1);
+		// //
+		// BB b1 = new BB();
+		// AA a2 = new AA();
 		// f(b1);
 		// g(b1);
 		// a3.fos(b1);
@@ -245,13 +308,13 @@ public class Example {
 	//
 	// // static A jn = new C();
 	//
-	static void f(A a2) {
+	static void f(AA a2) {
 		a2.foo();
 	}
 
-	static void g(B b3) {
-		B b4 = b3;
-		b4 = new C();
+	static void g(BB b3) {
+		BB b4 = b3;
+		b4 = new CC();
 		b4.foo();
 	}
 

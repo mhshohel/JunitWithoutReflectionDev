@@ -82,11 +82,17 @@ public final class Description implements Comparable<Description> {
 	public Map<String, Stack<Object>> staticFields = new LinkedHashMap<String, Stack<Object>>();
 	private static List<String> nodes = new ArrayList<String>();
 	private static List<String> edges = new ArrayList<String>();
+	public boolean isSuperClassObjectInitiated = false;
+	public boolean isVisitedToCheckStaticField = false;
 	public static final String UNKNOWN = "unknown";
 	public static final String THIS = "this";
 	public static final String NULL = "null";
-	public boolean isSuperClassObjectInitiated = false;
-	public boolean isVisitedToCheckStaticField = false;
+	public static final String PRIMITIVE = "primitive";
+	public static final String STRING = "string";
+	public static final String CLASS = "class";
+	public static final String OBJECT = "object";
+	public static final String ARRAY_TYPE = "arr_typ";
+	public static final String ARRAY_OBJECT = "arr_obj";
 
 	private Description() {
 		initialize();
@@ -278,8 +284,11 @@ public final class Description implements Comparable<Description> {
 						.getStaticFieldValues(fieldName);
 				if (!fields.isEmpty()) {
 					return fields.peek();
+				} else {
+					return referenceType.toString();
 				}
 			} catch (Exception e) {
+				return referenceType.toString();
 			}
 		}
 		return fields;
