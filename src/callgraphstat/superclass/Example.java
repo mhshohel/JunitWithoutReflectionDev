@@ -86,19 +86,7 @@ public class Example {
 	}
 
 	// static M mals[] = new M[10];
-	static void av(W i) {
-
-	}
-
-	public static void main(String[] args) {
-		// int[][][][] a = new int[3][3][4][4];
-		// M[][][] b = new M[5][5][];
-		// av(null, 3, new int[4][], 5, 5, b, 5, 6, a, 6, new M[1], null, "s",
-		// null);
-
-		// int iiiii[] = new int[4];
-		// iiiii[0] = 6;
-
+	static W av() {
 		V m = new V();
 		U mm = new U();
 		W mmm = new V();
@@ -107,8 +95,29 @@ public class Example {
 		i[1] = mm;
 		i[2] = mm;
 		i[3] = mmm;
+		return i[0];
+	}
 
-		av(i[0]);
+	public static void main(String[] args) {
+		W w = av();
+		// int[][][][] a = new int[3][3][4][4];
+		// M[][][] b = new M[5][5][];
+		// av(null, 3, new int[4][], 5, 5, b, 5, 6, a, 6, new M[1], null, "s",
+		// null);
+
+		// int iiiii[] = new int[4];
+		// iiiii[0] = 6;
+
+		// V m = new V();
+		// U mm = new U();
+		// W mmm = new V();
+		// W[] i = new W[5];
+		// i[0] = mm;
+		// i[1] = mm;
+		// i[2] = mm;
+		// i[3] = mmm;
+		//
+		// av(i[0]);
 		// i[1] = mm;
 		// i[2] = mmm;
 		// i[3] = mmm;

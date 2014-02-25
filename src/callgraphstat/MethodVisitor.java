@@ -299,40 +299,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 			System.out.println("\t\tField:" + this.classVisitor.fields);
 			System.out.println("\t\tStaticField:"
 					+ this.description.getStaticFields());
-
-			// TODO change it to instance of
-			// if (i.getName().equalsIgnoreCase("aaload")
-			// || i.getName().equalsIgnoreCase("aastore")) {
-			// i.accept(this);
-			// } else
 			if (!visitInstruction(i)) {
-				// // TODO Remove me
-				// if (i instanceof ConstantPushInstruction) {
-				// // ConstantPushInstruction icon = (ConstantPushInstruction)
-				// // i;
-				// // this.temporalVariables.add(icon.getValue());
-				// // TODO Remove me
-				// // System.out.println(icon.getValue());
-				// } else if (i instanceof LDC) {
-				// // LDC icon = (LDC) i;
-				// //
-				// this.temporalVariables.add(icon.getValue(constantPoolGen));
-				// // TODO Remove me
-				// // System.out.println(icon.getValue(constantPoolGen));
-				// } else if (i instanceof LDC_W) {
-				// // LDC_W icon = (LDC_W) i;
-				// //
-				// this.temporalVariables.add(icon.getValue(constantPoolGen));
-				// // TODO Remove me
-				// // System.out.println(icon.getValue(constantPoolGen));
-				// } else if (i instanceof LDC2_W) {
-				// // LDC2_W icon = (LDC2_W) i;
-				// //
-				// this.temporalVariables.add(icon.getValue(constantPoolGen));
-				// // TODO Remove me
-				// // System.out.println(icon.getValue(constantPoolGen));
-				// }
-
 				if (i instanceof ConstantPushInstruction || i instanceof LDC
 						|| i instanceof LDC_W || i instanceof LDC2_W) {
 					this.temporalVariables.add(Description.PRIMITIVE);
@@ -370,11 +337,31 @@ public final class MethodVisitor extends EmptyVisitor implements
 		// TODO verify return type
 		if (returnType.toString() != "void") {
 			Object value = (this.temporalVariables != null && !this.temporalVariables
-					.isEmpty()) ? this.temporalVariables.peek() : null;
+					.isEmpty()) ? this.temporalVariables.pop() : null;
 			// TODO:Remove me
 			System.out.println("RETURN TYPE: " + value);
-			if (value != null) {
-				return this.temporalVariables.pop();
+			try {
+				if (value != null) {
+					ArrayObjectProvider returnObject = null;
+					if (value instanceof ArrayObjectProvider) {
+						returnObject = (ArrayObjectProvider) value;
+						if (returnObject.getType() == null) {
+							returnObject.setType(returnType.toString());
+						}
+						if (returnType.toString().contains("[]")) {
+							return returnObject;
+						} else {
+							Object object = getSingleDataFromArray(
+									returnObject, returnType.toString(),
+									this.castType);
+							return (object != null) ? object : returnType;
+						}
+					} else {
+						return value;
+					}
+				}
+			} catch (Exception e) {
+				return returnType;
 			}
 		}
 		return returnType;
@@ -751,7 +738,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 						} else {
 							val = ((Data) val).object;
 						}
-						return (val != null) ? val : Description.UNKNOWN;
+						return (val != null) ? val
+								: (value.mostCountedObjectObject != null) ? value.mostCountedObjectObject
+										: Description.UNKNOWN;
 						// only value
 					}
 				}
