@@ -36,6 +36,7 @@ import org.apache.bcel.generic.AALOAD;
 import org.apache.bcel.generic.AASTORE;
 import org.apache.bcel.generic.ACONST_NULL;
 import org.apache.bcel.generic.ALOAD;
+import org.apache.bcel.generic.ANEWARRAY;
 import org.apache.bcel.generic.ASTORE;
 import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.BALOAD;
@@ -77,7 +78,9 @@ import org.apache.bcel.generic.LLOAD;
 import org.apache.bcel.generic.LSTORE;
 import org.apache.bcel.generic.LoadInstruction;
 import org.apache.bcel.generic.LocalVariableGen;
+import org.apache.bcel.generic.MULTIANEWARRAY;
 import org.apache.bcel.generic.MethodGen;
+import org.apache.bcel.generic.NEWARRAY;
 import org.apache.bcel.generic.PUTFIELD;
 import org.apache.bcel.generic.PUTSTATIC;
 import org.apache.bcel.generic.ReferenceType;
@@ -86,6 +89,8 @@ import org.apache.bcel.generic.SALOAD;
 import org.apache.bcel.generic.SASTORE;
 import org.apache.bcel.generic.StoreInstruction;
 import org.apache.bcel.generic.Type;
+
+import callgraphstat.MethodVisitor.ArrayObjectProvider.Data;
 
 public final class MethodVisitor extends EmptyVisitor implements
 		Comparable<MethodVisitor> {
@@ -338,6 +343,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 					loadValueFromLocalVariable((LoadInstruction) i);
 				} else if (i instanceof FieldInstruction) {
 					fieldValueInstructor((FieldInstruction) i);
+				} else if (i instanceof NEWARRAY || i instanceof ANEWARRAY
+						|| i instanceof MULTIANEWARRAY) {
+					createNewArrayProviderObject();
 				} else {
 					i.accept(this);
 				}
@@ -440,17 +448,36 @@ public final class MethodVisitor extends EmptyVisitor implements
 							value = arrayObjectProvider.arrayObjects
 									.get(this.castType);
 						} else {
-							value = (this.temporalVariables != null && !this.temporalVariables
-									.isEmpty()) ? this.temporalVariables.pop()
-									: null;
+							if (this.hasToLoadOnlyValueFromArray) {
+								value = getSingleDataFromArray(
+										this.temporalVariables.pop(),
+										type.toString(), this.castType);
+								this.hasToLoadOnlyValueFromArray = false;
+							} else {
+								value = this.temporalVariables.pop();
+							}
 						}
 					} else {
 						if (this.temporalVariables.peek() instanceof ArrayObjectProvider) {
 							String arrayType = ((ArrayObjectProvider) this.temporalVariables
-									.peek()).arrayType;
+									.peek()).getArrayType();
 							String currentType = type.toString();
-							if (arrayType.equalsIgnoreCase(currentType)) {
-								value = this.temporalVariables.pop();
+							if (arrayType == null) {
+								ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) this.temporalVariables
+										.pop();
+								arrayObjectProvider.setType(type.toString());
+								value = arrayObjectProvider;
+							} else if (arrayType.replace("[]", "")
+									.equalsIgnoreCase(
+											currentType.replace("[]", ""))) {
+								if (this.hasToLoadOnlyValueFromArray) {
+									value = getSingleDataFromArray(
+											this.temporalVariables.pop(),
+											type.toString(), this.castType);
+									this.hasToLoadOnlyValueFromArray = false;
+								} else {
+									value = this.temporalVariables.pop();
+								}
 							} else {
 								try {
 									Description desOne = this.description
@@ -481,21 +508,22 @@ public final class MethodVisitor extends EmptyVisitor implements
 						}
 					}
 				} else {
-					if (this.castType != null
-							&& this.temporalVariables.peek() instanceof ArrayObjectProvider) {
-						ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) this.temporalVariables
-								.peek();
-						value = arrayObjectProvider.arrayObjects
-								.get(this.castType);
-						if (value == null) {
-							value = this.temporalVariables.pop();
-						}
+					if (this.hasToLoadOnlyValueFromArray) {
+						value = getSingleDataFromArray(
+								this.temporalVariables.pop(), type.toString(),
+								this.castType);
+						this.hasToLoadOnlyValueFromArray = false;
 					} else {
 						value = this.temporalVariables.pop();
 					}
 				}
+				this.hasToLoadOnlyValueFromArray = false;
 			} catch (Exception e) {
 				value = type;
+				this.hasToLoadOnlyValueFromArray = false;
+			}
+			if (value == null) {
+				value = this.temporalVariables.pop();
 			}
 			switch (flag) {
 			case "ASTORE":
@@ -595,7 +623,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 						+ obj.getType(constantPoolGen).getClass().isArray());
 				storeValues("ASTORE", name,
 						this.localVariableGens[index].getType(), null);
-				removePrimitiveData();
+				// removePrimitiveData();
 			}
 		} catch (Exception e) {
 			System.err.println("FOUND IN ASTORE");
@@ -688,6 +716,57 @@ public final class MethodVisitor extends EmptyVisitor implements
 		return false;
 	}
 
+	private Object getSingleDataFromArray(Object data, String type,
+			String castType) {
+		if (data instanceof ArrayObjectProvider) {
+			ArrayObjectProvider value = (ArrayObjectProvider) data;
+			if (value.arrayObjects != null) {
+				// TODO load data by counter or index
+				// Check Cast
+				boolean typeIsArrayType = type.contains("[]");
+				if (castType != null) {
+					return (value.arrayObjects.containsKey(castType)) ? value.arrayObjects
+							.get(castType).object : Description.UNKNOWN;
+				} else if (value.getType().equalsIgnoreCase(
+						type.replace("[]", "").trim())) {
+					if (typeIsArrayType) {
+						return value;
+					} else {
+						Object val = value.arrayObjects.get(type);
+						if (val == null) {
+							val = (value.arrayObjects
+									.containsKey(Description.PRIMITIVE)) ? value.arrayObjects
+									.get(Description.PRIMITIVE).object : null;
+							if (val == null) {
+								// it means it is calling super class type,
+								// return most counted obj
+								if (isSameType(value.getType(),
+										type.replace("[]", "").trim())) {
+									System.out
+											.println(value.mostCountedObjectObject);
+									// return mostly used object
+									val = value.mostCountedObjectObject;
+								}
+							}
+						} else {
+							val = ((Data) val).object;
+						}
+						return (val != null) ? val : Description.UNKNOWN;
+						// only value
+					}
+				}
+				// return value.arrayObjects.get(type);
+			}
+		} else if (data.toString().equalsIgnoreCase(Description.NULL)) {
+			return Description.NULL;
+		}
+		return Description.UNKNOWN;
+	}
+
+	private boolean hasToLoadOnlyValueFromArray = false;
+	// count 2 required to store value in array from array
+	private int loadCounter = 0;
+
 	private void visitArrayStore(ArrayInstruction obj) {
 		try {
 			Object dataObject = this.temporalVariables.pop();
@@ -696,12 +775,24 @@ public final class MethodVisitor extends EmptyVisitor implements
 			if (arrayObjcet instanceof ArrayObjectProvider) {
 				ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) arrayObjcet;
 				// by check data type remove it from stack
-				arrayObjectProvider.add(dataObject.toString(), dataObject,
-						this.temporalVariables);
+				Object data = null;
+				if (this.hasToLoadOnlyValueFromArray) {
+					if (this.loadCounter == 2) {
+						data = getSingleDataFromArray(dataObject,
+								arrayObjectProvider.getType(), this.castType);
+					}
+					data = dataObject;
+					this.hasToLoadOnlyValueFromArray = false;
+				} else {
+					data = dataObject;
+				}
+				arrayObjectProvider.add(data, this.temporalVariables);
 			}
 		} catch (Exception e) {
-			System.err.println("FOUND IN AASTORE");
+			System.err.println("ERROR IN AASTORE");
+			this.hasToLoadOnlyValueFromArray = false;
 		}
+		this.hasToLoadOnlyValueFromArray = false;
 	}
 
 	private void visitArrayLoad(ArrayInstruction obj) {
@@ -709,19 +800,17 @@ public final class MethodVisitor extends EmptyVisitor implements
 			// first remove primitives
 			// then load one data only
 			removePrimitiveData();
-			Object object = this.temporalVariables.peek();
-			if (object instanceof ArrayObjectProvider) {
-				ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) object;
-				Object data = Description.UNKNOWN;// arrayObjectProvider.getByKey(key)
-				this.temporalVariables.pop();
-				this.temporalVariables.add(data);
+			if (this.loadCounter == 2 || !this.hasToLoadOnlyValueFromArray) {
+				this.loadCounter = 0;
 			}
+			this.hasToLoadOnlyValueFromArray = true;
+			this.loadCounter++;
 			System.out.println("\t\t" + obj.getName() + "   --->   "
 					+ obj.getType(constantPoolGen).getSignature());
 			System.out.println("\t\t" + obj.getType(constantPoolGen));
 			//
 		} catch (Exception e) {
-			System.err.println("FOUND IN AALOAD");
+			System.err.println("ERROR IN AALOAD");
 		}
 	}
 
@@ -734,9 +823,13 @@ public final class MethodVisitor extends EmptyVisitor implements
 		return false;
 	}
 
+	// private int isPrimitiveLastStackValueForParam = 0;
+
 	private List<Object> getParameters(Type[] types, String methodName) {
 		List<Object> params = new ArrayList<Object>();
 		try {
+			// TODO Remove ME its for test
+			Stack<Object> temp = this.temporalVariables;
 			int length = types.length;
 			int c = types.length;
 			if (length > 0) {
@@ -745,21 +838,32 @@ public final class MethodVisitor extends EmptyVisitor implements
 				for (int j = 0; j < length; j++) {
 					c--;
 					try {
-						// XXX find out what is actually the type is!
-						// for type check types, null, description, array, list,
-						// primitive including String as primitive
-						// for value first check null, description, array, list
-						// primitive including String as primitive
-						// remove all primitive data from stack until it's find
-						// any non primitive data, before adding as parameter
 						Type type = types[c];
 						Object value = (this.temporalVariables != null && !this.temporalVariables
 								.isEmpty()) ? this.temporalVariables.peek()
 								: null;
+						if (value != null
+								&& value instanceof ArrayObjectProvider) {
+							if (this.hasToLoadOnlyValueFromArray) {
+								value = getSingleDataFromArray(
+										this.temporalVariables.pop(),
+										type.toString(), this.castType);
+							}
+							this.hasToLoadOnlyValueFromArray = false;
+						}
+
 						if (value == null) {
-							object = types[c];
+							if (isPrimitiveType(type)) {
+								object = Description.PRIMITIVE;
+							} else {
+								object = type;
+							}
 						} else if (type.toString().contains("[]")) {
 							if (value instanceof ArrayObjectProvider) {
+								if (((ArrayObjectProvider) value).getType() == null) {
+									((ArrayObjectProvider) value).setType(type
+											.toString());
+								}
 								if (isSameType(type.toString(),
 										((ArrayObjectProvider) value).getType())) {
 									object = value;
@@ -816,7 +920,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 							object = value;
 						} else {
 							result = isSameType(type.toString(),
-									object.toString());
+									value.toString());
 							if (result) {
 								object = value;
 							} else {
@@ -826,7 +930,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 								}
 							}
 						}
-						this.temporalVariables.pop();
+						if (this.temporalVariables != null
+								&& !this.temporalVariables.isEmpty()
+								&& object.equals(value)) {
+							this.temporalVariables.pop();
+						}
 					} catch (Exception e) {
 						System.err
 								.println("SOME ERROR IN PARAM getParameters()");
@@ -843,6 +951,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 		// TODO Remove me
 		System.out.println("\t\t\t\tParams:   " + params);
 		return params;
+	}
+
+	private void createNewArrayProviderObject() {
+		removePrimitiveData();
+		this.temporalVariables.add(new ArrayObjectProvider());
 	}
 
 	// remove primitive type data from stack until the last value is other type
@@ -896,6 +1009,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	@Override
 	public void visitCHECKCAST(CHECKCAST obj) {
+		System.err.println("CAST");
 		System.out.println("\t\t" + obj.getName() + "   --->   "
 				+ obj.getType(constantPoolGen).getSignature());
 		System.out.println("\t\t" + obj.getType(constantPoolGen));
@@ -1043,21 +1157,57 @@ public final class MethodVisitor extends EmptyVisitor implements
 		// change key as object instead of string to keep all objects -- not
 		// done
 		// here
-		private Map<String, Object> arrayObjects = new LinkedHashMap<String, Object>();
-		private String arrayType = "";
+		private Map<String, Data> arrayObjects = new LinkedHashMap<String, Data>();
+		private String arrayType = null; // trace counter to get high
+		private int mostCounted = 0;
+		private Object mostCountedObjectObject = null;
 
 		public String getArrayType() {
+			if (this.arrayType == null) {
+				return null;
+			}
 			return this.arrayType;
 		}
 
+		public void setType(String arrayType) {
+			this.arrayType = arrayType;
+		}
+
 		public String getType() {
+			if (this.arrayType == null) {
+				return null;
+			}
 			return this.arrayType.replace("[]", "");
 		}
 
-		public void add(String type, Object object, Stack<Object> temp) {
+		public void add(Object object, Stack<Object> temp) {
 			// check type before add
-			this.arrayObjects.put(type, object);
-			temp.pop();
+			try {
+				if (object.toString().equalsIgnoreCase(Description.PRIMITIVE)) {
+					add(object.toString(), Description.PRIMITIVE);
+				} else if (isSameType(getType(), object.toString())) {
+					add(object.toString(), object);
+				}
+				temp.pop();
+			} catch (Exception e) {
+			}
+		}
+
+		private void add(String key, Object value) {
+			Data data = this.arrayObjects.get(key);
+			if (data == null) {
+				this.arrayObjects.put(key, new Data(value));
+			} else {
+				if (data.object.toString().equalsIgnoreCase(Description.NULL)) {
+					data.object = value;
+				} else {
+					data.counter++;
+				}
+				if (data.counter > mostCounted) {
+					mostCounted = data.counter;
+					mostCountedObjectObject = data.object;
+				}
+			}
 		}
 
 		public Object getByKey(String key) {
@@ -1070,6 +1220,19 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 		public ArrayObjectProvider(String arrayType) {
 			this.arrayType = arrayType;
+		}
+
+		public ArrayObjectProvider() {
+		}
+
+		class Data {
+			public Object object = null;
+			public int counter = 0;
+
+			public Data(Object object) {
+				this.object = object;
+				counter++;
+			}
 		}
 	}
 }

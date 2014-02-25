@@ -71,15 +71,79 @@ public class Example {
 
 	}
 
+	static void av(int aaaa, int a, int b, int[] aa, int[][] bb, M[][] m,
+			int c, int d, int[] cc) {
+
+	}
+
+	static void av(M a, M b, M[] aa) {
+
+	}
+
+	static void av(String a, int b, int[][] c, int d, int e, M[][][] f, int g,
+			int h, int[][][][] i, int j, M[] k, M l, String v, String vv) {
+
+	}
+
 	// static M mals[] = new M[10];
+	static void av(W i) {
+
+	}
 
 	public static void main(String[] args) {
-		int s = 5;
-		int[] v = new int[s];
-		int[][] sss = new int[4][];
-		M[] mm = new M[3];
+		// int[][][][] a = new int[3][3][4][4];
+		// M[][][] b = new M[5][5][];
+		// av(null, 3, new int[4][], 5, 5, b, 5, 6, a, 6, new M[1], null, "s",
+		// null);
 
-		M[][] mmmm = new M[3][s];
+		// int iiiii[] = new int[4];
+		// iiiii[0] = 6;
+
+		V m = new V();
+		U mm = new U();
+		W mmm = new V();
+		W[] i = new W[5];
+		i[0] = mm;
+		i[1] = mm;
+		i[2] = mm;
+		i[3] = mmm;
+
+		av(i[0]);
+		// i[1] = mm;
+		// i[2] = mmm;
+		// i[3] = mmm;
+		// W valss = i[1];
+		// W vals = (U) i[1];
+
+		// i[0] = m;// new M();
+		// W[][] ii = new W[3][];
+		// W[][] iii = new W[3][3];
+		// ii[0] = new W[7];
+		// ii[0][0] = null;
+		// ii[0][1] = m;
+		// ii[0][2] = mm;
+		// ii[0][3] = mmm;
+		// iii[0][0] = (W) mm;
+		// W val = ii[0][0];
+		// W w = ii[0][0];
+		// i[1] = m;
+		// i[2] = i[1];
+
+		// M[] ii = i;
+		// M j = i[0];
+		// av(j, i[0], i);
+		// int s = 5;
+		// int[][] v = new int[s][];
+		// v[0] = new int[3];
+		// av(s, 1, v[0][0]);
+		// av(s, 1, v[0][0], new int[11], new int[5][], new M[2][3], 4, 5,
+		// null);
+		// int s = 5;
+		// int[] v = new int[s];
+		// int[][] sss = new int[4][];
+		// M[] mm = new M[3];
+		//
+		// M[][] mmmm = new M[3][s];
 		// av(new Integer(8), new M(), new Object(), null, "");
 		// av(String.class);
 		// M mals[] = new M[10];

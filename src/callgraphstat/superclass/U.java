@@ -1,6 +1,6 @@
 package callgraphstat.superclass;
 
-public class U {
+public class U extends W {
 	public V vval = new V();
 
 	V getV() {
