@@ -19,9 +19,6 @@
  */
 package callgraphstat.superclass;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import callgraphstat.superclass.Enam.EnamCat;
 
 public class Example {
@@ -112,6 +109,8 @@ public class Example {
 	}
 
 	public static void main(String[] args) {
+		Y y = new Y();
+		y.a();
 		// IInterface i = new X();
 		// IInterface j = new W();
 		// mc((X) i, (W) j);
@@ -131,11 +130,11 @@ public class Example {
 		// // x[0].eval(i);
 		// x[1].eval((W) i);
 
-		List<M> ml = new ArrayList<M>();
-		ml.add(new M());
-
-		M m = ml.get(0);
-		m.foo();
+		// List<M> ml = new ArrayList<M>();
+		// ml.add(new M());
+		//
+		// M m = ml.get(0);
+		// m.foo();
 
 		// Map<M, M> mll = new HashMap<>();
 		// Stack<M> sm = new Stack<M>();

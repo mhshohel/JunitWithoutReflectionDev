@@ -418,12 +418,17 @@ public final class MethodVisitor extends EmptyVisitor implements
 	private void storeValues(String flag, String variableName, Object type,
 			ReferenceType referenceType) {
 		try {
+			// XXX change name to collectionType
+			boolean isCoolectionType = false;
 			Object value = null;
 			boolean isArrayType = false;
 			if (type.toString().contains("[]")) {
 				isArrayType = true;
 			} else {
 				isArrayType = isCollectionsOrMap(type.toString());
+				if (isArrayType) {
+					isCoolectionType = true;
+				}
 			}
 			try {
 				if (this.description.getDescriptionByClassName(type.toString()) == null) {
@@ -483,7 +488,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 										value = this.temporalVariables.pop();
 									} else {
 										value = new ArrayObjectProvider(
-												type.toString());
+												type.toString(),
+												isCoolectionType);
 										if (!this.temporalVariables.isEmpty()) {
 											if (isCollectionsOrMap(this.temporalVariables
 													.peek().toString())) {
@@ -493,7 +499,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 									}
 								} catch (Exception e) {
 									value = new ArrayObjectProvider(
-											type.toString());
+											type.toString(), isCoolectionType);
 									if (!this.temporalVariables.isEmpty()) {
 										if (isCollectionsOrMap(this.temporalVariables
 												.peek().toString())) {
@@ -503,7 +509,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 								}
 							}
 						} else {
-							value = new ArrayObjectProvider(type.toString());
+							value = new ArrayObjectProvider(type.toString(),
+									isCoolectionType);
 							if (!this.temporalVariables.isEmpty()) {
 								if (isCollectionsOrMap(this.temporalVariables
 										.peek().toString())) {
@@ -1082,9 +1089,26 @@ public final class MethodVisitor extends EmptyVisitor implements
 			Object object = this.temporalVariables.pop();
 			System.out.println(i.getReferenceType(constantPoolGen).toString());
 			List<Object> objects = null;
+			ArrayObjectProvider arrayObjectProvider = null;
+			List<Description> descriptions = null;
+			if (object instanceof ArrayList) {
+				descriptions = (ArrayList<Description>) this.temporalVariables
+						.pop();
+			}
 			if (description == null) {
 				if (object instanceof ArrayObjectProvider) {
-					ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) object;
+					arrayObjectProvider = (ArrayObjectProvider) object;
+					if (arrayObjectProvider.isCollectionType) {
+						for (Object o : params) {
+							if (o.toString().equalsIgnoreCase(
+									Description.PRIMITIVE)) {
+								arrayObjectProvider.add(o.toString(),
+										Description.PRIMITIVE);
+							} else {
+								arrayObjectProvider.add(o.toString(), o);
+							}
+						}
+					}
 					objects = new ArrayList<Object>();
 					if (this.castType != null) {
 						Data temp = arrayObjectProvider.arrayObjects
@@ -1102,6 +1126,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 			}
 			MethodVisitor methodVisitor = null;
 			Object returnType = null;
+			List<Description> list = new ArrayList<Description>();
 			if (description != null) {
 				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
 						description, methodName, types, true);
@@ -1110,6 +1135,20 @@ public final class MethodVisitor extends EmptyVisitor implements
 				}
 			} else if (objects != null && !objects.isEmpty()) {
 				for (Object data : objects) {
+					if (data instanceof Description) {
+						description = (Description) data;
+						list.add(description);
+						methodVisitor = description
+								.getMethodVisitorByNameAndTypeArgs(description,
+										methodName, types, true);
+						if (methodVisitor != null) {
+							returnType = methodVisitor.start(this.node, params,
+									false);
+						}
+					}
+				}
+			} else if (descriptions != null) {
+				for (Object data : descriptions) {
 					if (data instanceof Description) {
 						description = (Description) data;
 						methodVisitor = description
@@ -1122,9 +1161,14 @@ public final class MethodVisitor extends EmptyVisitor implements
 					}
 				}
 			}
+			// if still description is null do something by considering array
+			// object type and return
 			if (returnType != null
 					&& !returnType.toString().equalsIgnoreCase("void")) {
 				this.temporalVariables.add(returnType);
+			} else if (arrayObjectProvider != null
+					&& arrayObjectProvider.isCollectionType) {
+				this.temporalVariables.add(list);
 			}
 			System.out.println("------------------------");
 		} catch (Exception e) {
@@ -1167,6 +1211,12 @@ public final class MethodVisitor extends EmptyVisitor implements
 			}
 			MethodVisitor methodVisitor = null;
 			Object returnType = null;
+			List<Description> descriptions = null;
+			if (object instanceof ArrayList) {
+				descriptions = (ArrayList<Description>) this.temporalVariables
+						.pop();
+			}
+
 			if (description != null) {
 				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
 						description, methodName, types, true);
@@ -1175,6 +1225,32 @@ public final class MethodVisitor extends EmptyVisitor implements
 				}
 			} else if (objects != null && !objects.isEmpty()) {
 				for (Object data : objects) {
+					if (data instanceof Description) {
+						description = (Description) data;
+						methodVisitor = description
+								.getMethodVisitorByNameAndTypeArgs(description,
+										methodName, types, true);
+						if (methodVisitor != null) {
+							returnType = methodVisitor.start(this.node, params,
+									false);
+						}
+					}
+				}
+			} else if (objects != null && !objects.isEmpty()) {
+				for (Object data : objects) {
+					if (data instanceof Description) {
+						description = (Description) data;
+						methodVisitor = description
+								.getMethodVisitorByNameAndTypeArgs(description,
+										methodName, types, true);
+						if (methodVisitor != null) {
+							returnType = methodVisitor.start(this.node, params,
+									false);
+						}
+					}
+				}
+			} else if (descriptions != null) {
+				for (Object data : descriptions) {
 					if (data instanceof Description) {
 						description = (Description) data;
 						methodVisitor = description
@@ -1213,6 +1289,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 			Object object = this.temporalVariables.pop();
 			System.out.println(i.getReferenceType(constantPoolGen).toString());
 			List<Object> objects = null;
+			List<Description> descriptions = null;
+			if (object instanceof ArrayList) {
+				descriptions = (ArrayList<Description>) this.temporalVariables
+						.pop();
+			}
 			if (description == null) {
 				if (object instanceof ArrayObjectProvider) {
 					ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) object;
@@ -1252,6 +1333,19 @@ public final class MethodVisitor extends EmptyVisitor implements
 						}
 					}
 				}
+			} else if (descriptions != null) {
+				for (Object data : descriptions) {
+					if (data instanceof Description) {
+						description = (Description) data;
+						methodVisitor = description
+								.getMethodVisitorByNameAndTypeArgs(description,
+										methodName, types, true);
+						if (methodVisitor != null) {
+							returnType = methodVisitor.start(this.node, params,
+									false);
+						}
+					}
+				}
 			}
 			if (returnType != null
 					&& !returnType.toString().equalsIgnoreCase("void")) {
@@ -1278,7 +1372,14 @@ public final class MethodVisitor extends EmptyVisitor implements
 							constantPoolGen).toString());
 			MethodVisitor methodVisitor = null;
 			if (description != null) {
-				Description copiedDescription = description.copy();
+				System.err.println(methodName);
+				Description copiedDescription = null;
+				if (methodName.equalsIgnoreCase("<init>")) {
+					copiedDescription = description.copy();
+				} else {
+					copiedDescription = this.description;
+				}
+
 				this.temporalVariables.add(copiedDescription);
 				// TODO Remove me
 				System.out.println("STACK: " + this.temporalVariables);
@@ -1314,6 +1415,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 		private String arrayType = null; // trace counter to get high
 		private int mostCounted = 0;
 		private Object mostCountedObjectObject = null;
+		private boolean isCollectionType = false;
 
 		public String getArrayType() {
 			if (this.arrayType == null) {
@@ -1346,7 +1448,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 			}
 		}
 
-		private void add(String key, Object value) {
+		public void add(String key, Object value) {
 			Data data = this.arrayObjects.get(key);
 			if (data == null) {
 				data = new Data(value);
@@ -1372,8 +1474,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 			return object;
 		}
 
-		public ArrayObjectProvider(String arrayType) {
+		public ArrayObjectProvider(String arrayType, boolean isCollectionType) {
 			this.arrayType = arrayType;
+			this.isCollectionType = isCollectionType;
 		}
 
 		public ArrayObjectProvider() {

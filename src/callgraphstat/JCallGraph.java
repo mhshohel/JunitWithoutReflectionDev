@@ -30,14 +30,14 @@ public final class JCallGraph {
 
 	public static void main(String[] args) {
 		try {
-			String loc = "G:\\lnu\\5DV001 - Thesis Project\\Thesis - Jonas\\ThesisBackup\\JunitWithoutReflection.git.second\\JUnitWithoutReflection.Second\\bin\\callgraphstat";
 			// String loc =
-			// "G:\\lnu\\5DV001 - Thesis Project\\Thesis - Jonas\\ThesisBackup\\JunitWithoutReflection.git.second\\JUnitWithoutReflection.Second\\bin\\observer";
-			String mainClass = "callgraphstat.superclass.Example";
-			// String mainClass = "observer.Main";
+			// "G:\\lnu\\5DV001 - Thesis Project\\Thesis - Jonas\\ThesisBackup\\JunitWithoutReflection.git.second\\JUnitWithoutReflection.Second\\bin\\callgraphstat";
+			String loc = "G:\\lnu\\5DV001 - Thesis Project\\Thesis - Jonas\\ThesisBackup\\JunitWithoutReflection.git.second\\JUnitWithoutReflection.Second\\bin\\observer";
+			// String mainClass = "callgraphstat.superclass.Example";
+			String mainClass = "observer.Main";
 			File file = new File(loc);
-			JCallGraph jCallGraph = new JCallGraph(file, "callgraphstat");
-			// JCallGraph jCallGraph = new JCallGraph(file, "observer");
+			// JCallGraph jCallGraph = new JCallGraph(file, "callgraphstat");
+			JCallGraph jCallGraph = new JCallGraph(file, "observer");
 			// Map<String, Description> ssss =
 			// jCallGraph.getClassDescriptions();
 			// System.out.println(ssss.get(
@@ -127,8 +127,8 @@ public final class JCallGraph {
 					readFiles(fileEntry, pac.concat(fileEntry.getName()));
 				}
 			} else {
-				if (pac.equalsIgnoreCase("callgraphstat.superclass.")) {
-					// if (pac.equalsIgnoreCase("observer.")) {
+				// if (pac.equalsIgnoreCase("callgraphstat.superclass.")) {
+				if (pac.equalsIgnoreCase("observer.")) {
 					if (fileEntry.getName().endsWith(".class")) {
 						URL url = this.file.toURI().toURL();
 						URL[] urls = new URL[] { url };
