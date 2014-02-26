@@ -31,8 +31,10 @@ public final class JCallGraph {
 	public static void main(String[] args) {
 		try {
 			String loc = "G:\\lnu\\5DV001 - Thesis Project\\Thesis - Jonas\\ThesisBackup\\JunitWithoutReflection.git.second\\JUnitWithoutReflection.Second\\bin\\callgraphstat";
+			// String loc =
+			// "G:\\lnu\\5DV001 - Thesis Project\\Thesis - Jonas\\ThesisBackup\\JunitWithoutReflection.git.second\\JUnitWithoutReflection.Second\\bin\\observer";
 			String mainClass = "callgraphstat.superclass.Example";
-			// String mainClass = "observer.Printer";
+			// String mainClass = "observer.Main";
 			File file = new File(loc);
 			JCallGraph jCallGraph = new JCallGraph(file, "callgraphstat");
 			// JCallGraph jCallGraph = new JCallGraph(file, "observer");

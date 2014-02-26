@@ -19,6 +19,9 @@
  */
 package callgraphstat.superclass;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import callgraphstat.superclass.Enam.EnamCat;
 
 public class Example {
@@ -85,6 +88,8 @@ public class Example {
 
 	}
 
+	static int avs;
+
 	// static M mals[] = new M[10];
 	static W av() {
 		V m = new V();
@@ -98,8 +103,53 @@ public class Example {
 		return i[0];
 	}
 
+	static int gete() {
+		return 6;
+	}
+
+	static void mc(IInterface a, IInterface b) {
+
+	}
+
 	public static void main(String[] args) {
-		W w = av();
+		// IInterface i = new X();
+		// IInterface j = new W();
+		// mc((X) i, (W) j);
+		// M[] m = new M[4];
+		// for (int i = 0; i < m.length; i++) {
+		// m[i] = new M();
+		// }
+
+		// // multiple cast
+		// IInterface i = new W();
+		// IInterface[] x = new IInterface[4];
+		// x[0] = new X();
+		// x[1] = new W();
+		// ((X) x[0]).voo();
+
+		// ((X) x[0]).eval(i);
+		// // x[0].eval(i);
+		// x[1].eval((W) i);
+
+		List<M> ml = new ArrayList<M>();
+		ml.add(new M());
+
+		M m = ml.get(0);
+		m.foo();
+
+		// Map<M, M> mll = new HashMap<>();
+		// Stack<M> sm = new Stack<M>();
+		// Collection<M> cm = new HashSet<M>();
+
+		// Map<String, ArrayList<Integer>> map = new LinkedHashMap<String,
+		// ArrayList<Integer>>();
+		// List<Integer> in = new ArrayList<Integer>();
+		// in.add(3);
+		// map.put("item", (ArrayList<Integer>) in);
+		// int l = in.size();
+		// int a = in.get(0);
+
+		// W w = av();
 		// int[][][][] a = new int[3][3][4][4];
 		// M[][][] b = new M[5][5][];
 		// av(null, 3, new int[4][], 5, 5, b, 5, 6, a, 6, new M[1], null, "s",

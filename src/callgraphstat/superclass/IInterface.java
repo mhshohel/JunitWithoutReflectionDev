@@ -5,5 +5,5 @@ public interface IInterface {
 
 	public final T tval = null;
 
-	public E eval();
+	public E eval(IInterface e);
 }

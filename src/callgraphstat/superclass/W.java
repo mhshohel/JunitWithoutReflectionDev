@@ -16,7 +16,7 @@ public class W implements IInterface {
 	}
 
 	@Override
-	public E eval() {
+	public E eval(IInterface e) {
 		// TODO Auto-generated method stub
 		return null;
 	}

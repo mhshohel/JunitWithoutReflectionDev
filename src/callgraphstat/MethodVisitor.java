@@ -484,14 +484,32 @@ public final class MethodVisitor extends EmptyVisitor implements
 									} else {
 										value = new ArrayObjectProvider(
 												type.toString());
+										if (!this.temporalVariables.isEmpty()) {
+											if (isCollectionsOrMap(this.temporalVariables
+													.peek().toString())) {
+												this.temporalVariables.pop();
+											}
+										}
 									}
 								} catch (Exception e) {
 									value = new ArrayObjectProvider(
 											type.toString());
+									if (!this.temporalVariables.isEmpty()) {
+										if (isCollectionsOrMap(this.temporalVariables
+												.peek().toString())) {
+											this.temporalVariables.pop();
+										}
+									}
 								}
 							}
 						} else {
 							value = new ArrayObjectProvider(type.toString());
+							if (!this.temporalVariables.isEmpty()) {
+								if (isCollectionsOrMap(this.temporalVariables
+										.peek().toString())) {
+									this.temporalVariables.pop();
+								}
+							}
 						}
 					}
 				} else {
@@ -517,15 +535,36 @@ public final class MethodVisitor extends EmptyVisitor implements
 				addToLoaclVariable(variableName, value, referenceType);
 				break;
 			case "PUTFIELD":
-				this.classVisitor
-						.addValueToField(
-								this.classVisitor,
-								variableName,
-								value,
-								referenceType,
-								((this.temporalVariables != null && !this.temporalVariables
-										.isEmpty()) ? this.temporalVariables
-										.peek() : null));
+				// get most used class and verify by cast
+				if (temporalVariables.peek() instanceof ArrayObjectProvider) {
+					ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) temporalVariables
+							.peek();
+					if (isSameType(referenceType.toString().replace("[]", ""),
+							arrayObjectProvider.getType())) {
+						this.temporalVariables.pop();
+						for (Data data : arrayObjectProvider.arrayObjects
+								.values()) {
+							this.classVisitor.addValueToField(
+									this.classVisitor, variableName, value,
+									referenceType, data.object);
+						}
+					}
+				} else {
+					this.classVisitor
+							.addValueToField(
+									this.classVisitor,
+									variableName,
+									value,
+									referenceType,
+									((this.temporalVariables != null && !this.temporalVariables
+											.isEmpty()) ? (isSameType(
+											referenceType.toString(),
+											this.temporalVariables.peek()
+													.toString())) ? this.temporalVariables
+											.pop() : this.temporalVariables
+											.peek()
+											: null));
+				}
 				break;
 			case "PUTSTATIC":
 				this.description.addValueToStaticField(this.description,
@@ -550,14 +589,35 @@ public final class MethodVisitor extends EmptyVisitor implements
 							referenceType);
 					break;
 				case "GETFIELD":
-					value = this.classVisitor
-							.getValueFromField(
-									this.classVisitor,
-									variableName,
-									referenceType,
-									((this.temporalVariables != null && !this.temporalVariables
-											.isEmpty()) ? this.temporalVariables
-											.peek() : null));
+					if (temporalVariables.peek() instanceof ArrayObjectProvider) {
+						ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) temporalVariables
+								.peek();
+						if (isSameType(
+								referenceType.toString().replace("[]", ""),
+								arrayObjectProvider.getType())) {
+							this.temporalVariables.pop();
+							value = this.classVisitor
+									.getValueFromField(
+											this.classVisitor,
+											variableName,
+											referenceType,
+											arrayObjectProvider.mostCountedObjectObject);
+						}
+					} else {
+						value = this.classVisitor
+								.getValueFromField(
+										this.classVisitor,
+										variableName,
+										referenceType,
+										((this.temporalVariables != null && !this.temporalVariables
+												.isEmpty()) ? (isSameType(
+												referenceType.toString(),
+												this.temporalVariables.peek()
+														.toString())) ? this.temporalVariables
+												.pop() : this.temporalVariables
+												.peek()
+												: null));
+					}
 					break;
 				case "GETSTATIC":
 					value = this.description.getValueFromStaticField(
@@ -740,7 +800,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 						}
 						return (val != null) ? val
 								: (value.mostCountedObjectObject != null) ? value.mostCountedObjectObject
-										: Description.UNKNOWN;
+										: data;
 						// only value
 					}
 				}
@@ -749,7 +809,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 		} else if (data.toString().equalsIgnoreCase(Description.NULL)) {
 			return Description.NULL;
 		}
-		return Description.UNKNOWN;
+		return data;
 	}
 
 	private boolean hasToLoadOnlyValueFromArray = false;
@@ -936,9 +996,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 				Collections.reverse(params);
 			}
 		} catch (Exception e) {
+			// this.castType = null;
 		}
 		// TODO Remove me
 		System.out.println("\t\t\t\tParams:   " + params);
+		// this.castType = null;
 		return params;
 	}
 
@@ -1017,6 +1079,27 @@ public final class MethodVisitor extends EmptyVisitor implements
 			List<Object> params = getParameters(types, methodName);
 			Description description = getInvokedDescription(i.getReferenceType(
 					constantPoolGen).toString());
+			Object object = this.temporalVariables.pop();
+			System.out.println(i.getReferenceType(constantPoolGen).toString());
+			List<Object> objects = null;
+			if (description == null) {
+				if (object instanceof ArrayObjectProvider) {
+					ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) object;
+					objects = new ArrayList<Object>();
+					if (this.castType != null) {
+						Data temp = arrayObjectProvider.arrayObjects
+								.get(this.castType);
+						if (temp != null) {
+							objects.add(temp.object);
+						}
+					} else {
+						for (Data data : arrayObjectProvider.arrayObjects
+								.values()) {
+							objects.add(data.object);
+						}
+					}
+				}
+			}
 			MethodVisitor methodVisitor = null;
 			Object returnType = null;
 			if (description != null) {
@@ -1024,6 +1107,19 @@ public final class MethodVisitor extends EmptyVisitor implements
 						description, methodName, types, true);
 				if (methodVisitor != null) {
 					returnType = methodVisitor.start(this.node, params, false);
+				}
+			} else if (objects != null && !objects.isEmpty()) {
+				for (Object data : objects) {
+					if (data instanceof Description) {
+						description = (Description) data;
+						methodVisitor = description
+								.getMethodVisitorByNameAndTypeArgs(description,
+										methodName, types, true);
+						if (methodVisitor != null) {
+							returnType = methodVisitor.start(this.node, params,
+									false);
+						}
+					}
 				}
 			}
 			if (returnType != null
@@ -1046,8 +1142,29 @@ public final class MethodVisitor extends EmptyVisitor implements
 			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
 					methodName);
 			List<Object> params = getParameters(types, methodName);
+			System.out.println(i.getReferenceType(constantPoolGen).toString());
 			Description description = getInvokedDescription(i.getReferenceType(
 					constantPoolGen).toString());
+			Object object = this.temporalVariables.pop();
+			List<Object> objects = null;
+			if (description == null) {
+				if (object instanceof ArrayObjectProvider) {
+					ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) object;
+					objects = new ArrayList<Object>();
+					if (this.castType != null) {
+						Data temp = arrayObjectProvider.arrayObjects
+								.get(this.castType);
+						if (temp != null) {
+							objects.add(temp.object);
+						}
+					} else {
+						for (Data data : arrayObjectProvider.arrayObjects
+								.values()) {
+							objects.add(data.object);
+						}
+					}
+				}
+			}
 			MethodVisitor methodVisitor = null;
 			Object returnType = null;
 			if (description != null) {
@@ -1055,6 +1172,19 @@ public final class MethodVisitor extends EmptyVisitor implements
 						description, methodName, types, true);
 				if (methodVisitor != null) {
 					returnType = methodVisitor.start(this.node, params, false);
+				}
+			} else if (objects != null && !objects.isEmpty()) {
+				for (Object data : objects) {
+					if (data instanceof Description) {
+						description = (Description) data;
+						methodVisitor = description
+								.getMethodVisitorByNameAndTypeArgs(description,
+										methodName, types, true);
+						if (methodVisitor != null) {
+							returnType = methodVisitor.start(this.node, params,
+									false);
+						}
+					}
 				}
 			}
 			if (returnType != null
@@ -1065,6 +1195,72 @@ public final class MethodVisitor extends EmptyVisitor implements
 		} catch (Exception e) {
 			System.err
 					.println("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
+		}
+	}
+
+	@Override
+	public void visitINVOKESTATIC(INVOKESTATIC i) {
+		try {
+			Type[] types = i.getArgumentTypes(constantPoolGen);
+			String methodName = i.getMethodName(constantPoolGen);
+			// TODO: decide as output requirement
+			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
+					methodName);
+			List<Object> params = getParameters(types, methodName);
+			String classType = i.getReferenceType(constantPoolGen).toString();
+			Description description = this.description
+					.getDescriptionByKey(classType);
+			Object object = this.temporalVariables.pop();
+			System.out.println(i.getReferenceType(constantPoolGen).toString());
+			List<Object> objects = null;
+			if (description == null) {
+				if (object instanceof ArrayObjectProvider) {
+					ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) object;
+					objects = new ArrayList<Object>();
+					if (this.castType != null) {
+						Data temp = arrayObjectProvider.arrayObjects
+								.get(this.castType);
+						if (temp != null) {
+							objects.add(temp.object);
+						}
+					} else {
+						for (Data data : arrayObjectProvider.arrayObjects
+								.values()) {
+							objects.add(data.object);
+						}
+					}
+				}
+			}
+			MethodVisitor methodVisitor = null;
+			Object returnType = null;
+			if (description != null) {
+				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
+						description, methodName, types, true);
+				if (methodVisitor != null) {
+					returnType = methodVisitor.start(this.node, params, false);
+				}
+			} else if (objects != null && !objects.isEmpty()) {
+				for (Object data : objects) {
+					if (data instanceof Description) {
+						description = (Description) data;
+						methodVisitor = description
+								.getMethodVisitorByNameAndTypeArgs(description,
+										methodName, types, true);
+						if (methodVisitor != null) {
+							returnType = methodVisitor.start(this.node, params,
+									false);
+						}
+					}
+				}
+			}
+			if (returnType != null
+					&& !returnType.toString().equalsIgnoreCase("void")) {
+				this.temporalVariables.add(returnType);
+			}
+			System.out.println("------------------------");
+		} catch (Exception e) {
+			System.err
+					.println("SOME ERROR FOUND: public void visitINVOKESTATIC(INVOKESTATIC i)");
 		}
 	}
 
@@ -1107,38 +1303,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 		} catch (Exception e) {
 			System.err
 					.println("SOME ERROR FOUND: public void visitINVOKESPECIAL(INVOKESPECIAL i) ");
-		}
-	}
-
-	@Override
-	public void visitINVOKESTATIC(INVOKESTATIC i) {
-		try {
-			Type[] types = i.getArgumentTypes(constantPoolGen);
-			String methodName = i.getMethodName(constantPoolGen);
-			// TODO: decide as output requirement
-			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
-					methodName);
-			List<Object> params = getParameters(types, methodName);
-			String classType = i.getReferenceType(constantPoolGen).toString();
-			Description description = this.description
-					.getDescriptionByKey(classType);
-			MethodVisitor methodVisitor = null;
-			Object returnType = null;
-			if (description != null) {
-				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
-						description, methodName, types, true);
-				if (methodVisitor != null) {
-					returnType = methodVisitor.start(this.node, params, false);
-				}
-			}
-			if (returnType != null
-					&& !returnType.toString().equalsIgnoreCase("void")) {
-				this.temporalVariables.add(returnType);
-			}
-			System.out.println("------------------------");
-		} catch (Exception e) {
-			System.err
-					.println("SOME ERROR FOUND: public void visitINVOKESTATIC(INVOKESTATIC i)");
 		}
 	}
 
@@ -1185,17 +1349,18 @@ public final class MethodVisitor extends EmptyVisitor implements
 		private void add(String key, Object value) {
 			Data data = this.arrayObjects.get(key);
 			if (data == null) {
-				this.arrayObjects.put(key, new Data(value));
+				data = new Data(value);
+				this.arrayObjects.put(key, data);
 			} else {
 				if (data.object.toString().equalsIgnoreCase(Description.NULL)) {
 					data.object = value;
 				} else {
 					data.counter++;
 				}
-				if (data.counter > mostCounted) {
-					mostCounted = data.counter;
-					mostCountedObjectObject = data.object;
-				}
+			}
+			if (data.counter > mostCounted) {
+				mostCounted = data.counter;
+				mostCountedObjectObject = data.object;
 			}
 		}
 
