@@ -90,8 +90,6 @@ import org.apache.bcel.generic.SASTORE;
 import org.apache.bcel.generic.StoreInstruction;
 import org.apache.bcel.generic.Type;
 
-import callgraphstat.MethodVisitor.ArrayObjectProvider.Data;
-
 public final class MethodVisitor extends EmptyVisitor implements
 		Comparable<MethodVisitor> {
 	private Description description = null;
@@ -214,6 +212,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	public Object start(String source, List<Object> params, boolean isStaticCall) {
 		this.castType = null;
+		// -------------------Initialize Static Values--------------------
 		if (!this.description.isVisitedToCheckStaticField) {
 			this.description.isVisitedToCheckStaticField = true;
 			// set value to the parent, because its for static field
@@ -233,6 +232,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 						.println("SOME ERROR FOUND: public Object start(String source, List<Object> params, boolean isStaticCall");
 			}
 		}
+		// ------------------------------------------------------------------------------
+
+		// ------------------------Read Parameters----------------------------
 		this.isStaticCall = isStaticCall;
 		this.temporalVariables = new Stack<Object>();
 		Type returnType = this.method.getReturnType();
@@ -273,12 +275,17 @@ public final class MethodVisitor extends EmptyVisitor implements
 		} else {
 			target = this.node;
 		}
-		// add edge
+		// ------------------------------------------------------------------------------
+
+		// ------------------------Add Edges--------------------------------
 		if (!isStaticCall) {
 			if (source != null) {
 				Description.addEdge(source, target);
 			}
 		}
+		// ------------------------------------------------------------------------------
+
+		// ---------------------Read Instructions------------------
 		System.err.println("\t\tSTART METHOD:\n\t\t\t-----" + source
 				+ "\n\t\t\t\t--->" + target + "\n");
 
@@ -333,7 +340,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 		System.err.println("\t\t-----END METHOD:\n\t\t\t" + source
 				+ "\n\t\t\t\t--->" + target + "\n");
+		// ------------------------------------------------------------------------------
 
+		// -------------------Initialize ReturnValues--------------------
 		// TODO verify return type
 		if (returnType.toString() != "void") {
 			Object value = (this.temporalVariables != null && !this.temporalVariables
@@ -342,29 +351,30 @@ public final class MethodVisitor extends EmptyVisitor implements
 			System.out.println("RETURN TYPE: " + value);
 			try {
 				if (value != null) {
-					ArrayObjectProvider returnObject = null;
-					if (value instanceof ArrayObjectProvider) {
-						returnObject = (ArrayObjectProvider) value;
-						if (returnObject.getType() == null) {
-							returnObject.setType(returnType.toString());
-						}
-						if (returnType.toString().contains("[]")) {
-							return returnObject;
-						} else {
-							Object object = getSingleDataFromArray(
-									returnObject, returnType.toString(),
-									this.castType);
-							return (object != null) ? object : returnType;
-						}
-					} else {
-						return value;
-					}
+					// ArrayObjectProvider returnObject = null;
+					// if (value instanceof ArrayObjectProvider) {
+					// returnObject = (ArrayObjectProvider) value;
+					// if (returnObject.getType() == null) {
+					// returnObject.setType(returnType.toString());
+					// }
+					// if (returnType.toString().contains("[]")) {
+					// return returnObject;
+					// } else {
+					// Object object = getSingleDataFromArray(
+					// returnObject, returnType.toString(),
+					// this.castType);
+					// return (object != null) ? object : returnType;
+					// }
+					// } else {
+					// return value;
+					// }
 				}
 			} catch (Exception e) {
 				return returnType;
 			}
 		}
 		return returnType;
+		// ----------------------------------------------------------
 	}
 
 	private void addToLoaclVariable(String variableName, Object currentValue,
@@ -418,28 +428,27 @@ public final class MethodVisitor extends EmptyVisitor implements
 	private void storeValues(String flag, String variableName, Object type,
 			ReferenceType referenceType) {
 		try {
-			// XXX change name to collectionType
-			boolean isCoolectionType = false;
 			Object value = null;
 			boolean isArrayType = false;
 			if (type.toString().contains("[]")) {
 				isArrayType = true;
 			} else {
 				isArrayType = isCollectionsOrMap(type.toString());
-				if (isArrayType) {
-					isCoolectionType = true;
-				}
 			}
 			try {
 				if (this.description.getDescriptionByClassName(type.toString()) == null) {
 					if (!isArrayType) {
-						if (this.castType != null
-								&& this.temporalVariables.peek() instanceof ArrayObjectProvider) {
-							ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) this.temporalVariables
-									.peek();
-							value = arrayObjectProvider.arrayObjects
-									.get(this.castType);
-						} else {
+						// if (this.castType != null
+						// && this.temporalVariables.peek() instanceof
+						// ArrayObjectProvider) {
+						// ArrayObjectProvider arrayObjectProvider =
+						// (ArrayObjectProvider) this.temporalVariables
+						// .peek();
+						// value = arrayObjectProvider.arrayObjects
+						// .get(this.castType);
+						// } else
+
+						{
 							if (this.hasToLoadOnlyValueFromArray) {
 								value = getSingleDataFromArray(
 										this.temporalVariables.pop(),
@@ -450,74 +459,75 @@ public final class MethodVisitor extends EmptyVisitor implements
 							}
 						}
 					} else {
-						if (this.temporalVariables.peek() instanceof ArrayObjectProvider) {
-							String arrayType = ((ArrayObjectProvider) this.temporalVariables
-									.peek()).getArrayType();
-							String currentType = type.toString();
-							if (arrayType == null) {
-								ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) this.temporalVariables
-										.pop();
-								arrayObjectProvider.setType(type.toString());
-								value = arrayObjectProvider;
-							} else if (arrayType.replace("[]", "")
-									.equalsIgnoreCase(
-											currentType.replace("[]", ""))) {
-								if (this.hasToLoadOnlyValueFromArray) {
-									value = getSingleDataFromArray(
-											this.temporalVariables.pop(),
-											type.toString(), this.castType);
-									this.hasToLoadOnlyValueFromArray = false;
-								} else {
-									value = this.temporalVariables.pop();
-								}
-							} else {
-								try {
-									Description desOne = this.description
-											.getDescriptionByClassName(arrayType
-													.replace("[]", ""));
-									Description desTwo = this.description
-											.getDescriptionByClassName(currentType
-													.replace("[]", ""));
-									if ((desOne != null && desTwo != null)
-											&& (desOne.getActualClass()
-													.isAssignableFrom(desTwo
-															.getActualClass()))
-											|| (desTwo.getActualClass()
-													.isAssignableFrom(desOne
-															.getActualClass()))) {
-										value = this.temporalVariables.pop();
-									} else {
-										value = new ArrayObjectProvider(
-												type.toString(),
-												isCoolectionType);
-										if (!this.temporalVariables.isEmpty()) {
-											if (isCollectionsOrMap(this.temporalVariables
-													.peek().toString())) {
-												this.temporalVariables.pop();
-											}
-										}
-									}
-								} catch (Exception e) {
-									value = new ArrayObjectProvider(
-											type.toString(), isCoolectionType);
-									if (!this.temporalVariables.isEmpty()) {
-										if (isCollectionsOrMap(this.temporalVariables
-												.peek().toString())) {
-											this.temporalVariables.pop();
-										}
-									}
-								}
-							}
-						} else {
-							value = new ArrayObjectProvider(type.toString(),
-									isCoolectionType);
-							if (!this.temporalVariables.isEmpty()) {
-								if (isCollectionsOrMap(this.temporalVariables
-										.peek().toString())) {
-									this.temporalVariables.pop();
-								}
-							}
-						}
+						// if (this.temporalVariables.peek() instanceof
+						// ArrayObjectProvider) {
+						// String arrayType = ((ArrayObjectProvider)
+						// this.temporalVariables
+						// .peek()).getArrayType();
+						// String currentType = type.toString();
+						// if (arrayType == null) {
+						// ArrayObjectProvider arrayObjectProvider =
+						// (ArrayObjectProvider) this.temporalVariables
+						// .pop();
+						// arrayObjectProvider.setType(type.toString());
+						// value = arrayObjectProvider;
+						// } else if (arrayType.replace("[]", "")
+						// .equalsIgnoreCase(
+						// currentType.replace("[]", ""))) {
+						// if (this.hasToLoadOnlyValueFromArray) {
+						// value = getSingleDataFromArray(
+						// this.temporalVariables.pop(),
+						// type.toString(), this.castType);
+						// this.hasToLoadOnlyValueFromArray = false;
+						// } else {
+						// value = this.temporalVariables.pop();
+						// }
+						// } else {
+						// try {
+						// Description desOne = this.description
+						// .getDescriptionByClassName(arrayType
+						// .replace("[]", ""));
+						// Description desTwo = this.description
+						// .getDescriptionByClassName(currentType
+						// .replace("[]", ""));
+						// if ((desOne != null && desTwo != null)
+						// && (desOne.getActualClass()
+						// .isAssignableFrom(desTwo
+						// .getActualClass()))
+						// || (desTwo.getActualClass()
+						// .isAssignableFrom(desOne
+						// .getActualClass()))) {
+						// value = this.temporalVariables.pop();
+						// } else {
+						// // value = new ArrayObjectProvider(
+						// // type.toString());
+						// if (!this.temporalVariables.isEmpty()) {
+						// if (isCollectionsOrMap(this.temporalVariables
+						// .peek().toString())) {
+						// this.temporalVariables.pop();
+						// }
+						// }
+						// }
+						// } catch (Exception e) {
+						// // value = new ArrayObjectProvider(
+						// // type.toString());
+						// if (!this.temporalVariables.isEmpty()) {
+						// if (isCollectionsOrMap(this.temporalVariables
+						// .peek().toString())) {
+						// this.temporalVariables.pop();
+						// }
+						// }
+						// }
+						// }
+						// } else {
+						// // value = new ArrayObjectProvider(type.toString());
+						// if (!this.temporalVariables.isEmpty()) {
+						// if (isCollectionsOrMap(this.temporalVariables
+						// .peek().toString())) {
+						// this.temporalVariables.pop();
+						// }
+						// }
+						// }
 					}
 				} else {
 					if (this.hasToLoadOnlyValueFromArray) {
@@ -542,36 +552,37 @@ public final class MethodVisitor extends EmptyVisitor implements
 				addToLoaclVariable(variableName, value, referenceType);
 				break;
 			case "PUTFIELD":
-				// get most used class and verify by cast
-				if (temporalVariables.peek() instanceof ArrayObjectProvider) {
-					ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) temporalVariables
-							.peek();
-					if (isSameType(referenceType.toString().replace("[]", ""),
-							arrayObjectProvider.getType())) {
-						this.temporalVariables.pop();
-						for (Data data : arrayObjectProvider.arrayObjects
-								.values()) {
-							this.classVisitor.addValueToField(
-									this.classVisitor, variableName, value,
-									referenceType, data.object);
-						}
-					}
-				} else {
-					this.classVisitor
-							.addValueToField(
-									this.classVisitor,
-									variableName,
-									value,
-									referenceType,
-									((this.temporalVariables != null && !this.temporalVariables
-											.isEmpty()) ? (isSameType(
-											referenceType.toString(),
-											this.temporalVariables.peek()
-													.toString())) ? this.temporalVariables
-											.pop() : this.temporalVariables
-											.peek()
-											: null));
-				}
+			// get most used class and verify by cast
+			// if (temporalVariables.peek() instanceof ArrayObjectProvider) {
+			// ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider)
+			// temporalVariables
+			// .peek();
+			// if (isSameType(referenceType.toString().replace("[]", ""),
+			// arrayObjectProvider.getType())) {
+			// this.temporalVariables.pop();
+			// for (Data data : arrayObjectProvider.arrayObjects
+			// .values()) {
+			// this.classVisitor.addValueToField(
+			// this.classVisitor, variableName, value,
+			// referenceType, data.object);
+			// }
+			// }
+			// } else
+
+			{
+				this.classVisitor
+						.addValueToField(
+								this.classVisitor,
+								variableName,
+								value,
+								referenceType,
+								((this.temporalVariables != null && !this.temporalVariables
+										.isEmpty()) ? (isSameType(referenceType
+										.toString(), this.temporalVariables
+										.peek().toString())) ? this.temporalVariables
+										.pop() : this.temporalVariables.peek()
+										: null));
+			}
 				break;
 			case "PUTSTATIC":
 				this.description.addValueToStaticField(this.description,
@@ -596,35 +607,39 @@ public final class MethodVisitor extends EmptyVisitor implements
 							referenceType);
 					break;
 				case "GETFIELD":
-					if (temporalVariables.peek() instanceof ArrayObjectProvider) {
-						ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) temporalVariables
-								.peek();
-						if (isSameType(
-								referenceType.toString().replace("[]", ""),
-								arrayObjectProvider.getType())) {
-							this.temporalVariables.pop();
-							value = this.classVisitor
-									.getValueFromField(
-											this.classVisitor,
-											variableName,
-											referenceType,
-											arrayObjectProvider.mostCountedObjectObject);
-						}
-					} else {
-						value = this.classVisitor
-								.getValueFromField(
-										this.classVisitor,
-										variableName,
-										referenceType,
-										((this.temporalVariables != null && !this.temporalVariables
-												.isEmpty()) ? (isSameType(
-												referenceType.toString(),
-												this.temporalVariables.peek()
-														.toString())) ? this.temporalVariables
-												.pop() : this.temporalVariables
-												.peek()
-												: null));
-					}
+				// if (temporalVariables.peek() instanceof ArrayObjectProvider)
+				// {
+				// ArrayObjectProvider arrayObjectProvider =
+				// (ArrayObjectProvider) temporalVariables
+				// .peek();
+				// if (isSameType(
+				// referenceType.toString().replace("[]", ""),
+				// arrayObjectProvider.getType())) {
+				// this.temporalVariables.pop();
+				// value = this.classVisitor
+				// .getValueFromField(
+				// this.classVisitor,
+				// variableName,
+				// referenceType,
+				// arrayObjectProvider.mostCountedObjectObject);
+				// }
+				// } else
+
+				{
+					value = this.classVisitor
+							.getValueFromField(
+									this.classVisitor,
+									variableName,
+									referenceType,
+									((this.temporalVariables != null && !this.temporalVariables
+											.isEmpty()) ? (isSameType(
+											referenceType.toString(),
+											this.temporalVariables.peek()
+													.toString())) ? this.temporalVariables
+											.pop() : this.temporalVariables
+											.peek()
+											: null));
+				}
 					break;
 				case "GETSTATIC":
 					value = this.description.getValueFromStaticField(
@@ -772,50 +787,52 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	private Object getSingleDataFromArray(Object data, String type,
 			String castType) {
-		if (data instanceof ArrayObjectProvider) {
-			ArrayObjectProvider value = (ArrayObjectProvider) data;
-			if (value.arrayObjects != null) {
-				// TODO load data by counter or index
-				// Check Cast
-				boolean typeIsArrayType = type.contains("[]");
-				if (castType != null) {
-					return (value.arrayObjects.containsKey(castType)) ? value.arrayObjects
-							.get(castType).object : Description.UNKNOWN;
-				} else if (value.getType().equalsIgnoreCase(
-						type.replace("[]", "").trim())) {
-					if (typeIsArrayType) {
-						return value;
-					} else {
-						Object val = value.arrayObjects.get(type);
-						if (val == null) {
-							val = (value.arrayObjects
-									.containsKey(Description.PRIMITIVE)) ? value.arrayObjects
-									.get(Description.PRIMITIVE).object : null;
-							if (val == null) {
-								// it means it is calling super class type,
-								// return most counted obj
-								if (isSameType(value.getType(),
-										type.replace("[]", "").trim())) {
-									System.out
-											.println(value.mostCountedObjectObject);
-									// return mostly used object
-									val = value.mostCountedObjectObject;
-								}
-							}
-						} else {
-							val = ((Data) val).object;
-						}
-						return (val != null) ? val
-								: (value.mostCountedObjectObject != null) ? value.mostCountedObjectObject
-										: data;
-						// only value
-					}
-				}
-				// return value.arrayObjects.get(type);
-			}
-		} else if (data.toString().equalsIgnoreCase(Description.NULL)) {
-			return Description.NULL;
-		}
+		// if (data instanceof ArrayObjectProvider) {
+		// ArrayObjectProvider value = (ArrayObjectProvider) data;
+		// if (value.arrayObjects != null) {
+		// // TODO load data by counter or index
+		// // Check Cast
+		// boolean typeIsArrayType = type.contains("[]");
+		// if (castType != null) {
+		// return (value.arrayObjects.containsKey(castType)) ?
+		// value.arrayObjects
+		// .get(castType).object : Description.UNKNOWN;
+		// } else if (value.getType().equalsIgnoreCase(
+		// type.replace("[]", "").trim())) {
+		// if (typeIsArrayType) {
+		// return value;
+		// } else {
+		// Object val = value.arrayObjects.get(type);
+		// if (val == null) {
+		// val = (value.arrayObjects
+		// .containsKey(Description.PRIMITIVE)) ? value.arrayObjects
+		// .get(Description.PRIMITIVE).object : null;
+		// if (val == null) {
+		// // it means it is calling super class type,
+		// // return most counted obj
+		// if (isSameType(value.getType(),
+		// type.replace("[]", "").trim())) {
+		// System.out
+		// .println(value.mostCountedObjectObject);
+		// // return mostly used object
+		// val = value.mostCountedObjectObject;
+		// }
+		// }
+		// } else {
+		// // val = ((Data) val).object;
+		// }
+		// return (val != null) ? val
+		// : (value.mostCountedObjectObject != null) ?
+		// value.mostCountedObjectObject
+		// : data;
+		// // only value
+		// }
+		// }
+		// // return value.arrayObjects.get(type);
+		// }
+		// } else if (data.toString().equalsIgnoreCase(Description.NULL)) {
+		// return Description.NULL;
+		// }
 		return data;
 	}
 
@@ -828,22 +845,23 @@ public final class MethodVisitor extends EmptyVisitor implements
 			Object dataObject = this.temporalVariables.pop();
 			removePrimitiveData();
 			Object arrayObjcet = this.temporalVariables.peek();
-			if (arrayObjcet instanceof ArrayObjectProvider) {
-				ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) arrayObjcet;
-				// by check data type remove it from stack
-				Object data = null;
-				if (this.hasToLoadOnlyValueFromArray) {
-					if (this.loadCounter == 2) {
-						data = getSingleDataFromArray(dataObject,
-								arrayObjectProvider.getType(), this.castType);
-					}
-					data = dataObject;
-					this.hasToLoadOnlyValueFromArray = false;
-				} else {
-					data = dataObject;
-				}
-				arrayObjectProvider.add(data, this.temporalVariables);
-			}
+			// if (arrayObjcet instanceof ArrayObjectProvider) {
+			// ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider)
+			// arrayObjcet;
+			// // by check data type remove it from stack
+			// Object data = null;
+			// if (this.hasToLoadOnlyValueFromArray) {
+			// if (this.loadCounter == 2) {
+			// data = getSingleDataFromArray(dataObject,
+			// arrayObjectProvider.getType(), this.castType);
+			// }
+			// data = dataObject;
+			// this.hasToLoadOnlyValueFromArray = false;
+			// } else {
+			// data = dataObject;
+			// }
+			// arrayObjectProvider.add(data, this.temporalVariables);
+			// }
 		} catch (Exception e) {
 			System.err.println("ERROR IN AASTORE");
 			this.hasToLoadOnlyValueFromArray = false;
@@ -898,15 +916,15 @@ public final class MethodVisitor extends EmptyVisitor implements
 						Object value = (this.temporalVariables != null && !this.temporalVariables
 								.isEmpty()) ? this.temporalVariables.peek()
 								: null;
-						if (value != null
-								&& value instanceof ArrayObjectProvider) {
-							if (this.hasToLoadOnlyValueFromArray) {
-								value = getSingleDataFromArray(
-										this.temporalVariables.pop(),
-										type.toString(), this.castType);
-							}
-							this.hasToLoadOnlyValueFromArray = false;
-						}
+						// if (value != null
+						// && value instanceof ArrayObjectProvider) {
+						// if (this.hasToLoadOnlyValueFromArray) {
+						// value = getSingleDataFromArray(
+						// this.temporalVariables.pop(),
+						// type.toString(), this.castType);
+						// }
+						// this.hasToLoadOnlyValueFromArray = false;
+						// }
 
 						if (value == null) {
 							if (isPrimitiveType(type)) {
@@ -915,18 +933,21 @@ public final class MethodVisitor extends EmptyVisitor implements
 								object = type;
 							}
 						} else if (type.toString().contains("[]")) {
-							if (value instanceof ArrayObjectProvider) {
-								if (((ArrayObjectProvider) value).getType() == null) {
-									((ArrayObjectProvider) value).setType(type
-											.toString());
-								}
-								if (isSameType(type.toString(),
-										((ArrayObjectProvider) value).getType())) {
-									object = value;
-								} else {
-									object = type;
-								}
-							} else if (value.toString().equalsIgnoreCase(
+							// if (value instanceof ArrayObjectProvider) {
+							// if (((ArrayObjectProvider) value).getType() ==
+							// null) {
+							// ((ArrayObjectProvider) value).setType(type
+							// .toString());
+							// }
+							// if (isSameType(type.toString(),
+							// ((ArrayObjectProvider) value).getType())) {
+							// object = value;
+							// } else {
+							// object = type;
+							// }
+							// } else
+
+							if (value.toString().equalsIgnoreCase(
 									Description.NULL)) {
 								object = value;
 							} else {
@@ -1003,17 +1024,17 @@ public final class MethodVisitor extends EmptyVisitor implements
 				Collections.reverse(params);
 			}
 		} catch (Exception e) {
-			// this.castType = null;
+			this.castType = null;
 		}
 		// TODO Remove me
 		System.out.println("\t\t\t\tParams:   " + params);
-		// this.castType = null;
+		this.castType = null;
 		return params;
 	}
 
 	private void createNewArrayProviderObject() {
 		removePrimitiveData();
-		this.temporalVariables.add(new ArrayObjectProvider());
+		// this.temporalVariables.add(new ArrayObjectProvider());
 	}
 
 	// remove primitive type data from stack until the last value is other type
@@ -1086,89 +1107,23 @@ public final class MethodVisitor extends EmptyVisitor implements
 			List<Object> params = getParameters(types, methodName);
 			Description description = getInvokedDescription(i.getReferenceType(
 					constantPoolGen).toString());
-			Object object = this.temporalVariables.pop();
 			System.out.println(i.getReferenceType(constantPoolGen).toString());
-			List<Object> objects = null;
-			ArrayObjectProvider arrayObjectProvider = null;
-			List<Description> descriptions = null;
-			if (object instanceof ArrayList) {
-				descriptions = (ArrayList<Description>) this.temporalVariables
-						.pop();
-			}
-			if (description == null) {
-				if (object instanceof ArrayObjectProvider) {
-					arrayObjectProvider = (ArrayObjectProvider) object;
-					if (arrayObjectProvider.isCollectionType) {
-						for (Object o : params) {
-							if (o.toString().equalsIgnoreCase(
-									Description.PRIMITIVE)) {
-								arrayObjectProvider.add(o.toString(),
-										Description.PRIMITIVE);
-							} else {
-								arrayObjectProvider.add(o.toString(), o);
-							}
-						}
-					}
-					objects = new ArrayList<Object>();
-					if (this.castType != null) {
-						Data temp = arrayObjectProvider.arrayObjects
-								.get(this.castType);
-						if (temp != null) {
-							objects.add(temp.object);
-						}
-					} else {
-						for (Data data : arrayObjectProvider.arrayObjects
-								.values()) {
-							objects.add(data.object);
-						}
-					}
-				}
-			}
 			MethodVisitor methodVisitor = null;
 			Object returnType = null;
-			List<Description> list = new ArrayList<Description>();
 			if (description != null) {
 				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
 						description, methodName, types, true);
 				if (methodVisitor != null) {
 					returnType = methodVisitor.start(this.node, params, false);
-				}
-			} else if (objects != null && !objects.isEmpty()) {
-				for (Object data : objects) {
-					if (data instanceof Description) {
-						description = (Description) data;
-						list.add(description);
-						methodVisitor = description
-								.getMethodVisitorByNameAndTypeArgs(description,
-										methodName, types, true);
-						if (methodVisitor != null) {
-							returnType = methodVisitor.start(this.node, params,
-									false);
-						}
-					}
-				}
-			} else if (descriptions != null) {
-				for (Object data : descriptions) {
-					if (data instanceof Description) {
-						description = (Description) data;
-						methodVisitor = description
-								.getMethodVisitorByNameAndTypeArgs(description,
-										methodName, types, true);
-						if (methodVisitor != null) {
-							returnType = methodVisitor.start(this.node, params,
-									false);
-						}
-					}
+				} else {// methodVisitor is null because class is Library class
+					createEdgeIfMethodNotFound(this.node,
+							i.getReferenceType(constantPoolGen).toString()
+									+ "." + methodName, params);
 				}
 			}
-			// if still description is null do something by considering array
-			// object type and return
 			if (returnType != null
 					&& !returnType.toString().equalsIgnoreCase("void")) {
 				this.temporalVariables.add(returnType);
-			} else if (arrayObjectProvider != null
-					&& arrayObjectProvider.isCollectionType) {
-				this.temporalVariables.add(list);
 			}
 			System.out.println("------------------------");
 		} catch (Exception e) {
@@ -1185,82 +1140,35 @@ public final class MethodVisitor extends EmptyVisitor implements
 			// TODO: decide as output requirement
 			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
 					methodName);
+			String cast = this.castType;
 			List<Object> params = getParameters(types, methodName);
-			System.out.println(i.getReferenceType(constantPoolGen).toString());
 			Description description = getInvokedDescription(i.getReferenceType(
 					constantPoolGen).toString());
 			Object object = this.temporalVariables.pop();
+			System.out.println(i.getReferenceType(constantPoolGen).toString());
 			List<Object> objects = null;
-			if (description == null) {
-				if (object instanceof ArrayObjectProvider) {
-					ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) object;
-					objects = new ArrayList<Object>();
-					if (this.castType != null) {
-						Data temp = arrayObjectProvider.arrayObjects
-								.get(this.castType);
-						if (temp != null) {
-							objects.add(temp.object);
-						}
-					} else {
-						for (Data data : arrayObjectProvider.arrayObjects
-								.values()) {
-							objects.add(data.object);
-						}
-					}
-				}
-			}
+			// if (description == null) {
+			// if (object instanceof ArrayObjectProvider) {
+			// ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider)
+			// object;
+			// objects = new ArrayList<Object>();
+			// if (this.castType != null) {
+			// System.out.println("");
+			// }
+			// }
+			// }
+
 			MethodVisitor methodVisitor = null;
 			Object returnType = null;
-			List<Description> descriptions = null;
-			if (object instanceof ArrayList) {
-				descriptions = (ArrayList<Description>) this.temporalVariables
-						.pop();
-			}
-
 			if (description != null) {
 				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
 						description, methodName, types, true);
 				if (methodVisitor != null) {
 					returnType = methodVisitor.start(this.node, params, false);
-				}
-			} else if (objects != null && !objects.isEmpty()) {
-				for (Object data : objects) {
-					if (data instanceof Description) {
-						description = (Description) data;
-						methodVisitor = description
-								.getMethodVisitorByNameAndTypeArgs(description,
-										methodName, types, true);
-						if (methodVisitor != null) {
-							returnType = methodVisitor.start(this.node, params,
-									false);
-						}
-					}
-				}
-			} else if (objects != null && !objects.isEmpty()) {
-				for (Object data : objects) {
-					if (data instanceof Description) {
-						description = (Description) data;
-						methodVisitor = description
-								.getMethodVisitorByNameAndTypeArgs(description,
-										methodName, types, true);
-						if (methodVisitor != null) {
-							returnType = methodVisitor.start(this.node, params,
-									false);
-						}
-					}
-				}
-			} else if (descriptions != null) {
-				for (Object data : descriptions) {
-					if (data instanceof Description) {
-						description = (Description) data;
-						methodVisitor = description
-								.getMethodVisitorByNameAndTypeArgs(description,
-										methodName, types, true);
-						if (methodVisitor != null) {
-							returnType = methodVisitor.start(this.node, params,
-									false);
-						}
-					}
+				} else {// methodVisitor is null because class is Library class
+					createEdgeIfMethodNotFound(this.node,
+							i.getReferenceType(constantPoolGen).toString()
+									+ "." + methodName, params);
 				}
 			}
 			if (returnType != null
@@ -1271,90 +1179,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 		} catch (Exception e) {
 			System.err
 					.println("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
-		}
-	}
-
-	@Override
-	public void visitINVOKESTATIC(INVOKESTATIC i) {
-		try {
-			Type[] types = i.getArgumentTypes(constantPoolGen);
-			String methodName = i.getMethodName(constantPoolGen);
-			// TODO: decide as output requirement
-			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
-					methodName);
-			List<Object> params = getParameters(types, methodName);
-			String classType = i.getReferenceType(constantPoolGen).toString();
-			Description description = this.description
-					.getDescriptionByKey(classType);
-			Object object = this.temporalVariables.pop();
-			System.out.println(i.getReferenceType(constantPoolGen).toString());
-			List<Object> objects = null;
-			List<Description> descriptions = null;
-			if (object instanceof ArrayList) {
-				descriptions = (ArrayList<Description>) this.temporalVariables
-						.pop();
-			}
-			if (description == null) {
-				if (object instanceof ArrayObjectProvider) {
-					ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider) object;
-					objects = new ArrayList<Object>();
-					if (this.castType != null) {
-						Data temp = arrayObjectProvider.arrayObjects
-								.get(this.castType);
-						if (temp != null) {
-							objects.add(temp.object);
-						}
-					} else {
-						for (Data data : arrayObjectProvider.arrayObjects
-								.values()) {
-							objects.add(data.object);
-						}
-					}
-				}
-			}
-			MethodVisitor methodVisitor = null;
-			Object returnType = null;
-			if (description != null) {
-				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
-						description, methodName, types, true);
-				if (methodVisitor != null) {
-					returnType = methodVisitor.start(this.node, params, false);
-				}
-			} else if (objects != null && !objects.isEmpty()) {
-				for (Object data : objects) {
-					if (data instanceof Description) {
-						description = (Description) data;
-						methodVisitor = description
-								.getMethodVisitorByNameAndTypeArgs(description,
-										methodName, types, true);
-						if (methodVisitor != null) {
-							returnType = methodVisitor.start(this.node, params,
-									false);
-						}
-					}
-				}
-			} else if (descriptions != null) {
-				for (Object data : descriptions) {
-					if (data instanceof Description) {
-						description = (Description) data;
-						methodVisitor = description
-								.getMethodVisitorByNameAndTypeArgs(description,
-										methodName, types, true);
-						if (methodVisitor != null) {
-							returnType = methodVisitor.start(this.node, params,
-									false);
-						}
-					}
-				}
-			}
-			if (returnType != null
-					&& !returnType.toString().equalsIgnoreCase("void")) {
-				this.temporalVariables.add(returnType);
-			}
-			System.out.println("------------------------");
-		} catch (Exception e) {
-			System.err
-					.println("SOME ERROR FOUND: public void visitINVOKESTATIC(INVOKESTATIC i)");
 		}
 	}
 
@@ -1372,14 +1196,12 @@ public final class MethodVisitor extends EmptyVisitor implements
 							constantPoolGen).toString());
 			MethodVisitor methodVisitor = null;
 			if (description != null) {
-				System.err.println(methodName);
 				Description copiedDescription = null;
 				if (methodName.equalsIgnoreCase("<init>")) {
 					copiedDescription = description.copy();
 				} else {
 					copiedDescription = this.description;
 				}
-
 				this.temporalVariables.add(copiedDescription);
 				// TODO Remove me
 				System.out.println("STACK: " + this.temporalVariables);
@@ -1396,6 +1218,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 				}
 				if (methodVisitor != null) {
 					methodVisitor.start(this.node, params, this.isStaticCall);
+				} else {// methodVisitor is null because class is Library class
+					createEdgeIfMethodNotFound(this.node,
+							i.getReferenceType(constantPoolGen).toString()
+									+ "." + methodName, params);
 				}
 			} else {
 				this.temporalVariables.add(i.getReferenceType(constantPoolGen));
@@ -1407,89 +1233,157 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
-	final class ArrayObjectProvider {
-		// change key as object instead of string to keep all objects -- not
-		// done
-		// here
-		private Map<String, Data> arrayObjects = new LinkedHashMap<String, Data>();
-		private String arrayType = null; // trace counter to get high
-		private int mostCounted = 0;
-		private Object mostCountedObjectObject = null;
-		private boolean isCollectionType = false;
-
-		public String getArrayType() {
-			if (this.arrayType == null) {
-				return null;
-			}
-			return this.arrayType;
-		}
-
-		public void setType(String arrayType) {
-			this.arrayType = arrayType;
-		}
-
-		public String getType() {
-			if (this.arrayType == null) {
-				return null;
-			}
-			return this.arrayType.replace("[]", "");
-		}
-
-		public void add(Object object, Stack<Object> temp) {
-			// check type before add
-			try {
-				if (object.toString().equalsIgnoreCase(Description.PRIMITIVE)) {
-					add(object.toString(), Description.PRIMITIVE);
-				} else if (isSameType(getType(), object.toString())) {
-					add(object.toString(), object);
-				}
-				temp.pop();
-			} catch (Exception e) {
-			}
-		}
-
-		public void add(String key, Object value) {
-			Data data = this.arrayObjects.get(key);
-			if (data == null) {
-				data = new Data(value);
-				this.arrayObjects.put(key, data);
-			} else {
-				if (data.object.toString().equalsIgnoreCase(Description.NULL)) {
-					data.object = value;
-				} else {
-					data.counter++;
+	@Override
+	public void visitINVOKESTATIC(INVOKESTATIC i) {
+		try {
+			Type[] types = i.getArgumentTypes(constantPoolGen);
+			String methodName = i.getMethodName(constantPoolGen);
+			// TODO: decide as output requirement
+			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
+					methodName);
+			List<Object> params = getParameters(types, methodName);
+			String classType = i.getReferenceType(constantPoolGen).toString();
+			Description description = this.description
+					.getDescriptionByKey(classType);
+			MethodVisitor methodVisitor = null;
+			Object returnType = null;
+			if (description != null) {
+				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
+						description, methodName, types, true);
+				if (methodVisitor != null) {
+					returnType = methodVisitor.start(this.node, params, false);
+				} else {// methodVisitor is null because class is Library class
+					createEdgeIfMethodNotFound(this.node,
+							i.getReferenceType(constantPoolGen).toString()
+									+ "." + methodName, params);
 				}
 			}
-			if (data.counter > mostCounted) {
-				mostCounted = data.counter;
-				mostCountedObjectObject = data.object;
+			if (returnType != null
+					&& !returnType.toString().equalsIgnoreCase("void")) {
+				this.temporalVariables.add(returnType);
 			}
-		}
-
-		public Object getByKey(String key) {
-			Object object = this.arrayObjects.get(key);
-			if (object == null) {
-				object = Description.NULL;
-			}
-			return object;
-		}
-
-		public ArrayObjectProvider(String arrayType, boolean isCollectionType) {
-			this.arrayType = arrayType;
-			this.isCollectionType = isCollectionType;
-		}
-
-		public ArrayObjectProvider() {
-		}
-
-		class Data {
-			public Object object = null;
-			public int counter = 0;
-
-			public Data(Object object) {
-				this.object = object;
-				counter++;
-			}
+			System.out.println("------------------------");
+		} catch (Exception e) {
+			System.err
+					.println("SOME ERROR FOUND: public void visitINVOKESTATIC(INVOKESTATIC i)");
 		}
 	}
+
+	private void createEdgeIfMethodNotFound(String source, String target,
+			List<Object> params) {
+		if (params != null && !params.isEmpty()) {
+			int length = params.size();
+			String types = "(";
+			String actualParam = "";
+			for (int i = 0; i < length; i++) {
+				actualParam = params.get(i).toString();
+				types += ((i + 1) == length) ? actualParam : actualParam + ",";
+			}
+			types += ")";
+			target += types;
+		}
+		Description.addEdge(source, target);
+	}
+
+	final class Values {
+		// make it something to keep data with data type, so that we can know
+		// how to what is the data type easily, then we should take all the data
+		// from the list, from the value checker we should check if the value is
+		// instance of Values, in this way we can retrieve it from the Values
+		// object for array, this class is actually used for array type or
+		// collection type data.
+		private List<Object> values = null;
+		private Class<?> classType = null;
+		private Class<?> containerClassType = null;
+		private boolean isArrayOrCollectionType = false;
+
+		public Values() {
+			this.values = new ArrayList<Object>();
+		}
+	}
+
+	// final class ArrayObjectProvider {
+	// // change key as object instead of string to keep all objects -- not
+	// // done
+	// // here
+	// private Map<String, Data> arrayObjects = new LinkedHashMap<String,
+	// Data>();
+	// private String arrayType = null; // trace counter to get high
+	// private int mostCounted = 0;
+	// private Object mostCountedObjectObject = null;
+	//
+	// public String getArrayType() {
+	// if (this.arrayType == null) {
+	// return null;
+	// }
+	// return this.arrayType;
+	// }
+	//
+	// public void setType(String arrayType) {
+	// this.arrayType = arrayType;
+	// }
+	//
+	// public String getType() {
+	// if (this.arrayType == null) {
+	// return null;
+	// }
+	// return this.arrayType.replace("[]", "");
+	// }
+	//
+	// public void add(Object object, Stack<Object> temp) {
+	// // check type before add
+	// try {
+	// if (object.toString().equalsIgnoreCase(Description.PRIMITIVE)) {
+	// add(object.toString(), Description.PRIMITIVE);
+	// } else if (isSameType(getType(), object.toString())) {
+	// add(object.toString(), object);
+	// }
+	// temp.pop();
+	// } catch (Exception e) {
+	// }
+	// }
+	//
+	// private void add(String key, Object value) {
+	// Data data = this.arrayObjects.get(key);
+	// if (data == null) {
+	// data = new Data(value);
+	// this.arrayObjects.put(key, data);
+	// } else {
+	// if (data.object.toString().equalsIgnoreCase(Description.NULL)) {
+	// data.object = value;
+	// } else {
+	// data.counter++;
+	// }
+	// }
+	// if (data.counter > mostCounted) {
+	// mostCounted = data.counter;
+	// mostCountedObjectObject = data.object;
+	// }
+	// }
+	//
+	// public Object getByKey(String key) {
+	// Object object = this.arrayObjects.get(key);
+	// if (object == null) {
+	// object = Description.NULL;
+	// }
+	// return object;
+	// }
+	//
+	// public ArrayObjectProvider(String arrayType) {
+	// this.arrayType = arrayType;
+	// }
+	//
+	// public ArrayObjectProvider() {
+	// }
+	//
+	// class Data {
+	// public Object object = null;
+	// public int counter = 0;
+	//
+	// public Data(Object object) {
+	// this.object = object;
+	// counter++;
+	// }
+	// }
+	// }
 }

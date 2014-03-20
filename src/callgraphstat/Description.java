@@ -93,6 +93,7 @@ public final class Description implements Comparable<Description> {
 	public static final String OBJECT = "object";
 	public static final String ARRAY_TYPE = "arr_typ";
 	public static final String ARRAY_OBJECT = "arr_obj";
+	public static final String COLLECTION_TYPE = "coll_typ";
 
 	private Description() {
 		initialize();

@@ -108,9 +108,25 @@ public class Example {
 
 	}
 
+	static int val;
+
 	public static void main(String[] args) {
-		Y y = new Y();
-		y.a();
+		Object o = new A();
+		A a = new A();
+		o.equals(a);
+		// A a = new A();
+		// String as = "";
+		// int aa = 5;
+		// val = 9;
+		//
+		// if (val == 9) {
+		// a.foo();
+		// } else {
+		// a.foos();
+		// }
+
+		// Y y = new Y();
+		// y.a();
 		// IInterface i = new X();
 		// IInterface j = new W();
 		// mc((X) i, (W) j);
