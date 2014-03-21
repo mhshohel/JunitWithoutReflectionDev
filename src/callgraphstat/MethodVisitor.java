@@ -1053,7 +1053,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 	}
 
 	private void printObjectInvoke(Type[] types, ReferenceType referenceType,
-			String methodName) {
+			String methodName, String flag) {
 		// ------------Only To Show-------------
 		String type = "(";
 		for (int j = 0; j < types.length; j++) {
@@ -1061,7 +1061,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 		type += ")";
 		System.out
-				.println(String.format(format, "O", referenceType, methodName)
+				.println(String.format(format, flag, referenceType, methodName)
 						+ " "
 						+ type
 						+ "\n------------------------------------------------------------------------------------------\n");
@@ -1069,9 +1069,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 	}
 
 	private Description getInvokedDescription(String classType) {
+		// especially for Interface, it will match the type first to send values
 		try {
 			Object stackObject = (this.temporalVariables != null && !this.temporalVariables
-					.isEmpty()) ? this.temporalVariables.peek()
+					.isEmpty()) ? this.temporalVariables.pop()
 					: Description.NULL;
 			String stackType = stackObject.toString();
 			if (isSameType(classType, stackType)) {
@@ -1083,6 +1084,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 		} catch (Exception e) {
 			return null;
 		}
+		// no problem to return null, this null value should handle by invoked
+		// method
 		return null;
 	}
 
@@ -1103,11 +1106,12 @@ public final class MethodVisitor extends EmptyVisitor implements
 			String methodName = i.getMethodName(constantPoolGen);
 			// TODO: decide as output requirement
 			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
-					methodName);
+					methodName, "I");
 			List<Object> params = getParameters(types, methodName);
-			Description description = getInvokedDescription(i.getReferenceType(
-					constantPoolGen).toString());
-			System.out.println(i.getReferenceType(constantPoolGen).toString());
+			ReferenceType referenceTpe = i.getReferenceType(constantPoolGen);
+			Description description = getInvokedDescription(referenceTpe
+					.toString());
+			System.out.println(referenceTpe.toString());
 			MethodVisitor methodVisitor = null;
 			Object returnType = null;
 			if (description != null) {
@@ -1115,12 +1119,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 						description, methodName, types, true);
 				if (methodVisitor != null) {
 					returnType = methodVisitor.start(this.node, params, false);
-				} else {// methodVisitor is null because class is Library class
-					createEdgeIfMethodNotFound(this.node,
-							i.getReferenceType(constantPoolGen).toString()
-									+ "." + methodName, params);
 				}
 			}
+			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
+					referenceTpe.toString(), methodName, params);
 			if (returnType != null
 					&& !returnType.toString().equalsIgnoreCase("void")) {
 				this.temporalVariables.add(returnType);
@@ -1139,25 +1141,13 @@ public final class MethodVisitor extends EmptyVisitor implements
 			String methodName = i.getMethodName(constantPoolGen);
 			// TODO: decide as output requirement
 			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
-					methodName);
+					methodName, "O");
 			String cast = this.castType;
 			List<Object> params = getParameters(types, methodName);
-			Description description = getInvokedDescription(i.getReferenceType(
-					constantPoolGen).toString());
-			Object object = this.temporalVariables.pop();
-			System.out.println(i.getReferenceType(constantPoolGen).toString());
-			List<Object> objects = null;
-			// if (description == null) {
-			// if (object instanceof ArrayObjectProvider) {
-			// ArrayObjectProvider arrayObjectProvider = (ArrayObjectProvider)
-			// object;
-			// objects = new ArrayList<Object>();
-			// if (this.castType != null) {
-			// System.out.println("");
-			// }
-			// }
-			// }
-
+			ReferenceType referenceTpe = i.getReferenceType(constantPoolGen);
+			Description description = getInvokedDescription(referenceTpe
+					.toString());
+			System.out.println(referenceTpe.toString());
 			MethodVisitor methodVisitor = null;
 			Object returnType = null;
 			if (description != null) {
@@ -1165,12 +1155,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 						description, methodName, types, true);
 				if (methodVisitor != null) {
 					returnType = methodVisitor.start(this.node, params, false);
-				} else {// methodVisitor is null because class is Library class
-					createEdgeIfMethodNotFound(this.node,
-							i.getReferenceType(constantPoolGen).toString()
-									+ "." + methodName, params);
 				}
 			}
+			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
+					referenceTpe.toString(), methodName, params);
 			if (returnType != null
 					&& !returnType.toString().equalsIgnoreCase("void")) {
 				this.temporalVariables.add(returnType);
@@ -1189,11 +1177,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 			String methodName = i.getMethodName(constantPoolGen);
 			// TODO: decide as output requirement
 			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
-					methodName);
+					methodName, "C");
 			List<Object> params = getParameters(types, methodName);
+			ReferenceType referenceTpe = i.getReferenceType(constantPoolGen);
 			Description description = this.description
-					.getDescriptionByClassName(i.getReferenceType(
-							constantPoolGen).toString());
+					.getDescriptionByClassName(referenceTpe.toString());
 			MethodVisitor methodVisitor = null;
 			if (description != null) {
 				Description copiedDescription = null;
@@ -1218,14 +1206,12 @@ public final class MethodVisitor extends EmptyVisitor implements
 				}
 				if (methodVisitor != null) {
 					methodVisitor.start(this.node, params, this.isStaticCall);
-				} else {// methodVisitor is null because class is Library class
-					createEdgeIfMethodNotFound(this.node,
-							i.getReferenceType(constantPoolGen).toString()
-									+ "." + methodName, params);
 				}
 			} else {
 				this.temporalVariables.add(i.getReferenceType(constantPoolGen));
 			}
+			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
+					referenceTpe.toString(), methodName, params);
 			System.out.println("------------------------");
 		} catch (Exception e) {
 			System.err
@@ -1240,24 +1226,23 @@ public final class MethodVisitor extends EmptyVisitor implements
 			String methodName = i.getMethodName(constantPoolGen);
 			// TODO: decide as output requirement
 			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
-					methodName);
+					methodName, "S");
 			List<Object> params = getParameters(types, methodName);
-			String classType = i.getReferenceType(constantPoolGen).toString();
+			ReferenceType referenceTpe = i.getReferenceType(constantPoolGen);
 			Description description = this.description
-					.getDescriptionByKey(classType);
+					.getDescriptionByKey(referenceTpe.toString());
 			MethodVisitor methodVisitor = null;
 			Object returnType = null;
 			if (description != null) {
 				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
 						description, methodName, types, true);
 				if (methodVisitor != null) {
+					// do something for array type, try to capture all values
 					returnType = methodVisitor.start(this.node, params, false);
-				} else {// methodVisitor is null because class is Library class
-					createEdgeIfMethodNotFound(this.node,
-							i.getReferenceType(constantPoolGen).toString()
-									+ "." + methodName, params);
 				}
 			}
+			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
+					referenceTpe.toString(), methodName, params);
 			if (returnType != null
 					&& !returnType.toString().equalsIgnoreCase("void")) {
 				this.temporalVariables.add(returnType);
@@ -1269,20 +1254,26 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
-	private void createEdgeIfMethodNotFound(String source, String target,
-			List<Object> params) {
-		if (params != null && !params.isEmpty()) {
-			int length = params.size();
+	// generate edges which has no description or method visitor recorded
+	private void createEdgeIfMethodNotFound(Description description,
+			MethodVisitor methodVisitor, String source, String referenceTpe,
+			String methodName, List<Object> params) {
+		if (description == null || methodVisitor == null) {
+			String target = referenceTpe + "." + methodName;
 			String types = "(";
-			String actualParam = "";
-			for (int i = 0; i < length; i++) {
-				actualParam = params.get(i).toString();
-				types += ((i + 1) == length) ? actualParam : actualParam + ",";
+			if (params != null && !params.isEmpty()) {
+				int length = params.size();
+				String actualParam = "";
+				for (int i = 0; i < length; i++) {
+					actualParam = params.get(i).toString();
+					types += ((i + 1) == length) ? actualParam : actualParam
+							+ ",";
+				}
 			}
 			types += ")";
 			target += types;
+			Description.addEdge(source, target);
 		}
-		Description.addEdge(source, target);
 	}
 
 	final class Values {

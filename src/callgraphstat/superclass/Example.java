@@ -19,6 +19,8 @@
  */
 package callgraphstat.superclass;
 
+import java.util.Iterator;
+
 import callgraphstat.superclass.Enam.EnamCat;
 
 public class Example {
@@ -110,10 +112,23 @@ public class Example {
 
 	static int val;
 
+	public static String getString() {
+		return new String("SD");
+	}
+
 	public static void main(String[] args) {
-		Object o = new A();
-		A a = new A();
-		o.equals(a);
+		Iterator iit = new N();
+		A aval = new A();
+		aval.foo();
+		String sval = getString();
+		sval.charAt(0);
+		new String();
+		iit.remove();
+		IInterface im = new M();
+		im.foo();
+		new A().getClass();
+		E ee = new A().foos(null, 4, 45, new M(), null);
+
 		// A a = new A();
 		// String as = "";
 		// int aa = 5;

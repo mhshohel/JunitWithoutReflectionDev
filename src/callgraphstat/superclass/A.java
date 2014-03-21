@@ -40,10 +40,15 @@ public class A {
 
 	}
 
+	void foos(Class<?> cl) {
+
+	}
+
 	void obFo() {
 	}
 
 	public E foos(Object object, int i, double d, M m, String stv) {
+		m.foo();
 		return new P().getE();
 	}
 
