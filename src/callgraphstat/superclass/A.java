@@ -19,6 +19,7 @@
  */
 package callgraphstat.superclass;
 
+
 public class A {
 	public int intval;
 	protected int intvalA;
@@ -34,6 +35,14 @@ public class A {
 		// int a = dval.val();
 		// valAA = dval.val();
 		// E ev = dval.valA();
+	}
+
+	void fooBException() {
+		try {
+			new M();
+		} catch (ArrayStoreException is) {
+			is.fillInStackTrace();
+		}
 	}
 
 	void foos() {

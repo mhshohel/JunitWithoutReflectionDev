@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
+import org.apache.bcel.classfile.ExceptionTable;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
@@ -113,6 +114,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 	private Map<String, Stack<Object>> localVariables = null;
 	private String castType = null;
 	private boolean isStaticCall = false;
+	private ExceptionTable exceptionTable = null;
 	private Set<String> exceptionClassList = null;
 
 	public MethodVisitor(Description description, ClassVisitor classVisitor,
@@ -158,6 +160,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 				+ type + this.method.getReturnType();
 		this.temporalVariables = new Stack<Object>();
 		this.localVariables = new LinkedHashMap<String, Stack<Object>>();
+		this.exceptionTable = this.method.getExceptionTable();
 		this.exceptionClassList = new HashSet<String>();
 	}
 
@@ -353,6 +356,14 @@ public final class MethodVisitor extends EmptyVisitor implements
 		System.err.println("\t\t-----END METHOD:\n\t\t\t" + source
 				+ "\n\t\t\t\t--->" + target + "\n");
 		// ------------------------------------------------------------------------------
+		// -----------FixException---------
+		for (String ex : this.exceptionClassList) {
+			exceptions.add(ex);
+		}
+		if (this.exceptionTable != null) {
+			exceptions.add(exceptionTable.toString());
+		}
+		// --------------------------------
 
 		// -------------------Initialize ReturnValues--------------------
 		// TODO verify return type
@@ -1130,6 +1141,13 @@ public final class MethodVisitor extends EmptyVisitor implements
 			String cast = this.castType;
 			List<Object> params = getParameters(types, methodName);
 			ReferenceType referenceTpe = i.getReferenceType(constantPoolGen);
+			// check Exception class and then keep them
+			if (isSameType(referenceTpe.toString(), "java.lang.Exception")) {
+				if (!referenceTpe.toString().equalsIgnoreCase(
+						"java.lang.Object")) {
+					this.exceptionClassList.add(referenceTpe.toString());
+				}
+			}
 			Description description = getInvokedDescription(referenceTpe
 					.toString());
 			System.out.println(referenceTpe.toString());
@@ -1141,15 +1159,17 @@ public final class MethodVisitor extends EmptyVisitor implements
 				if (methodVisitor != null) {
 					returnType = methodVisitor.start(this.node, params, false,
 							this.exceptionClassList);
-					// check Exception class and then print edges, print all
-					if (isSameType(referenceTpe.toString(),
-							"java.lang.Exception")) {
-						System.out.println("FOOUND FOUND FOUND");
-					}
 				}
 			}
 			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
 					referenceTpe.toString(), methodName, params);
+			// check Exception class and then print edges, print all
+			if (isSameType(referenceTpe.toString(), "java.lang.Exception")) {
+				for (String ex : this.exceptionClassList) {
+					createEdgeIfMethodNotFound(null, null, this.node, ex,
+							methodName, params);
+				}
+			}
 			if (returnType != null
 					&& !returnType.toString().equalsIgnoreCase("void")) {
 				this.temporalVariables.add(returnType);
@@ -1173,7 +1193,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 			ReferenceType referenceTpe = i.getReferenceType(constantPoolGen);
 			// check Exception class and then keep them
 			if (isSameType(referenceTpe.toString(), "java.lang.Exception")) {
-				this.exceptionClassList.add(referenceTpe.toString());
+				if (!referenceTpe.toString().equalsIgnoreCase(
+						"java.lang.Object")) {
+					this.exceptionClassList.add(referenceTpe.toString());
+				}
 			}
 			Description description = this.description
 					.getDescriptionByClassName(referenceTpe.toString());
@@ -1252,7 +1275,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 	}
 
 	// generate edges which has no description or method visitor recorded
-	private void createEdgeIfMethodNotFound(Description description,
+	private boolean createEdgeIfMethodNotFound(Description description,
 			MethodVisitor methodVisitor, String source, String referenceTpe,
 			String methodName, List<Object> params) {
 		if (description == null || methodVisitor == null) {
@@ -1269,8 +1292,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 			}
 			types += ")";
 			target += types;
-			Description.addEdge(source, target);
+			return Description.addEdge(source, target);
 		}
+		return false;
 	}
 
 	final class Values {

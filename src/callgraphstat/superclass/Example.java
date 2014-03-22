@@ -19,6 +19,8 @@
  */
 package callgraphstat.superclass;
 
+import java.io.IOException;
+
 import callgraphstat.superclass.Enam.EnamCat;
 
 import com.sun.org.apache.xerces.internal.impl.xpath.regex.ParseException;
@@ -119,25 +121,45 @@ public class Example {
 	static void throwtest() {
 		try {
 			int i = 0;
-		} catch (Exception e) {
+		} catch (ArithmeticException e) {
+			e.getCause();
 			throw new ArithmeticException();
 		}
 	}
 
 	static A staticA = new A();
 
+	static void exceptionTest() throws IOException {
+		try {
+			int i = 0;
+		} catch (ArithmeticException e) {
+			e.getCause();
+			throw new ArithmeticException();
+		}
+	}
+
 	public static void main(String[] args) {
 		try {
+			exceptionTest();
 			throwtest();
-		} catch (Exception ae) {
-			System.err.println(ae.getMessage());
-		}
-		try {
-			getString();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		// new B().fooBException();
+		// try {
+		// throwtest();
+		// } catch (Exception ae) {
+		// System.err.println(ae.getMessage());
+		// }
+		// try {
+		// getString();
+		// } catch (Exception e) {
+		//
+		// // TODO Auto-generated catch block
+		// e.addSuppressed(new Exception());
+		// }
+
 		// A aaaa = new A().aval();
 		// new A().aav(aaaa);
 		// Iterator iit = new N();
