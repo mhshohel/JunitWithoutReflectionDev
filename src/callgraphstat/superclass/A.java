@@ -53,7 +53,12 @@ public class A {
 		return null;
 	}
 
+	void foooA() {
+		System.out.println("FOOOOOA");
+	}
+
 	void foo() {
+		foooA();
 		// dval = new E();
 		// int a = dval.val();
 		// valAA = dval.val();

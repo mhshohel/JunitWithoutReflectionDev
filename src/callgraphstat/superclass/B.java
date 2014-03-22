@@ -80,11 +80,11 @@ public class B extends A {
 	}
 
 	public B() {
-		try {
-			new M();
-		} catch (ParseException p) {
-			p.initCause(new AbortException());
-		}
+		// try {
+		// new M();
+		// } catch (ParseException p) {
+		// p.initCause(new AbortException());
+		// }
 	}
 
 	E foos(A v, int i, M m) {
@@ -96,6 +96,9 @@ public class B extends A {
 
 	void foo() {
 		L l = new L();
+	}
+
+	void bval() {
 	}
 
 	static void st() {

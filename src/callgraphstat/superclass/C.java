@@ -28,7 +28,12 @@ public class C extends B {
 	public C(A c, Object d, B ds, Object s) {
 	}
 
+	void foooC() {
+		System.out.println("FOOOOOOOOC");
+	}
+
 	void foo() {
+		foooC();
 		// A v = new B();
 		// int c;
 	}

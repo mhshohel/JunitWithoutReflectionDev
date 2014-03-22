@@ -10,7 +10,10 @@ public class M implements IInterface {
 	}
 
 	public void foo() {
+		MMM();
+	}
 
+	void MMM() {
 	}
 
 	@Override

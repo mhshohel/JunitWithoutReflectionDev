@@ -1,6 +1,6 @@
 package callgraphstat.superclass;
 
-public class O {
+public class O implements IInterface {
 	P p = null;
 
 	O() {
@@ -17,5 +17,20 @@ public class O {
 
 	void igp() {
 		p = new P();
+	}
+
+	@Override
+	public void foo() {
+		// TODO Auto-generated method stub
+		OOP();
+	}
+
+	void OOP() {
+	}
+
+	@Override
+	public E eval(IInterface e) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

@@ -127,7 +127,7 @@ public class Example {
 		}
 	}
 
-	static A staticA = new A();
+	// static A staticA = new A();
 
 	static void exceptionTest() throws IOException {
 		try {
@@ -138,10 +138,49 @@ public class Example {
 		}
 	}
 
+	static void inte(IInterface i) {
+		i.foo();
+	}
+
+	static void inte(A i) {
+		i.foo();
+	}
+
+	static void inte(A i, A j, int k, int l, A m, A n, String o, A p, int q) {
+		A a = i;
+		A b = j;
+		int c = k;
+		int d = l;
+		A e = m;
+		A f = n;
+		String g = o;
+		A h = p;
+		int z = q;
+	}
+
 	public static void main(String[] args) {
-		A castClass = new B();
-		castClass.aval();
-		((B) castClass).foo();
+		// C c = new C();
+		// for (int i = 0; i < 2; i++)
+		// inte(c, null, 0, 0, null, c, null, null, 9);
+		// inte(c, c, 0, 0, null, c, null, null, 9);
+		M mm = new M();
+		for (int l = 0; l < 2; l++)
+			for (int k = 0; k < 2; k++) {
+				for (int i = 0; i < 2; i++) {
+					// IInterface j = new M();
+					// inte(j);
+				}
+			}
+
+		A av = new B();
+		((B) av).bval();
+		av.foo();
+		new M();
+		// C castClass = new C();
+		// inte((A) castClass);
+		// A aVal = castClass;
+		// castClass.aval();
+		// ((B) castClass).foo();
 
 		// A a = new A();
 		//

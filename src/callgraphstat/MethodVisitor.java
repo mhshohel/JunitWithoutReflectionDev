@@ -469,137 +469,142 @@ public final class MethodVisitor extends EmptyVisitor implements
 				isArrayType = isCollectionsOrMap(type.toString());
 			}
 			try {
-				if (this.description.getDescriptionByClassName(type.toString()) == null) {
-					// if (!isArrayType) {
-					// // if (this.castType != null
-					// // && this.temporalVariables.peek() instanceof
-					// // ArrayObjectProvider) {
-					// // ArrayObjectProvider arrayObjectProvider =
-					// // (ArrayObjectProvider) this.temporalVariables
-					// // .peek();
-					// // value = arrayObjectProvider.arrayObjects
-					// // .get(this.castType);
-					// // } else
-					//
-					// {
-					// if (this.hasToLoadOnlyValueFromArray) {
-					// value = getSingleDataFromArray(
-					// this.temporalVariables.pop(),
-					// type.toString(), this.castType);
-					// this.hasToLoadOnlyValueFromArray = false;
-					// } else {
-					// value = this.temporalVariables.pop();
-					// }
-					// }
-					// } else {
-					// // if (this.temporalVariables.peek() instanceof
-					// // ArrayObjectProvider) {
-					// // String arrayType = ((ArrayObjectProvider)
-					// // this.temporalVariables
-					// // .peek()).getArrayType();
-					// // String currentType = type.toString();
-					// // if (arrayType == null) {
-					// // ArrayObjectProvider arrayObjectProvider =
-					// // (ArrayObjectProvider) this.temporalVariables
-					// // .pop();
-					// // arrayObjectProvider.setType(type.toString());
-					// // value = arrayObjectProvider;
-					// // } else if (arrayType.replace("[]", "")
-					// // .equalsIgnoreCase(
-					// // currentType.replace("[]", ""))) {
-					// // if (this.hasToLoadOnlyValueFromArray) {
-					// // value = getSingleDataFromArray(
-					// // this.temporalVariables.pop(),
-					// // type.toString(), this.castType);
-					// // this.hasToLoadOnlyValueFromArray = false;
-					// // } else {
-					// // value = this.temporalVariables.pop();
-					// // }
-					// // } else {
-					// // try {
-					// // Description desOne = this.description
-					// // .getDescriptionByClassName(arrayType
-					// // .replace("[]", ""));
-					// // Description desTwo = this.description
-					// // .getDescriptionByClassName(currentType
-					// // .replace("[]", ""));
-					// // if ((desOne != null && desTwo != null)
-					// // && (desOne.getActualClass()
-					// // .isAssignableFrom(desTwo
-					// // .getActualClass()))
-					// // || (desTwo.getActualClass()
-					// // .isAssignableFrom(desOne
-					// // .getActualClass()))) {
-					// // value = this.temporalVariables.pop();
-					// // } else {
-					// // // value = new ArrayObjectProvider(
-					// // // type.toString());
-					// // if (!this.temporalVariables.isEmpty()) {
-					// // if (isCollectionsOrMap(this.temporalVariables
-					// // .peek().toString())) {
-					// // this.temporalVariables.pop();
-					// // }
-					// // }
-					// // }
-					// // } catch (Exception e) {
-					// // // value = new ArrayObjectProvider(
-					// // // type.toString());
-					// // if (!this.temporalVariables.isEmpty()) {
-					// // if (isCollectionsOrMap(this.temporalVariables
-					// // .peek().toString())) {
-					// // this.temporalVariables.pop();
-					// // }
-					// // }
-					// // }
-					// // }
-					// // } else {
-					// // // value = new ArrayObjectProvider(type.toString());
-					// // if (!this.temporalVariables.isEmpty()) {
-					// // if (isCollectionsOrMap(this.temporalVariables
-					// // .peek().toString())) {
-					// // this.temporalVariables.pop();
-					// // }
-					// // }
-					// // }
-					// }
-				} else {
-					// if (this.hasToLoadOnlyValueFromArray) {
-					// value = getSingleDataFromArray(
-					// this.temporalVariables.pop(), type.toString(),
-					// this.castType);
-					// this.hasToLoadOnlyValueFromArray = false;
-					// } else {
-					// value = this.temporalVariables.pop();
-					// }
-					value = (this.temporalVariables != null && !this.temporalVariables
-							.isEmpty()) ? this.temporalVariables.pop() : null;
-					if (value != null) {
-						if (value.toString().equalsIgnoreCase(
-								Description.PRIMITIVE)
-								|| value.toString().equalsIgnoreCase(
-										Description.NULL)
-								|| value instanceof String
-								|| isPrimitiveType(type)) {
-							value = Description.PRIMITIVE;
-						} else {
-							boolean result = isSameType(type.toString(),
-									value.toString());
-							if (!result) {
-								value = getCopiedDescriptionIfValueNotMatched(value);
-								if (!isSameType(type.toString(),
-										value.toString())) {
-									value = getCopiedDescriptionIfValueNotMatched(type);
-								}
-							}
-						}
-					} else {
+				// if
+				// (this.description.getDescriptionByClassName(type.toString())
+				// == null) {
+				// if (!isArrayType) {
+				// // if (this.castType != null
+				// // && this.temporalVariables.peek() instanceof
+				// // ArrayObjectProvider) {
+				// // ArrayObjectProvider arrayObjectProvider =
+				// // (ArrayObjectProvider) this.temporalVariables
+				// // .peek();
+				// // value = arrayObjectProvider.arrayObjects
+				// // .get(this.castType);
+				// // } else
+				//
+				// {
+				// if (this.hasToLoadOnlyValueFromArray) {
+				// value = getSingleDataFromArray(
+				// this.temporalVariables.pop(),
+				// type.toString(), this.castType);
+				// this.hasToLoadOnlyValueFromArray = false;
+				// } else {
+				// value = this.temporalVariables.pop();
+				// }
+				// }
+				// } else {
+				// // if (this.temporalVariables.peek() instanceof
+				// // ArrayObjectProvider) {
+				// // String arrayType = ((ArrayObjectProvider)
+				// // this.temporalVariables
+				// // .peek()).getArrayType();
+				// // String currentType = type.toString();
+				// // if (arrayType == null) {
+				// // ArrayObjectProvider arrayObjectProvider =
+				// // (ArrayObjectProvider) this.temporalVariables
+				// // .pop();
+				// // arrayObjectProvider.setType(type.toString());
+				// // value = arrayObjectProvider;
+				// // } else if (arrayType.replace("[]", "")
+				// // .equalsIgnoreCase(
+				// // currentType.replace("[]", ""))) {
+				// // if (this.hasToLoadOnlyValueFromArray) {
+				// // value = getSingleDataFromArray(
+				// // this.temporalVariables.pop(),
+				// // type.toString(), this.castType);
+				// // this.hasToLoadOnlyValueFromArray = false;
+				// // } else {
+				// // value = this.temporalVariables.pop();
+				// // }
+				// // } else {
+				// // try {
+				// // Description desOne = this.description
+				// // .getDescriptionByClassName(arrayType
+				// // .replace("[]", ""));
+				// // Description desTwo = this.description
+				// // .getDescriptionByClassName(currentType
+				// // .replace("[]", ""));
+				// // if ((desOne != null && desTwo != null)
+				// // && (desOne.getActualClass()
+				// // .isAssignableFrom(desTwo
+				// // .getActualClass()))
+				// // || (desTwo.getActualClass()
+				// // .isAssignableFrom(desOne
+				// // .getActualClass()))) {
+				// // value = this.temporalVariables.pop();
+				// // } else {
+				// // // value = new ArrayObjectProvider(
+				// // // type.toString());
+				// // if (!this.temporalVariables.isEmpty()) {
+				// // if (isCollectionsOrMap(this.temporalVariables
+				// // .peek().toString())) {
+				// // this.temporalVariables.pop();
+				// // }
+				// // }
+				// // }
+				// // } catch (Exception e) {
+				// // // value = new ArrayObjectProvider(
+				// // // type.toString());
+				// // if (!this.temporalVariables.isEmpty()) {
+				// // if (isCollectionsOrMap(this.temporalVariables
+				// // .peek().toString())) {
+				// // this.temporalVariables.pop();
+				// // }
+				// // }
+				// // }
+				// // }
+				// // } else {
+				// // // value = new ArrayObjectProvider(type.toString());
+				// // if (!this.temporalVariables.isEmpty()) {
+				// // if (isCollectionsOrMap(this.temporalVariables
+				// // .peek().toString())) {
+				// // this.temporalVariables.pop();
+				// // }
+				// // }
+				// // }
+				// }
+				// } else {
+				// if (this.hasToLoadOnlyValueFromArray) {
+				// value = getSingleDataFromArray(
+				// this.temporalVariables.pop(), type.toString(),
+				// this.castType);
+				// this.hasToLoadOnlyValueFromArray = false;
+				// } else {
+				// value = this.temporalVariables.pop();
+				// }
+				value = (this.temporalVariables != null && !this.temporalVariables
+						.isEmpty()) ? this.temporalVariables.pop() : null;
+				if (value != null) {
+					if (value.toString().equalsIgnoreCase(Description.NULL)) {
+						value = Description.NULL;
+					} else if (value.toString().equalsIgnoreCase(
+							Description.PRIMITIVE)
+							|| value instanceof String) {
 						if (isPrimitiveType(type)) {
 							value = Description.PRIMITIVE;
 						} else {
-							value = getCopiedDescriptionIfValueNotMatched(type);
+							value = null;
+						}
+					} else {
+						boolean result = isSameType(type.toString(),
+								value.toString());
+						if (!result) {
+							value = getCopiedDescriptionIfValueNotMatched(value);
+							if (!isSameType(type.toString(), value.toString())) {
+								value = getCopiedDescriptionIfValueNotMatched(type);
+							}
 						}
 					}
 				}
+				if (value == null) {
+					if (isPrimitiveType(type)) {
+						value = Description.PRIMITIVE;
+					} else {
+						value = getCopiedDescriptionIfValueNotMatched(type);
+					}
+				}
+				// }
 				// this.hasToLoadOnlyValueFromArray = false;
 			} catch (Exception e) {
 				value = getCopiedDescriptionIfValueNotMatched(type);
@@ -750,7 +755,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 						+ obj.getType(constantPoolGen).getClass().isArray());
 				storeValues("ASTORE", name,
 						this.localVariableGens[index].getType(), null);
-				// removePrimitiveData();
+				removePrimitiveData();
 			}
 		} catch (Exception e) {
 			System.err.println("FOUND IN ASTORE");
@@ -1024,7 +1029,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 					} catch (Exception e) {
 						System.err
 								.println("SOME ERROR IN PARAM getParameters()");
-						object = types[c];
+						object = getCopiedDescriptionIfValueNotMatched(types[c]);
 					}
 					params.add(object);
 				}
@@ -1079,6 +1084,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	private Description getInvokedDescription(String classType) {
 		// especially for Interface, it will match the type first to send values
+		Description value = null;
 		try {
 			Object stackObject = (this.temporalVariables != null && !this.temporalVariables
 					.isEmpty()) ? this.temporalVariables.pop()
@@ -1088,14 +1094,19 @@ public final class MethodVisitor extends EmptyVisitor implements
 				classType = stackType;
 			}
 			if (stackObject instanceof Description) {
-				return (Description) stackObject;
+				value = (Description) stackObject;
 			}
 		} catch (Exception e) {
-			return null;
 		}
 		// no problem to return null, this null value should handle by invoked
 		// method
-		return null;
+		if (value == null) {
+			Object object = getCopiedDescriptionIfValueNotMatched(classType);
+			if (object instanceof Description) {
+				value = (Description) object;
+			}
+		}
+		return value;
 	}
 
 	@Override
@@ -1105,7 +1116,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 				+ obj.getType(constantPoolGen).getSignature());
 		System.out.println("\t\t" + obj.getType(constantPoolGen));
 		System.out.println("\t\t" + obj.getLoadClassType(constantPoolGen));
-		this.castType = obj.getType(constantPoolGen).toString();
+		this.castType = null;// obj.getType(constantPoolGen).toString();
 	}
 
 	@Override
@@ -1142,6 +1153,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 			System.err
 					.println("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
 		}
+		// Verify and remove remaining primitive data
+		removePrimitiveData();
 	}
 
 	@Override
@@ -1193,6 +1206,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 			System.err
 					.println("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
 		}
+		// Verify and remove remaining primitive data
+		removePrimitiveData();
 	}
 
 	@Override
@@ -1250,6 +1265,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 			System.err
 					.println("SOME ERROR FOUND: public void visitINVOKESPECIAL(INVOKESPECIAL i) ");
 		}
+		// Verify and remove remaining primitive data
+		removePrimitiveData();
 	}
 
 	@Override
@@ -1286,6 +1303,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 			System.err
 					.println("SOME ERROR FOUND: public void visitINVOKESTATIC(INVOKESTATIC i)");
 		}
+		// Verify and remove remaining primitive data
+		removePrimitiveData();
 	}
 
 	// generate edges which has no description or method visitor recorded
