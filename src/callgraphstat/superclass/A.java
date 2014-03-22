@@ -44,10 +44,24 @@ public class A {
 
 	}
 
+	A aval() {
+		return null;
+	}
+
+	A as = null;
+
+	void aav(A a) {
+		as = a;
+	}
+
+	static void staticall() {
+
+	}
+
 	void obFo() {
 	}
 
-	public E foos(Object object, int i, double d, M m, String stv) {
+	public E foos(Object object, int i, double d, IInterface m, String stv) {
 		m.foo();
 		return new P().getE();
 	}

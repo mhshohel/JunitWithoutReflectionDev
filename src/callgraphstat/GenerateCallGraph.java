@@ -1,6 +1,7 @@
 package callgraphstat;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public final class GenerateCallGraph {
@@ -28,7 +29,8 @@ public final class GenerateCallGraph {
 
 	private void start() throws Exception {
 		try {
-			this.mainMethod.start(null, new ArrayList<Object>(), false);
+			this.mainMethod.start(null, new ArrayList<Object>(), false,
+					new HashSet<String>());
 			this.mainMethod = null;
 			this.mainClass = null;
 		} catch (Exception e) {

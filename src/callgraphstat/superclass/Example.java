@@ -19,9 +19,9 @@
  */
 package callgraphstat.superclass;
 
-import java.util.Iterator;
-
 import callgraphstat.superclass.Enam.EnamCat;
+
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.ParseException;
 
 public class Example {
 	// // static H valsH = new H();
@@ -112,22 +112,48 @@ public class Example {
 
 	static int val;
 
-	public static String getString() {
+	public static String getString() throws ParseException {
 		return new String("SD");
 	}
 
+	static void throwtest() {
+		try {
+			int i = 0;
+		} catch (Exception e) {
+			throw new ArithmeticException();
+		}
+	}
+
+	static A staticA = new A();
+
 	public static void main(String[] args) {
-		Iterator iit = new N();
-		A aval = new A();
-		aval.foo();
-		String sval = getString();
-		sval.charAt(0);
-		new String();
-		iit.remove();
-		IInterface im = new M();
-		im.foo();
-		new A().getClass();
-		E ee = new A().foos(null, 4, 45, new M(), null);
+		try {
+			throwtest();
+		} catch (Exception ae) {
+			System.err.println(ae.getMessage());
+		}
+		try {
+			getString();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// A aaaa = new A().aval();
+		// new A().aav(aaaa);
+		// Iterator iit = new N();
+		// A aval = new A();
+		// aval.foo();
+		// String sval = getString();
+		// sval.charAt(0);
+		// new String();
+		// iit.remove();
+		// IInterface im = new M();
+		// im.foo();
+		// new A().getClass();
+		// A.staticall();
+		// E ee = new A().foos(null, 4, 45, new M(), null);
+		// ee.foos(null);
+		// ee.valEOF();
 
 		// A a = new A();
 		// String as = "";
@@ -356,7 +382,7 @@ public class Example {
 		// A bb = new B();
 		// b = new B();
 		// String vvv = "J";
-		// E emm = bb.foos(null, 4, 1.5, null, "J");
+		// E emm = bb.foos(null, 4, 1.5, mava, "J");
 		//
 		// T nu = emm.valA();
 		// int aaaa = 5;

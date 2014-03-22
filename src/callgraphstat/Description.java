@@ -314,7 +314,7 @@ public final class Description implements Comparable<Description> {
 		return edges;
 	}
 
-	public final static List<String> getUnsortedEdges() {
+	public final static List<String> getUnSortedEdges() {
 		return edges;
 	}
 

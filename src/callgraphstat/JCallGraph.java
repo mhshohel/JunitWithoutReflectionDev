@@ -75,10 +75,10 @@ public final class JCallGraph {
 			// }
 			// print edges
 			System.out.println("EDGES\n_____________________");
-			java.util.List<String> edges = Description.getUnsortedEdges();
+			java.util.List<String> edges = Description.getUnSortedEdges();
 			System.out.println("Edges...");
-			for (String edge : edges) {
-				System.out.println(edge);
+			for (int i = 0; i < edges.size(); i++) {
+				System.out.println((i + 1) + ".\t" + edges.get(i) + "\n");
 			}
 			System.out.println("\n\n\n\t\t\t\t\tElapsed Time: "
 					+ (double) (end - start) / 1000000000.0 + "s");
