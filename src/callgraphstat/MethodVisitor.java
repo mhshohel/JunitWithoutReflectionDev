@@ -41,7 +41,6 @@ import org.apache.bcel.generic.ACONST_NULL;
 import org.apache.bcel.generic.ALOAD;
 import org.apache.bcel.generic.ANEWARRAY;
 import org.apache.bcel.generic.ASTORE;
-import org.apache.bcel.generic.ATHROW;
 import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.BALOAD;
 import org.apache.bcel.generic.BASTORE;
@@ -341,9 +340,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 				} else if (i instanceof ArrayInstruction) {
 					arrayInstructions((ArrayInstruction) i);
 				}
-				if (i instanceof ATHROW) {
-					visitATHROW((ATHROW) i);
-				}
 			}
 			// TODO:Remove me
 			System.out.println("\t\tAfter\n-------------------");
@@ -360,6 +356,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 		for (String ex : this.exceptionClassList) {
 			exceptions.add(ex);
 		}
+		// only for caller class not for current class (contains throws
+		// Exception)
 		if (this.exceptionTable != null) {
 			exceptions.add(exceptionTable.toString());
 		}
@@ -460,7 +458,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
-	private void storeValues(String flag, String variableName, Object type,
+	private void storeValues(String flag, String variableName, Type type,
 			ReferenceType referenceType) {
 		try {
 			Object value = null;
@@ -472,115 +470,140 @@ public final class MethodVisitor extends EmptyVisitor implements
 			}
 			try {
 				if (this.description.getDescriptionByClassName(type.toString()) == null) {
-					if (!isArrayType) {
-						// if (this.castType != null
-						// && this.temporalVariables.peek() instanceof
-						// ArrayObjectProvider) {
-						// ArrayObjectProvider arrayObjectProvider =
-						// (ArrayObjectProvider) this.temporalVariables
-						// .peek();
-						// value = arrayObjectProvider.arrayObjects
-						// .get(this.castType);
-						// } else
-
-						{
-							if (this.hasToLoadOnlyValueFromArray) {
-								value = getSingleDataFromArray(
-										this.temporalVariables.pop(),
-										type.toString(), this.castType);
-								this.hasToLoadOnlyValueFromArray = false;
-							} else {
-								value = this.temporalVariables.pop();
+					// if (!isArrayType) {
+					// // if (this.castType != null
+					// // && this.temporalVariables.peek() instanceof
+					// // ArrayObjectProvider) {
+					// // ArrayObjectProvider arrayObjectProvider =
+					// // (ArrayObjectProvider) this.temporalVariables
+					// // .peek();
+					// // value = arrayObjectProvider.arrayObjects
+					// // .get(this.castType);
+					// // } else
+					//
+					// {
+					// if (this.hasToLoadOnlyValueFromArray) {
+					// value = getSingleDataFromArray(
+					// this.temporalVariables.pop(),
+					// type.toString(), this.castType);
+					// this.hasToLoadOnlyValueFromArray = false;
+					// } else {
+					// value = this.temporalVariables.pop();
+					// }
+					// }
+					// } else {
+					// // if (this.temporalVariables.peek() instanceof
+					// // ArrayObjectProvider) {
+					// // String arrayType = ((ArrayObjectProvider)
+					// // this.temporalVariables
+					// // .peek()).getArrayType();
+					// // String currentType = type.toString();
+					// // if (arrayType == null) {
+					// // ArrayObjectProvider arrayObjectProvider =
+					// // (ArrayObjectProvider) this.temporalVariables
+					// // .pop();
+					// // arrayObjectProvider.setType(type.toString());
+					// // value = arrayObjectProvider;
+					// // } else if (arrayType.replace("[]", "")
+					// // .equalsIgnoreCase(
+					// // currentType.replace("[]", ""))) {
+					// // if (this.hasToLoadOnlyValueFromArray) {
+					// // value = getSingleDataFromArray(
+					// // this.temporalVariables.pop(),
+					// // type.toString(), this.castType);
+					// // this.hasToLoadOnlyValueFromArray = false;
+					// // } else {
+					// // value = this.temporalVariables.pop();
+					// // }
+					// // } else {
+					// // try {
+					// // Description desOne = this.description
+					// // .getDescriptionByClassName(arrayType
+					// // .replace("[]", ""));
+					// // Description desTwo = this.description
+					// // .getDescriptionByClassName(currentType
+					// // .replace("[]", ""));
+					// // if ((desOne != null && desTwo != null)
+					// // && (desOne.getActualClass()
+					// // .isAssignableFrom(desTwo
+					// // .getActualClass()))
+					// // || (desTwo.getActualClass()
+					// // .isAssignableFrom(desOne
+					// // .getActualClass()))) {
+					// // value = this.temporalVariables.pop();
+					// // } else {
+					// // // value = new ArrayObjectProvider(
+					// // // type.toString());
+					// // if (!this.temporalVariables.isEmpty()) {
+					// // if (isCollectionsOrMap(this.temporalVariables
+					// // .peek().toString())) {
+					// // this.temporalVariables.pop();
+					// // }
+					// // }
+					// // }
+					// // } catch (Exception e) {
+					// // // value = new ArrayObjectProvider(
+					// // // type.toString());
+					// // if (!this.temporalVariables.isEmpty()) {
+					// // if (isCollectionsOrMap(this.temporalVariables
+					// // .peek().toString())) {
+					// // this.temporalVariables.pop();
+					// // }
+					// // }
+					// // }
+					// // }
+					// // } else {
+					// // // value = new ArrayObjectProvider(type.toString());
+					// // if (!this.temporalVariables.isEmpty()) {
+					// // if (isCollectionsOrMap(this.temporalVariables
+					// // .peek().toString())) {
+					// // this.temporalVariables.pop();
+					// // }
+					// // }
+					// // }
+					// }
+				} else {
+					// if (this.hasToLoadOnlyValueFromArray) {
+					// value = getSingleDataFromArray(
+					// this.temporalVariables.pop(), type.toString(),
+					// this.castType);
+					// this.hasToLoadOnlyValueFromArray = false;
+					// } else {
+					// value = this.temporalVariables.pop();
+					// }
+					value = (this.temporalVariables != null && !this.temporalVariables
+							.isEmpty()) ? this.temporalVariables.pop() : null;
+					if (value != null) {
+						if (value.toString().equalsIgnoreCase(
+								Description.PRIMITIVE)
+								|| value.toString().equalsIgnoreCase(
+										Description.NULL)
+								|| value instanceof String
+								|| isPrimitiveType(type)) {
+							value = Description.PRIMITIVE;
+						} else {
+							boolean result = isSameType(type.toString(),
+									value.toString());
+							if (!result) {
+								value = getCopiedDescriptionIfValueNotMatched(value);
+								if (!isSameType(type.toString(),
+										value.toString())) {
+									value = getCopiedDescriptionIfValueNotMatched(type);
+								}
 							}
 						}
 					} else {
-						// if (this.temporalVariables.peek() instanceof
-						// ArrayObjectProvider) {
-						// String arrayType = ((ArrayObjectProvider)
-						// this.temporalVariables
-						// .peek()).getArrayType();
-						// String currentType = type.toString();
-						// if (arrayType == null) {
-						// ArrayObjectProvider arrayObjectProvider =
-						// (ArrayObjectProvider) this.temporalVariables
-						// .pop();
-						// arrayObjectProvider.setType(type.toString());
-						// value = arrayObjectProvider;
-						// } else if (arrayType.replace("[]", "")
-						// .equalsIgnoreCase(
-						// currentType.replace("[]", ""))) {
-						// if (this.hasToLoadOnlyValueFromArray) {
-						// value = getSingleDataFromArray(
-						// this.temporalVariables.pop(),
-						// type.toString(), this.castType);
-						// this.hasToLoadOnlyValueFromArray = false;
-						// } else {
-						// value = this.temporalVariables.pop();
-						// }
-						// } else {
-						// try {
-						// Description desOne = this.description
-						// .getDescriptionByClassName(arrayType
-						// .replace("[]", ""));
-						// Description desTwo = this.description
-						// .getDescriptionByClassName(currentType
-						// .replace("[]", ""));
-						// if ((desOne != null && desTwo != null)
-						// && (desOne.getActualClass()
-						// .isAssignableFrom(desTwo
-						// .getActualClass()))
-						// || (desTwo.getActualClass()
-						// .isAssignableFrom(desOne
-						// .getActualClass()))) {
-						// value = this.temporalVariables.pop();
-						// } else {
-						// // value = new ArrayObjectProvider(
-						// // type.toString());
-						// if (!this.temporalVariables.isEmpty()) {
-						// if (isCollectionsOrMap(this.temporalVariables
-						// .peek().toString())) {
-						// this.temporalVariables.pop();
-						// }
-						// }
-						// }
-						// } catch (Exception e) {
-						// // value = new ArrayObjectProvider(
-						// // type.toString());
-						// if (!this.temporalVariables.isEmpty()) {
-						// if (isCollectionsOrMap(this.temporalVariables
-						// .peek().toString())) {
-						// this.temporalVariables.pop();
-						// }
-						// }
-						// }
-						// }
-						// } else {
-						// // value = new ArrayObjectProvider(type.toString());
-						// if (!this.temporalVariables.isEmpty()) {
-						// if (isCollectionsOrMap(this.temporalVariables
-						// .peek().toString())) {
-						// this.temporalVariables.pop();
-						// }
-						// }
-						// }
-					}
-				} else {
-					if (this.hasToLoadOnlyValueFromArray) {
-						value = getSingleDataFromArray(
-								this.temporalVariables.pop(), type.toString(),
-								this.castType);
-						this.hasToLoadOnlyValueFromArray = false;
-					} else {
-						value = this.temporalVariables.pop();
+						if (isPrimitiveType(type)) {
+							value = Description.PRIMITIVE;
+						} else {
+							value = getCopiedDescriptionIfValueNotMatched(type);
+						}
 					}
 				}
-				this.hasToLoadOnlyValueFromArray = false;
+				// this.hasToLoadOnlyValueFromArray = false;
 			} catch (Exception e) {
-				value = type;
-				this.hasToLoadOnlyValueFromArray = false;
-			}
-			if (value == null) {
-				value = this.temporalVariables.pop();
+				value = getCopiedDescriptionIfValueNotMatched(type);
+				// this.hasToLoadOnlyValueFromArray = false;
 			}
 			switch (flag) {
 			case "ASTORE":
@@ -1086,15 +1109,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 	}
 
 	@Override
-	public void visitATHROW(ATHROW obj) {
-		System.err.println("ATHROW");
-		Class[] clss = obj.getExceptions();
-		System.out.println(clss[0].getClass().getName());
-		System.out.println("\t\t" + obj.getName() + "   --->   "
-				+ obj.getExceptions());
-	}
-
-	@Override
 	public void visitINVOKEINTERFACE(INVOKEINTERFACE i) {
 		try {
 			Type[] types = i.getArgumentTypes(constantPoolGen);
@@ -1292,6 +1306,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 			}
 			types += ")";
 			target += types;
+			// keep edges that is not part of Description or part of Library
+			// Class
+			if (!this.description.hasDescription(referenceTpe.toString())) {
+				Description.addLibraryEdge(source, target);
+			}
 			return Description.addEdge(source, target);
 		}
 		return false;

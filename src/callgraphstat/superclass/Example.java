@@ -139,13 +139,23 @@ public class Example {
 	}
 
 	public static void main(String[] args) {
-		try {
-			exceptionTest();
-			throwtest();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		A castClass = new B();
+		castClass.aval();
+		((B) castClass).foo();
+
+		// A a = new A();
+		//
+		// AClassCat ac = AClassCat.GENERATED;
+		// ac.toString();
+		// new String();
+
+		// try {
+		// exceptionTest();
+		// throwtest();
+		// } catch (Exception e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 		// new B().fooBException();
 		// try {
 		// throwtest();

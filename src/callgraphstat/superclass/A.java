@@ -19,12 +19,35 @@
  */
 package callgraphstat.superclass;
 
-
 public class A {
 	public int intval;
 	protected int intvalA;
 	public A valAOfA;
 	protected A valAOfB;
+
+	public enum AClassCat {
+		GENERATED("Generated Code"), REGULAR("Regular Class"), TEST(
+				"Test Class");
+		private String category;
+
+		private AClassCat(String category) {
+			this.category = category;
+		}
+
+		public String toString() {
+			return this.category;
+		}
+	}
+
+	class AAA {
+		void methodAAA() {
+
+		}
+	}
+
+	A() {
+		new AAA().methodAAA();
+	}
 
 	E foos(A v, int i, M a) {
 		return null;

@@ -76,9 +76,29 @@ public final class JCallGraph {
 			// print edges
 			System.out.println("EDGES\n_____________________");
 			java.util.List<String> edges = Description.getUnSortedEdges();
-			System.out.println("Edges...");
+			System.out.println("All Edges...\n");
 			for (int i = 0; i < edges.size(); i++) {
 				System.out.println((i + 1) + ".\t" + edges.get(i) + "\n");
+			}
+
+			System.out.println("\n\nLIBRARY EDGES\n_____________________");
+			java.util.List<String> libedges = Description
+					.getUnSortedLibraryEdges();
+			System.out
+					.println("Edges...(That has no further access to the class or assume library classes)\n");
+			for (int i = 0; i < libedges.size(); i++) {
+				System.out.println((i + 1) + ".\t" + libedges.get(i) + "\n");
+			}
+
+			System.out
+					.println("\n\nLIBRARY CLASS OR METHOD NO ACCESS\n_____________________");
+			java.util.List<String> noAccessLibedges = Description
+					.getUnSortdLibraryClassOrMethodNoAccess();
+			System.out
+					.println("List of Classes or Methods that has no access, assume library classes\n");
+			for (int i = 0; i < noAccessLibedges.size(); i++) {
+				System.out.println((i + 1) + ".\t" + noAccessLibedges.get(i)
+						+ "\n");
 			}
 			System.out.println("\n\n\n\t\t\t\t\tElapsed Time: "
 					+ (double) (end - start) / 1000000000.0 + "s");

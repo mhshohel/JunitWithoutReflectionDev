@@ -82,6 +82,8 @@ public final class Description implements Comparable<Description> {
 	public Map<String, Stack<Object>> staticFields = new LinkedHashMap<String, Stack<Object>>();
 	private static List<String> nodes = new ArrayList<String>();
 	private static List<String> edges = new ArrayList<String>();
+	private static List<String> libEdges = new ArrayList<String>();
+	private static List<String> noAccessedClassesOrMethod = new ArrayList<String>();
 	public boolean isSuperClassObjectInitiated = false;
 	public boolean isVisitedToCheckStaticField = false;
 	public static final String UNKNOWN = "unknown";
@@ -152,8 +154,10 @@ public final class Description implements Comparable<Description> {
 		}
 		// Inner Class as Application
 		for (Class<?> cls : this.clas.getDeclaredClasses()) {
-			this.classDescriptions.put(cls.getName(), new Description(cls,
-					ClassCategory.REGULAR, this.classDescriptions));
+			if (!this.classDescriptions.containsKey(cls.getName())) {
+				this.classDescriptions.put(cls.getName(), new Description(cls,
+						ClassCategory.REGULAR, this.classDescriptions));
+			}
 		}
 		initializeMethodVisitor(this, false);
 	}
@@ -309,6 +313,19 @@ public final class Description implements Comparable<Description> {
 		return false;
 	}
 
+	public final static boolean addLibraryEdge(String source, String target) {
+		String libEdge = source.concat(" -- > ").concat(target).trim();
+		System.out.println("\t\t\tLib Edge: " + libEdge);
+		if (!noAccessedClassesOrMethod.contains(target)) {
+			noAccessedClassesOrMethod.add(target);
+		}
+		if (libEdges.contains(libEdge)) {
+			return true;
+		}
+		libEdges.add(libEdge);
+		return false;
+	}
+
 	public final static List<String> getSortedEdges() {
 		Collections.sort(edges);
 		return edges;
@@ -316,6 +333,24 @@ public final class Description implements Comparable<Description> {
 
 	public final static List<String> getUnSortedEdges() {
 		return edges;
+	}
+
+	public final static List<String> getSorteLibraryEdges() {
+		Collections.sort(libEdges);
+		return libEdges;
+	}
+
+	public final static List<String> getUnSortedLibraryEdges() {
+		return libEdges;
+	}
+
+	public final static List<String> getSortdLibraryClassOrMethodNoAccess() {
+		Collections.sort(noAccessedClassesOrMethod);
+		return noAccessedClassesOrMethod;
+	}
+
+	public final static List<String> getUnSortdLibraryClassOrMethodNoAccess() {
+		return noAccessedClassesOrMethod;
 	}
 
 	public final List<Description> getInterfaces() {
