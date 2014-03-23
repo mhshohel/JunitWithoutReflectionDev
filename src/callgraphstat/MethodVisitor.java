@@ -359,7 +359,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 		// only for caller class not for current class (contains throws
 		// Exception)
 		if (this.exceptionTable != null) {
-			exceptions.add(exceptionTable.toString());
+			String[] excepList = this.exceptionTable.getExceptionNames();
+			for (String exc : excepList) {
+				exceptions.add(exc);
+			}
 		}
 		// --------------------------------
 
@@ -573,35 +576,47 @@ public final class MethodVisitor extends EmptyVisitor implements
 				// } else {
 				// value = this.temporalVariables.pop();
 				// }
-				value = (this.temporalVariables != null && !this.temporalVariables
-						.isEmpty()) ? this.temporalVariables.pop() : null;
-				if (value != null) {
+				if (isPrimitiveType(type)) {
+					value = (this.temporalVariables != null && !this.temporalVariables
+							.isEmpty()) ? this.temporalVariables.peek() : null;
 					if (value.toString().equalsIgnoreCase(Description.NULL)) {
-						value = Description.NULL;
-					} else if (value.toString().equalsIgnoreCase(
-							Description.PRIMITIVE)
-							|| value instanceof String) {
-						if (isPrimitiveType(type)) {
-							value = Description.PRIMITIVE;
-						} else {
-							value = null;
-						}
+						value = this.temporalVariables.pop();
 					} else {
-						boolean result = isSameType(type.toString(),
-								value.toString());
-						if (!result) {
-							value = getCopiedDescriptionIfValueNotMatched(value);
-							if (!isSameType(type.toString(), value.toString())) {
-								value = getCopiedDescriptionIfValueNotMatched(type);
+						value = Description.PRIMITIVE;
+					}
+				} else {
+					value = (this.temporalVariables != null && !this.temporalVariables
+							.isEmpty()) ? this.temporalVariables.pop() : null;
+
+					if (value != null) {
+						if (value.toString().equalsIgnoreCase(Description.NULL)) {
+							value = Description.NULL;
+						} else if (value.toString().equalsIgnoreCase(
+								Description.PRIMITIVE)
+								|| value instanceof String) {
+							if (isPrimitiveType(type)) {
+								value = Description.PRIMITIVE;
+							} else {
+								value = null;
+							}
+						} else {
+							boolean result = isSameType(type.toString(),
+									value.toString());
+							if (!result) {
+								value = getCopiedDescriptionIfValueNotMatched(value);
+								if (!isSameType(type.toString(),
+										value.toString())) {
+									value = getCopiedDescriptionIfValueNotMatched(type);
+								}
 							}
 						}
 					}
-				}
-				if (value == null) {
-					if (isPrimitiveType(type)) {
-						value = Description.PRIMITIVE;
-					} else {
-						value = getCopiedDescriptionIfValueNotMatched(type);
+					if (value == null) {
+						if (isPrimitiveType(type)) {
+							value = Description.PRIMITIVE;
+						} else {
+							value = getCopiedDescriptionIfValueNotMatched(type);
+						}
 					}
 				}
 				// }
@@ -755,6 +770,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 						+ obj.getType(constantPoolGen).getClass().isArray());
 				storeValues("ASTORE", name,
 						this.localVariableGens[index].getType(), null);
+				// must remove primitive values, because storeValue not deleted
+				// primitive values
 				removePrimitiveData();
 			}
 		} catch (Exception e) {
@@ -1143,7 +1160,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 				}
 			}
 			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
-					referenceTpe.toString(), methodName, params);
+					referenceTpe.toString(), methodName, params, types);
 			if (returnType != null
 					&& !returnType.toString().equalsIgnoreCase("void")) {
 				this.temporalVariables.add(returnType);
@@ -1189,12 +1206,12 @@ public final class MethodVisitor extends EmptyVisitor implements
 				}
 			}
 			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
-					referenceTpe.toString(), methodName, params);
+					referenceTpe.toString(), methodName, params, types);
 			// check Exception class and then print edges, print all
 			if (isSameType(referenceTpe.toString(), "java.lang.Exception")) {
 				for (String ex : this.exceptionClassList) {
 					createEdgeIfMethodNotFound(null, null, this.node, ex,
-							methodName, params);
+							methodName, params, types);
 				}
 			}
 			if (returnType != null
@@ -1259,7 +1276,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 				this.temporalVariables.add(i.getReferenceType(constantPoolGen));
 			}
 			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
-					referenceTpe.toString(), methodName, params);
+					referenceTpe.toString(), methodName, params, types);
 			System.out.println("------------------------");
 		} catch (Exception e) {
 			System.err
@@ -1293,7 +1310,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 				}
 			}
 			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
-					referenceTpe.toString(), methodName, params);
+					referenceTpe.toString(), methodName, params, types);
 			if (returnType != null
 					&& !returnType.toString().equalsIgnoreCase("void")) {
 				this.temporalVariables.add(returnType);
@@ -1310,25 +1327,74 @@ public final class MethodVisitor extends EmptyVisitor implements
 	// generate edges which has no description or method visitor recorded
 	private boolean createEdgeIfMethodNotFound(Description description,
 			MethodVisitor methodVisitor, String source, String referenceTpe,
-			String methodName, List<Object> params) {
+			String methodName, List<Object> params, Type[] types) {
+		boolean hasDescription = this.description.hasDescription(referenceTpe
+				.toString());
 		if (description == null || methodVisitor == null) {
 			String target = referenceTpe + "." + methodName;
-			String types = "(";
+			String type = "(";
 			if (params != null && !params.isEmpty()) {
 				int length = params.size();
 				String actualParam = "";
 				for (int i = 0; i < length; i++) {
 					actualParam = params.get(i).toString();
-					types += ((i + 1) == length) ? actualParam : actualParam
+					if (actualParam.equalsIgnoreCase(Description.PRIMITIVE)) {
+						actualParam = types[i].toString();
+					}
+					type += ((i + 1) == length) ? actualParam : actualParam
 							+ ",";
 				}
 			}
-			types += ")";
-			target += types;
+			type += ")";
+			target += type;
 			// keep edges that is not part of Description or part of Library
 			// Class
-			if (!this.description.hasDescription(referenceTpe.toString())) {
-				Description.addLibraryEdge(source, target);
+			if (!hasDescription) {
+				boolean result = false;
+				if (methodName.equalsIgnoreCase("<init>")) {
+					target += "void";
+				} else {
+					try {
+						// should set new target
+						Class<?> clas = Class.forName(referenceTpe.toString());
+						java.lang.reflect.Method[] methods = clas.getMethods();
+						List<java.lang.reflect.Method> methodPeeked = new ArrayList<java.lang.reflect.Method>();
+						for (java.lang.reflect.Method method : methods) {
+							if (method.getName().equalsIgnoreCase(methodName)) {
+								result = true;
+								Class<?>[] cTypes = method.getParameterTypes();
+								for (int i = 0; i < cTypes.length; i++) {
+									if (!cTypes[i].getName().equalsIgnoreCase(
+											types[i].toString())) {
+										result = false;
+										break;
+									}
+								}
+								if (result) {
+									target = method.getDeclaringClass()
+											.getName()
+											+ "."
+											+ methodName
+											+ type + method.getReturnType();
+									for (Class<?> exType : method
+											.getExceptionTypes()) {
+										this.exceptionClassList.add(exType
+												.getName());
+									}
+									// TODO:Annotation
+									break;
+								}
+							}
+						}
+					} catch (ClassNotFoundException e) {
+					}
+				}
+				if (result) {
+					Description.addLibraryEdge(source, target);
+					return Description.addEdge(source, target);
+				} else {
+					return false;
+				}
 			}
 			return Description.addEdge(source, target);
 		}
@@ -1352,88 +1418,87 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
-	// final class ArrayObjectProvider {
-	// // change key as object instead of string to keep all objects -- not
-	// // done
-	// // here
-	// private Map<String, Data> arrayObjects = new LinkedHashMap<String,
-	// Data>();
-	// private String arrayType = null; // trace counter to get high
-	// private int mostCounted = 0;
-	// private Object mostCountedObjectObject = null;
-	//
-	// public String getArrayType() {
-	// if (this.arrayType == null) {
-	// return null;
-	// }
-	// return this.arrayType;
-	// }
-	//
-	// public void setType(String arrayType) {
-	// this.arrayType = arrayType;
-	// }
-	//
-	// public String getType() {
-	// if (this.arrayType == null) {
-	// return null;
-	// }
-	// return this.arrayType.replace("[]", "");
-	// }
-	//
-	// public void add(Object object, Stack<Object> temp) {
-	// // check type before add
-	// try {
-	// if (object.toString().equalsIgnoreCase(Description.PRIMITIVE)) {
-	// add(object.toString(), Description.PRIMITIVE);
-	// } else if (isSameType(getType(), object.toString())) {
-	// add(object.toString(), object);
-	// }
-	// temp.pop();
-	// } catch (Exception e) {
-	// }
-	// }
-	//
-	// private void add(String key, Object value) {
-	// Data data = this.arrayObjects.get(key);
-	// if (data == null) {
-	// data = new Data(value);
-	// this.arrayObjects.put(key, data);
-	// } else {
-	// if (data.object.toString().equalsIgnoreCase(Description.NULL)) {
-	// data.object = value;
-	// } else {
-	// data.counter++;
-	// }
-	// }
-	// if (data.counter > mostCounted) {
-	// mostCounted = data.counter;
-	// mostCountedObjectObject = data.object;
-	// }
-	// }
-	//
-	// public Object getByKey(String key) {
-	// Object object = this.arrayObjects.get(key);
-	// if (object == null) {
-	// object = Description.NULL;
-	// }
-	// return object;
-	// }
-	//
-	// public ArrayObjectProvider(String arrayType) {
-	// this.arrayType = arrayType;
-	// }
-	//
-	// public ArrayObjectProvider() {
-	// }
-	//
-	// class Data {
-	// public Object object = null;
-	// public int counter = 0;
-	//
-	// public Data(Object object) {
-	// this.object = object;
-	// counter++;
-	// }
-	// }
-	// }
+	final class ArrayObjectProvider {
+		// change key as object instead of string to keep all objects -- not
+		// done
+		// here
+		private Map<String, Data> arrayObjects = new LinkedHashMap<String, Data>();
+		private String arrayType = null; // trace counter to get high
+		private int mostCounted = 0;
+		private Object mostCountedObjectObject = null;
+
+		public String getArrayType() {
+			if (this.arrayType == null) {
+				return null;
+			}
+			return this.arrayType;
+		}
+
+		public void setType(String arrayType) {
+			this.arrayType = arrayType;
+		}
+
+		public String getType() {
+			if (this.arrayType == null) {
+				return null;
+			}
+			return this.arrayType.replace("[]", "");
+		}
+
+		public void add(Object object, Stack<Object> temp) {
+			// check type before add
+			try {
+				if (object.toString().equalsIgnoreCase(Description.PRIMITIVE)) {
+					add(object.toString(), Description.PRIMITIVE);
+				} else if (isSameType(getType(), object.toString())) {
+					add(object.toString(), object);
+				}
+				temp.pop();
+			} catch (Exception e) {
+			}
+		}
+
+		private void add(String key, Object value) {
+			Data data = this.arrayObjects.get(key);
+			if (data == null) {
+				data = new Data(value);
+				this.arrayObjects.put(key, data);
+			} else {
+				if (data.object.toString().equalsIgnoreCase(Description.NULL)) {
+					data.object = value;
+				} else {
+					data.counter++;
+				}
+			}
+			if (data.counter > mostCounted) {
+				mostCounted = data.counter;
+				mostCountedObjectObject = data.object;
+			}
+		}
+
+		public Object getByKey(String key) {
+			Object object = this.arrayObjects.get(key);
+			if (object == null) {
+				object = Description.NULL;
+			}
+			return object;
+		}
+
+		public ArrayObjectProvider(String arrayType) {
+			this.arrayType = arrayType;
+		}
+
+		public ArrayObjectProvider() {
+		}
+
+		class Data {
+			public Object object = null;
+			public int counter = 0;
+
+			public Data(Object object) {
+				this.object = object;
+				counter++;
+			}
+		}
+	}
 }

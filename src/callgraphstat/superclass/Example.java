@@ -158,24 +158,53 @@ public class Example {
 		int z = q;
 	}
 
+	static void ptest(Y y, int a, int b, int c, String d) {
+		Y yy = y;
+		int aa = a;
+		int bb = b;
+		int cc = c;
+		String dd = d;
+	}
+
 	public static void main(String[] args) {
+		// try {
+		// new A().aa();
+		// } catch (CustomException e) {
+		// e.getNewList();
+		// } catch (Exception e) {
+		// e.getMessage();
+		// }
+		// callgraphstat.externalclasses.A a = new
+		// callgraphstat.externalclasses.A();
+		// a.cc(new callgraphstat.externalclasses.C());
+		// a.bb();
+		// a.abc();
+		// try {
+		// a.ex();
+		// } catch (Exception e) {
+		// e.getMessage();
+		// }
+
+		// String s = new String("SD");
+		// s.codePointAt(0);
+		// ptest(new Y(), 1, 2, 3, null);
 		// C c = new C();
 		// for (int i = 0; i < 2; i++)
 		// inte(c, null, 0, 0, null, c, null, null, 9);
 		// inte(c, c, 0, 0, null, c, null, null, 9);
-		M mm = new M();
-		for (int l = 0; l < 2; l++)
-			for (int k = 0; k < 2; k++) {
-				for (int i = 0; i < 2; i++) {
-					// IInterface j = new M();
-					// inte(j);
-				}
-			}
-
-		A av = new B();
-		((B) av).bval();
-		av.foo();
-		new M();
+		// M mm = new M();
+		// for (int l = 0; l < 2; l++)
+		// for (int k = 0; k < 2; k++) {
+		// for (int i = 0; i < 2; i++) {
+		// // IInterface j = new M();
+		// // inte(j);
+		// }
+		// }
+		//
+		// A av = new B();
+		// ((B) av).bval();
+		// av.foo();
+		// new M();
 		// C castClass = new C();
 		// inte((A) castClass);
 		// A aVal = castClass;

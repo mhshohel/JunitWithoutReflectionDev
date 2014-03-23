@@ -25,28 +25,32 @@ public class A {
 	public A valAOfA;
 	protected A valAOfB;
 
-	public enum AClassCat {
-		GENERATED("Generated Code"), REGULAR("Regular Class"), TEST(
-				"Test Class");
-		private String category;
+	// public enum AClassCat {
+	// GENERATED("Generated Code"), REGULAR("Regular Class"), TEST(
+	// "Test Class");
+	// private String category;
+	//
+	// private AClassCat(String category) {
+	// this.category = category;
+	// }
+	//
+	// public String toString() {
+	// return this.category;
+	// }
+	// }
 
-		private AClassCat(String category) {
-			this.category = category;
-		}
+	// class AAA {
+	// void methodAAA() {
+	//
+	// }
+	// }
 
-		public String toString() {
-			return this.category;
-		}
-	}
+	// A() {
+	// new AAA().methodAAA();
+	// }
 
-	class AAA {
-		void methodAAA() {
+	void aa() throws ArithmeticException, ArrayStoreException, CustomException {
 
-		}
-	}
-
-	A() {
-		new AAA().methodAAA();
 	}
 
 	E foos(A v, int i, M a) {
@@ -74,6 +78,10 @@ public class A {
 	}
 
 	void foos() {
+		fools();
+	}
+
+	private void fools() {
 
 	}
 
