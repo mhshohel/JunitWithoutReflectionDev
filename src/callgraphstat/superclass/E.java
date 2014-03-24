@@ -1,11 +1,5 @@
 package callgraphstat.superclass;
 
-public class E extends A {
-	int valEOF() {
-		return 0;
-	}
+public class E {
 
-	T valA() {
-		return new T();
-	}
 }

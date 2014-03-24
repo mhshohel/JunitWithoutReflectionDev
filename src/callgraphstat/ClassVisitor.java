@@ -77,84 +77,130 @@ public final class ClassVisitor extends EmptyVisitor {
 		return classVisitor;
 	}
 
-	private final Stack<Object> getValuesFromField(ClassVisitor classVisitor,
-			String fieldName) {
-		Stack<Object> fields = null;
-		try {
-			fields = classVisitor.fields.get(fieldName);
-			if (fields == null) {
-				if (classVisitor.description.getSuperClassDescription() != null) {
-					fields = getValuesFromField(classVisitor.description
-							.getSuperClassDescription().getClassVisitor(),
-							fieldName);
-				}
-			}
-		} catch (Exception e) {
-		}
-		return fields;
-	}
+	// private final Stack<Object> getValuesFromField(ClassVisitor classVisitor,
+	// String fieldName) {
+	// Stack<Object> fields = null;
+	// try {
+	// fields = classVisitor.fields.get(fieldName);
+	// if (fields == null) {
+	// if (classVisitor.description.getSuperClassDescription() != null) {
+	// fields = getValuesFromField(classVisitor.description
+	// .getSuperClassDescription().getClassVisitor(),
+	// fieldName);
+	// }
+	// }
+	// } catch (Exception e) {
+	// }
+	// return fields;
+	// }
+	//
+	// public final Object getValueFromField(ClassVisitor classVisitor,
+	// String fieldName, ReferenceType referenceType, Object object) {
+	// boolean isSame = (referenceType.toString()
+	// .equalsIgnoreCase(classVisitor.description.getClassName())) ? true
+	// : false;
+	// Stack<Object> fields = null;
+	// try {
+	// if (isSame) {
+	// fields = getValuesFromField(classVisitor, fieldName);
+	// } else {
+	// if (referenceType.toString()
+	// .equalsIgnoreCase(object.toString())) {
+	// if (object instanceof Description) {
+	// Description description = (Description) object;
+	// fields = description.getClassVisitor()
+	// .getValuesFromField(
+	// description.getClassVisitor(),
+	// fieldName);
+	// }
+	// }
+	// }
+	// if (fields != null && !fields.isEmpty()) {
+	// return fields.peek();
+	// }
+	// } catch (Exception e) {
+	// }
+	// return fields;
+	// }
 
-	public final Object getValueFromField(ClassVisitor classVisitor,
-			String fieldName, ReferenceType referenceType, Object object) {
-		boolean isSame = (referenceType.toString()
-				.equalsIgnoreCase(classVisitor.description.getClassName())) ? true
-				: false;
-		Stack<Object> fields = null;
-		try {
-			if (isSame) {
-				fields = getValuesFromField(classVisitor, fieldName);
-			} else {
-				if (referenceType.toString()
-						.equalsIgnoreCase(object.toString())) {
-					if (object instanceof Description) {
-						Description description = (Description) object;
-						fields = description.getClassVisitor()
-								.getValuesFromField(
-										description.getClassVisitor(),
-										fieldName);
-					}
-				}
-			}
-			if (fields != null && !fields.isEmpty()) {
-				return fields.peek();
-			}
-		} catch (Exception e) {
-		}
-		return fields;
-	}
+	// public final Object getValueFromFieldByFieldName(String key) {
+	// Object value = null;
+	// try {
+	// Stack<Object> values = this.fields.get(key);
+	// if (values != null && !values.isEmpty()) {
+	// return values.peek();
+	// }
+	// } catch (Exception e) {
+	// }
+	// return value;
+	// }
 
-	public final Object getValueFromFieldByFieldName(String key) {
+	// check for other type not description
+	public Object getValueFromField(Object targetClass, String fieldName,
+			ReferenceType referenceType) {
+		Stack<Object> field = null;
 		Object value = null;
-		try {
-			Stack<Object> values = this.fields.get(key);
-			if (values != null && !values.isEmpty()) {
-				return values.peek();
-			}
-		} catch (Exception e) {
-		}
-		return value;
-	}
-
-	public void addValueToField(ClassVisitor classVisitor, String fieldName,
-			Object value, ReferenceType referenceType, Object object) {
-		boolean isSame = (referenceType.toString()
-				.equalsIgnoreCase(classVisitor.description.getClassName())) ? true
-				: false;
-		Stack<Object> fields = null;
-		try {
-			if (isSame) {
-				fields = getValuesFromField(classVisitor, fieldName);
+		if (targetClass != null && targetClass instanceof Description) {
+			Description description = (Description) targetClass;
+			ClassVisitor classVisitor = description.getClassVisitor();
+			field = classVisitor.fields.get(fieldName);
+			if (field != null) {
+				return field.peek();
 			} else {
-				if (object instanceof Description) {
-					Description description = (Description) object;
-					fields = description.getClassVisitor().getValuesFromField(
-							description.getClassVisitor(), fieldName);
+				// no need to have copy of Description for Super Class
+				if (description.getSuperClassDescription() != null) {
+					value = getValueFromField(
+							description.getSuperClassDescription(), fieldName,
+							referenceType);
 				}
 			}
-			if (fields != null) {
-				fields.add(value);
+		}
+		return (value == null) ? Description.NULL : value;
+	}
+
+	// check for other type not description
+	public void addValueToField(Object targetClass, String fieldName,
+			Object value, ReferenceType referenceType) {
+		if (targetClass != null && targetClass instanceof Description) {
+			Description description = (Description) targetClass;
+			ClassVisitor classVisitor = description.getClassVisitor();
+			Stack<Object> field = classVisitor.fields.get(fieldName);
+			if (field != null) {
+				field.add(value);
+			} else {
+				// no need to have copy of Description for Super Class
+				if (description.getSuperClassDescription() != null) {
+					addValueToField(description.getSuperClassDescription(),
+							fieldName, value, referenceType);
+				}
 			}
-		} catch (Exception e) {
 		}
 	}
+
+	// public void addValueToField(ClassVisitor classVisitor, String fieldName,
+	// Object value, ReferenceType referenceType, Object object) {
+	//
+	// Stack<Object> field = classVisitor.fields.get(fieldName);
+	// field.add(value);
+	// // boolean isSame = (referenceType.toString()
+	// // .equalsIgnoreCase(classVisitor.description.getClassName())) ? true
+	// // : false;
+	// // Stack<Object> fields = null;
+	// // try {
+	// // // if (isSame) {
+	// // // fields = getValuesFromField(classVisitor, fieldName);
+	// // // } else {
+	// // // if (object instanceof Description) {
+	// // // Description description = (Description) object;
+	// // // fields = description.getClassVisitor().getValuesFromField(
+	// // // description.getClassVisitor(), fieldName);
+	// // // }
+	// // // }
+	// // // if (fields != null) {
+	// // // fields.add(value);
+	// // // }
+	// // } catch (Exception e) {
+	// // }
+	// }
+
 }
