@@ -21,8 +21,12 @@ package callgraphstat.superclass;
 
 public class Example {
 
-	public static void main(String[] args) {
-		new A().oObject = new StringBuilder();
+	static SuperClassA getVal() {
+		return new A();
+	}
 
+	public static void main(String[] args) {
+		SuperClassA as = getVal();
+		((A) as).a(new A());
 	}
 }

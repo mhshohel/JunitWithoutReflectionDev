@@ -155,16 +155,17 @@ public final class ClassVisitor extends EmptyVisitor {
 				}
 			}
 		}
-		return (value == null) ? Description.NULL : value;
+		return (value == referenceType.toString()) ? Description.NULL : value;
 	}
 
 	// check for other type not description
 	public void addValueToField(Object targetClass, String fieldName,
 			Object value, ReferenceType referenceType) {
+		Stack<Object> field = null;
 		if (targetClass != null && targetClass instanceof Description) {
 			Description description = (Description) targetClass;
 			ClassVisitor classVisitor = description.getClassVisitor();
-			Stack<Object> field = classVisitor.fields.get(fieldName);
+			field = classVisitor.fields.get(fieldName);
 			if (field != null) {
 				field.add(value);
 			} else {
