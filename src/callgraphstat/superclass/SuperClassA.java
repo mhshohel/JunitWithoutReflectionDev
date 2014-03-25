@@ -8,8 +8,16 @@ public class SuperClassA {
 		new E();
 	}
 
+	void aValEx() {
+		System.err.println("I am From SuperClassA");
+	}
+
 	protected F f() {
 		F f = new F();
 		return f;
+	}
+
+	void add(A a) {
+
 	}
 }

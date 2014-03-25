@@ -6,12 +6,20 @@ public class A extends SuperClassA {
 	Object oObject = null;
 	static SuperClassA seval = new B();
 
+	void aValEx() {
+		System.err.println("I am From A");
+	}
+
 	SuperClassA getVal() {
 		b = new B();
 		return this.b;
 	}
 
-	void a(SuperClassA val) {
+	void bval(B b) {
+
+	}
+
+	void aVC(SuperClassA val) {
 		((A) val).b();
 	}
 

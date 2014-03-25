@@ -19,6 +19,9 @@
  */
 package callgraphstat.superclass;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Example {
 
 	static SuperClassA getVal() {
@@ -26,7 +29,20 @@ public class Example {
 	}
 
 	public static void main(String[] args) {
-		SuperClassA as = getVal();
-		((A) as).a(new A());
+		// Stack<A> stack = new Stack<A>();
+		// stack.add(new A());
+		// stack.peek();
+		// stack.get(0);
+		// stack.pop();
+		// SuperClassA a = new SuperClassA();
+		// a.add(new A());
+
+		List<SuperClassA> aList = new ArrayList<SuperClassA>();
+		aList.add(new A());
+		aList.add(new B());
+
+		SuperClassA aval = aList.get(0);
+		aval.aValEx();
+
 	}
 }
