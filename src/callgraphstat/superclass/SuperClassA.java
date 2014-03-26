@@ -10,6 +10,7 @@ public class SuperClassA {
 
 	void aValEx() {
 		System.err.println("I am From SuperClassA");
+		f();
 	}
 
 	protected F f() {
@@ -19,5 +20,8 @@ public class SuperClassA {
 
 	void add(A a) {
 
+	}
+
+	void exam() {
 	}
 }

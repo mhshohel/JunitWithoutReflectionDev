@@ -4,10 +4,19 @@ public class A extends SuperClassA {
 	public B b = null;
 	D dval = null;
 	Object oObject = null;
-	static SuperClassA seval = new B();
+
+	// static SuperClassA seval = new B();
+	void claA() {
+		privatem();
+	}
+
+	private void privatem() {
+
+	}
 
 	void aValEx() {
 		System.err.println("I am From A");
+		// b();
 	}
 
 	SuperClassA getVal() {

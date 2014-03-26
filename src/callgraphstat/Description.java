@@ -68,6 +68,7 @@ public final class Description implements Comparable<Description> {
 		}
 	}
 
+	public int id = 0;
 	private Class<?> clas = null;
 	private JavaClass javaClass = null;
 	private ClassVisitor classVisitor = null;
@@ -86,16 +87,6 @@ public final class Description implements Comparable<Description> {
 	private static List<String> noAccessedClassesOrMethod = new ArrayList<String>();
 	public boolean isSuperClassObjectInitiated = false;
 	public boolean isVisitedToCheckStaticField = false;
-	public static final String UNKNOWN = "unknown";
-	public static final String THIS = "this";
-	public static final String NULL = "null";
-	public static final String PRIMITIVE = "primitive";
-	public static final String STRING = "string";
-	public static final String CLASS = "class";
-	public static final String OBJECT = "object";
-	public static final String ARRAY_TYPE = "arr_typ";
-	public static final String ARRAY_OBJECT = "arr_obj";
-	public static final String COLLECTION_TYPE = "coll_typ";
 
 	private Description() {
 		initialize();
@@ -116,6 +107,7 @@ public final class Description implements Comparable<Description> {
 	}
 
 	private void initialize() {
+		this.id = StaticValues.getNewID();
 		this.isVisitedToCheckStaticField = false;
 		this.classDescriptions = new LinkedHashMap<String, Description>();
 		this.methods = new LinkedHashMap<Method, MethodVisitor>();
@@ -233,10 +225,18 @@ public final class Description implements Comparable<Description> {
 	public void addValueToStaticField(Description description,
 			String fieldName, Object value, ReferenceType referenceType) {
 		try {
-			Stack<Object> fields = getValuesFromStaticField(description,
+			Stack<Object> field = getValuesFromStaticField(description,
 					fieldName);
-			if (fields != null) {
-				fields.add(value);
+			if (field != null) {
+				if (value instanceof Stack) {
+					for (Object obj : (Stack<?>) value) {
+						if (!field.contains(obj)) {
+							field.add(obj);
+						}
+					}
+				} else {
+					field.add(value);
+				}
 			} else {
 				if (referenceType != null) {
 					try {
@@ -281,14 +281,14 @@ public final class Description implements Comparable<Description> {
 	public final Object getValueFromStaticField(Description description,
 			String fieldName, ReferenceType referenceType) {
 		Stack<Object> fields = getValuesFromStaticField(description, fieldName);
-		if (fields != null && !fields.isEmpty()) {
-			return fields.peek();
+		if (fields != null) {// && !fields.isEmpty()) {
+			return fields;// .peek();
 		} else if (referenceType != null) {
 			try {
 				fields = this.classDescriptions.get(referenceType.toString())
 						.getStaticFieldValues(fieldName);
 				if (!fields.isEmpty()) {
-					return fields.peek();
+					return fields;// .peek();
 				} else {
 					return referenceType.toString();
 				}
@@ -310,6 +310,7 @@ public final class Description implements Comparable<Description> {
 			return true;
 		}
 		edges.add(edge);
+		System.err.println("---------------- " + edge + " ----------------");
 		return false;
 	}
 
@@ -408,6 +409,14 @@ public final class Description implements Comparable<Description> {
 	public int compareTo(Description description) {
 		return this.getActualClass().getName()
 				.compareTo(description.getActualClass().getName());
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if (object instanceof Description) {
+			return this.id == ((Description) object).id;
+		}
+		return false;
 	}
 
 	public final ClassVisitor getClassVisitor() {

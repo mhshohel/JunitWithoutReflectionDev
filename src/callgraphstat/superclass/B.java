@@ -8,4 +8,7 @@ public class B extends SuperClassA {
 	void aValEx() {
 		System.err.println("I am From B");
 	}
+
+	void exam() {
+	}
 }
