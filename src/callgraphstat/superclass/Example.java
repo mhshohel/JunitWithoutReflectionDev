@@ -35,37 +35,47 @@ public class Example {
 
 	static SuperClassA ca = null;
 
-	public static void main(String[] args) {
-		// ca = new A();
-		// ca = new B();
-		SuperClassA ca = new A();
-		if (!(ca instanceof A)) {
-			new A();
-		} else {
-			new B();
-			B b = new B();
-			if (b instanceof SuperClassA) {
-				new C();
-			} else {
-				new E();
-			}
-			D d = new D();
-		}
-		int o = 9;
+	static void con(SuperClassA a, D d, SuperClassA b) {
+		SuperClassA vb = a;
+	}
 
-		int p = 1;
-		con((o == 9) ? new A() : (p == 1) ? new B() : new C(), new D());
-		SuperClassA aaa = null;
-		switch (o) {
-		case 9:
-			aaa = new A();
-			break;
-		case 0:
-			aaa = new B();
-			C c = new C();
-			c.aValEx();
-			break;
-		}
+	public static void main(String[] args) {
+		// A d = new A();
+		// d.dval = new D();
+		// D f = d.dval;
+		ca = new A();
+		ca = new B();
+		new D().aValEx();
+		con(ca, new D(), new C());
+
+		// SuperClassA ca = new A();
+		// if (!(ca instanceof A)) {
+		// new A();
+		// } else {
+		// new B();
+		// B b = new B();
+		// if (b instanceof SuperClassA) {
+		// new C();
+		// } else {
+		// new E();
+		// }
+		// D d = new D();
+		// }
+		// int o = 9;
+		//
+		// int p = 1;
+		// con((o == 9) ? new A() : (p == 1) ? new B() : new C(), new D());
+		// SuperClassA aaa = null;
+		// switch (o) {
+		// case 9:
+		// aaa = new A();
+		// break;
+		// case 0:
+		// aaa = new B();
+		// C c = new C();
+		// c.aValEx();
+		// break;
+		// }
 
 		// D d = new D();
 		// SuperClassA dss = d.getVals(ca);

@@ -2,11 +2,13 @@ package callgraphstat.superclass;
 
 public class A extends SuperClassA {
 	public B b = null;
-	D dval = null;
+	public D dval = null;
 	Object oObject = null;
 
 	// static SuperClassA seval = new B();
 	void claA() {
+		dval = new D();
+		D s = dval;
 		privatem();
 	}
 

@@ -225,18 +225,10 @@ public final class Description implements Comparable<Description> {
 	public void addValueToStaticField(Description description,
 			String fieldName, Object value, ReferenceType referenceType) {
 		try {
-			Stack<Object> field = getValuesFromStaticField(description,
+			Stack<Object> fields = getValuesFromStaticField(description,
 					fieldName);
-			if (field != null) {
-				if (value instanceof Stack) {
-					for (Object obj : (Stack<?>) value) {
-						if (!field.contains(obj)) {
-							field.add(obj);
-						}
-					}
-				} else {
-					field.add(value);
-				}
+			if (fields != null) {
+				fields.add(value);
 			} else {
 				if (referenceType != null) {
 					try {
@@ -281,14 +273,14 @@ public final class Description implements Comparable<Description> {
 	public final Object getValueFromStaticField(Description description,
 			String fieldName, ReferenceType referenceType) {
 		Stack<Object> fields = getValuesFromStaticField(description, fieldName);
-		if (fields != null) {// && !fields.isEmpty()) {
-			return fields;// .peek();
+		if (fields != null && !fields.isEmpty()) {
+			return fields.peek();
 		} else if (referenceType != null) {
 			try {
 				fields = this.classDescriptions.get(referenceType.toString())
 						.getStaticFieldValues(fieldName);
 				if (!fields.isEmpty()) {
-					return fields;// .peek();
+					return fields.peek();
 				} else {
 					return referenceType.toString();
 				}
@@ -310,7 +302,6 @@ public final class Description implements Comparable<Description> {
 			return true;
 		}
 		edges.add(edge);
-		System.err.println("---------------- " + edge + " ----------------");
 		return false;
 	}
 
@@ -409,14 +400,6 @@ public final class Description implements Comparable<Description> {
 	public int compareTo(Description description) {
 		return this.getActualClass().getName()
 				.compareTo(description.getActualClass().getName());
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		if (object instanceof Description) {
-			return this.id == ((Description) object).id;
-		}
-		return false;
 	}
 
 	public final ClassVisitor getClassVisitor() {

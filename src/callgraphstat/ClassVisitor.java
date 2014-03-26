@@ -145,7 +145,7 @@ public final class ClassVisitor extends EmptyVisitor {
 			ClassVisitor classVisitor = description.getClassVisitor();
 			field = classVisitor.fields.get(fieldName);
 			if (field != null) {
-				return field;// .peek();
+				return field.peek();
 			} else {
 				// no need to have copy of Description for Super Class
 				if (description.getSuperClassDescription() != null) {
@@ -169,15 +169,7 @@ public final class ClassVisitor extends EmptyVisitor {
 			ClassVisitor classVisitor = description.getClassVisitor();
 			field = classVisitor.fields.get(fieldName);
 			if (field != null) {
-				if (value instanceof Stack) {
-					for (Object obj : (Stack<?>) value) {
-						if (!field.contains(obj)) {
-							field.add(obj);
-						}
-					}
-				} else {
-					field.add(value);
-				}
+				field.add(value);
 			} else {
 				// no need to have copy of Description for Super Class
 				if (description.getSuperClassDescription() != null) {
