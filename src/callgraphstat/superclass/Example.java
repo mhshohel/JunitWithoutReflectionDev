@@ -43,87 +43,52 @@ public class Example {
 		// A d = new A();
 		// d.dval = new D();
 		// D f = d.dval;
-		ca = new A();
-		ca = new B();
-		new D().aValEx();
-		con(ca, new D(), new C());
+		// ca = new A();
+		// ca = new B();
+		// new D().aValEx();
+		// con(ca, new D(), new C());
 
-		// SuperClassA ca = new A();
-		// if (!(ca instanceof A)) {
-		// new A();
-		// } else {
-		// new B();
-		// B b = new B();
-		// if (b instanceof SuperClassA) {
-		// new C();
-		// } else {
-		// new E();
-		// }
-		// D d = new D();
-		// }
-		// int o = 9;
-		//
-		// int p = 1;
-		// con((o == 9) ? new A() : (p == 1) ? new B() : new C(), new D());
-		// SuperClassA aaa = null;
-		// switch (o) {
-		// case 9:
-		// aaa = new A();
-		// break;
-		// case 0:
-		// aaa = new B();
-		// C c = new C();
-		// c.aValEx();
-		// break;
-		// }
+		int b = 0;
+		if (b > 0) {
+			new C();
+		}
 
-		// D d = new D();
-		// SuperClassA dss = d.getVals(ca);
-		// if (dss != null)
-		// dss.aValEx();
+		if (b > 8) {
+			new D();
+		} else if (b < 7) {
+			new E();
+		} else {
+			new F();
+			ca = null;
+		}
 
-		// A d = new A();
-		// ca = d;
-		// SuperClassA ne = con(ca);
-		// ca.aValEx();
-		// C c = new C();
-		// c.aValEx();
-		// ((A) ne).claA();
-		// ne.exam();
+		A a = new A();
+		SuperClassA sa = null;
+		while (a != null) {
+			sa = new A();
+			if (b > 0) {
+				sa = new C();
+			}
+			sa = (sa == null) ? new A() : sa;
+		}
 
-		//
-		// int a = 9;
-		//
-		// // SuperClassA aa = new A();
-		// // SuperClassA aaa = aa;
-		//
-		// // aa = null;
-		// // aaa.aValEx();
-		//
-		// A aaass = new A();
-		// SuperClassA aaa = null;
-		// switch (a) {
-		// case 9:
-		// aaa = new A();
-		// break;
-		// case 0:
-		// aaa = new B();
-		// C c = new C();
-		// c.aValEx();
-		// break;
-		// }
-		//
-		// A aaasdss = new A();
-		//
-		// if (a == 9) {
-		// aaa = new A();
-		// } else {
-		// aaa = new B();
-		// C c = new C();
-		// c.aValEx();
-		// }
-		//
-		// aaa.aValEx();
+		while (a != null) {
+			sa = new A();
+		}
+		int h = 9;
+		SuperClassA aaa = null;
+		switch (h) {
+		case 9:
+			aaa = new A();
+			break;
+		case 0:
+			aaa = new B();
+			C c = new C();
+			c.aValEx();
+			break;
+		default:
+			break;
+		}
 
 		// con((a == 9) ? new A() : new B());
 		// Example.aLists.add(new C());

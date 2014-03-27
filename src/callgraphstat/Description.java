@@ -297,7 +297,7 @@ public final class Description implements Comparable<Description> {
 
 	public final static boolean addEdge(String source, String target) {
 		String edge = source.concat(" -- > ").concat(target).trim();
-		System.out.println("\t\t\tEdge: " + edge);
+		StaticValues.out("\t\t\tEdge: " + edge);
 		if (edges.contains(edge)) {
 			return true;
 		}
@@ -307,7 +307,7 @@ public final class Description implements Comparable<Description> {
 
 	public final static boolean addLibraryEdge(String source, String target) {
 		String libEdge = source.concat(" -- > ").concat(target).trim();
-		System.out.println("\t\t\tLib Edge: " + libEdge);
+		StaticValues.out("\t\t\tLib Edge: " + libEdge);
 		if (!noAccessedClassesOrMethod.contains(target)) {
 			noAccessedClassesOrMethod.add(target);
 		}
@@ -400,6 +400,14 @@ public final class Description implements Comparable<Description> {
 	public int compareTo(Description description) {
 		return this.getActualClass().getName()
 				.compareTo(description.getActualClass().getName());
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if (object instanceof Description) {
+			return this.id == ((Description) object).id;
+		}
+		return false;
 	}
 
 	public final ClassVisitor getClassVisitor() {
