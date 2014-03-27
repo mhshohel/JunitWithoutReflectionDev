@@ -17,4 +17,12 @@ public class StaticValues {
 		id++;
 		return id;
 	}
+
+	public static void out(Object obj) {
+		System.out.println((obj == null) ? "null" : obj);
+	}
+
+	public static void err(Object obj) {
+		System.err.println((obj == null) ? "null" : obj);
+	}
 }
