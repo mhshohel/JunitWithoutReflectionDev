@@ -423,6 +423,13 @@ public final class MethodVisitor extends EmptyVisitor implements
 		try {
 			List<Object> values = this.localVariables.get(variableName);
 			if (values != null) {
+				int size = values.size();
+				for (int i = 0; i < size; i++) {
+					if (values.get(i).hashCode() == currentValue.hashCode()) {
+						values.remove(i);
+						break;
+					}
+				}
 				values.add(currentValue);
 			}
 		} catch (Exception e) {
@@ -1169,6 +1176,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 				} else {
 					copiedDescription = this.description;
 				}
+
 				this.temporalVariables.add(copiedDescription);
 				// TODO Remove me
 				StaticValues.out("STACK: " + this.temporalVariables);
@@ -1278,6 +1286,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 				boolean result = false;
 				if (methodName.equalsIgnoreCase("<init>")) {
 					target += "void";
+					result = true;
 				} else {
 					try {
 						// should set new target

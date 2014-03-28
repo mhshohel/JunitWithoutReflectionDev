@@ -106,8 +106,10 @@ public final class Description implements Comparable<Description> {
 		initialize(clas, classDescriptions);
 	}
 
+	public List<Object> vals = new ArrayList<Object>();
+
 	private void initialize() {
-		this.id = StaticValues.getNewID();
+		// this.id = StaticValues.getNewID();
 		this.isVisitedToCheckStaticField = false;
 		this.classDescriptions = new LinkedHashMap<String, Description>();
 		this.methods = new LinkedHashMap<Method, MethodVisitor>();
@@ -225,10 +227,17 @@ public final class Description implements Comparable<Description> {
 	public void addValueToStaticField(Description description,
 			String fieldName, Object value, ReferenceType referenceType) {
 		try {
-			Stack<Object> fields = getValuesFromStaticField(description,
+			Stack<Object> field = getValuesFromStaticField(description,
 					fieldName);
-			if (fields != null) {
-				fields.add(value);
+			if (field != null) {
+				int size = field.size();
+				for (int i = 0; i < size; i++) {
+					if (field.get(i).hashCode() == value.hashCode()) {
+						field.remove(i);
+						break;
+					}
+				}
+				field.add(value);
 			} else {
 				if (referenceType != null) {
 					try {
@@ -403,9 +412,15 @@ public final class Description implements Comparable<Description> {
 	}
 
 	@Override
+	public int hashCode() {
+		return clas.hashCode() + javaClass.hashCode() + classVisitor.hashCode();
+	}
+
+	@Override
 	public boolean equals(Object object) {
 		if (object instanceof Description) {
-			return this.id == ((Description) object).id;
+			Description description = (Description) object;
+			return this.hashCode() == description.hashCode();
 		}
 		return false;
 	}
