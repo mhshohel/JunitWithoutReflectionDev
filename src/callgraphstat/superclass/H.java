@@ -5,6 +5,8 @@ public class H {
 	static String name;
 	static G g = new G();
 
+	public SuperClassA a = null;
+
 	H() {
 
 	}

@@ -220,8 +220,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 	}
 
 	public Object start(String source, List<Object> params,
-			boolean isStaticCall, Set<String> exceptions) {
+			boolean isStaticCall, Set<String> exceptions, boolean alreadyHas) {
 		this.castType = null;
+		System.err.println(source);
 		// -------------------Initialize Static Values--------------------
 		if (!this.description.isVisitedToCheckStaticField) {
 			this.description.isVisitedToCheckStaticField = true;
@@ -239,7 +240,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 							.get(0)
 							.start((source != null) ? source
 									: this.description.getClassName(),
-									new ArrayList<Object>(), true, exceptions);
+									new ArrayList<Object>(), true, exceptions,
+									false);
 				}
 			} catch (Exception e) {
 				StaticValues
@@ -248,12 +250,14 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 		// ------------------------------------------------------------------------------
 
-		// ------------------------Read Parameters----------------------------
+		// ------------------------Read
+		// Parameters----------------------------
 		this.isStaticCall = isStaticCall;
 		this.temporalVariables = new Stack<Object>();
 		Type returnType = this.method.getReturnType();
 		int length = params.size();
-		// store values into local variable from parameters, note: each variable
+		// store values into local variable from parameters, note: each
+		// variable
 		// name of parameters is a local variable
 		if (length > 0) {
 			int k = -1;
@@ -292,82 +296,90 @@ public final class MethodVisitor extends EmptyVisitor implements
 		} else {
 			target = this.node;
 		}
+
 		// ------------------------------------------------------------------------------
 
 		// ------------------------Add Edges--------------------------------
 		// if (!isStaticCall) {
 		if (source != null) {
-			Description.addEdge(source, target);
-		}
-		// }
-		// ------------------------------------------------------------------------------
-
-		// ---------------------Read Instructions------------------
-		StaticValues.err("\t\tSTART METHOD:\n\t\t\t-----" + source
-				+ "\n\t\t\t\t--->" + target + "\n");
-
-		if (methodGen.isAbstract() || methodGen.isNative()) {
-			return getDescriptionCopy(returnType);
-		}
-
-		// InstructionList instructionList = methodGen.getInstructionList();
-		for (InstructionHandle ihInstructionHandle = methodGen
-				.getInstructionList().getStart(); ihInstructionHandle != null; ihInstructionHandle = ihInstructionHandle
-				.getNext()) {
-			Instruction i = ihInstructionHandle.getInstruction();
-			// TODO: Remove me
-			StaticValues.out(i.getName());
-			StaticValues.out("\t\tBefore\n-------------------");
-			StaticValues.out("\t\tStack: " + this.temporalVariables);
-			StaticValues.out("\t\tLocal:" + this.localVariables);
-			StaticValues.out("\t\tField:" + this.classVisitor.fields);
-			StaticValues.out("\t\tStaticField:"
-					+ this.description.getStaticFields());
-			if (!visitInstruction(i)) {
-				if (i instanceof ConstantPushInstruction || i instanceof LDC
-						|| i instanceof LDC_W || i instanceof LDC2_W) {
-					this.temporalVariables.add(StaticValues.PRIMITIVE);
-					StaticValues.out(StaticValues.PRIMITIVE);
-				} else if (i instanceof StoreInstruction) {
-					storeValueToLocalVariable((StoreInstruction) i);
-				} else if (i instanceof LoadInstruction) {
-					loadValueFromLocalVariable((LoadInstruction) i);
-				} else if (i instanceof FieldInstruction) {
-					fieldValueInstructor((FieldInstruction) i);
-				} else if (i instanceof NEWARRAY || i instanceof ANEWARRAY
-						|| i instanceof MULTIANEWARRAY) {
-					createNewArrayProviderObject();
-				} else {
-					i.accept(this);
-				}
-			} else {
-				if (i instanceof ACONST_NULL) {
-					this.temporalVariables.add(StaticValues.NULL);
-				} else if (i instanceof ArrayInstruction) {
-					arrayInstructions((ArrayInstruction) i);
-				}
+			boolean res = StaticValues.addEdge(source, target);
+			if (res) {
+				System.err.println("\t\t\tDuplicate Edges Found");
 			}
-			// TODO:Remove me
-			StaticValues.out("\t\tAfter\n-------------------");
-			StaticValues.out("\t\tStack: " + this.temporalVariables);
-			StaticValues.out("\t\tLocal:" + this.localVariables);
-			StaticValues.out("\t\tField:" + this.classVisitor.fields);
-			StaticValues.out("\t\tStaticField:"
-					+ this.description.getStaticFields());
 		}
-		StaticValues.err("\t\t-----END METHOD:\n\t\t\t" + source
-				+ "\n\t\t\t\t--->" + target + "\n");
-		// ------------------------------------------------------------------------------
-		// -----------FixException---------
-		for (String ex : this.exceptionClassList) {
-			exceptions.add(ex);
-		}
-		// only for caller class not for current class (contains throws
-		// Exception)
-		if (this.exceptionTable != null) {
-			String[] excepList = this.exceptionTable.getExceptionNames();
-			for (String exc : excepList) {
-				exceptions.add(exc);
+
+		if (!alreadyHas) {
+			// }
+			// ------------------------------------------------------------------------------
+
+			// ---------------------Read Instructions------------------
+			StaticValues.err("\t\tSTART METHOD:\n\t\t\t-----" + source
+					+ "\n\t\t\t\t--->" + target + "\n");
+
+			if (methodGen.isAbstract() || methodGen.isNative()) {
+				return getDescriptionCopy(returnType);
+			}
+
+			// InstructionList instructionList = methodGen.getInstructionList();
+			for (InstructionHandle ihInstructionHandle = methodGen
+					.getInstructionList().getStart(); ihInstructionHandle != null; ihInstructionHandle = ihInstructionHandle
+					.getNext()) {
+				Instruction i = ihInstructionHandle.getInstruction();
+				// TODO: Remove me
+				StaticValues.out(i.getName());
+				StaticValues.out("\t\tBefore\n-------------------");
+				StaticValues.out("\t\tStack: " + this.temporalVariables);
+				StaticValues.out("\t\tLocal:" + this.localVariables);
+				StaticValues.out("\t\tField:" + this.classVisitor.fields);
+				StaticValues.out("\t\tStaticField:"
+						+ this.description.getStaticFields());
+				if (!visitInstruction(i)) {
+					if (i instanceof ConstantPushInstruction
+							|| i instanceof LDC || i instanceof LDC_W
+							|| i instanceof LDC2_W) {
+						this.temporalVariables.add(StaticValues.PRIMITIVE);
+						StaticValues.out(StaticValues.PRIMITIVE);
+					} else if (i instanceof StoreInstruction) {
+						storeValueToLocalVariable((StoreInstruction) i);
+					} else if (i instanceof LoadInstruction) {
+						loadValueFromLocalVariable((LoadInstruction) i);
+					} else if (i instanceof FieldInstruction) {
+						fieldValueInstructor((FieldInstruction) i);
+					} else if (i instanceof NEWARRAY || i instanceof ANEWARRAY
+							|| i instanceof MULTIANEWARRAY) {
+						createNewArrayProviderObject();
+					} else {
+						i.accept(this);
+					}
+				} else {
+					if (i instanceof ACONST_NULL) {
+						this.temporalVariables.add(StaticValues.NULL);
+					} else if (i instanceof ArrayInstruction) {
+						arrayInstructions((ArrayInstruction) i);
+					}
+				}
+				// TODO:Remove me
+				StaticValues.out("\t\tAfter\n-------------------");
+				StaticValues.out("\t\tStack: " + this.temporalVariables);
+				StaticValues.out("\t\tLocal:" + this.localVariables);
+				StaticValues.out("\t\tField:" + this.classVisitor.fields);
+				StaticValues.out("\t\tStaticField:"
+						+ this.description.getStaticFields());
+			}
+			StaticValues.err("\t\t-----END METHOD:\n\t\t\t" + source
+					+ "\n\t\t\t\t--->" + target + "\n");
+			// ------------------------------------------------------------------------------
+			// -----------FixException---------
+			for (String ex : this.exceptionClassList) {
+				exceptions.add(ex);
+			}
+			// only for caller class not for current class (contains throws
+			// Exception)
+			if (this.exceptionTable != null) {
+				String[] excepList = this.exceptionTable.getExceptionNames();
+				for (String exc : excepList) {
+					exceptions.add(exc);
+				}
 			}
 		}
 		// --------------------------------
@@ -1044,7 +1056,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 						description, methodName, types, true);
 				if (methodVisitor != null) {
 					returnType = methodVisitor.start(this.node, params, false,
-							this.exceptionClassList);
+							this.exceptionClassList, false);
 				}
 			}
 			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
@@ -1125,7 +1137,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 						description, methodName, types, true);
 				if (methodVisitor != null) {
 					returnType = methodVisitor.start(this.node, params, false,
-							this.exceptionClassList);
+							this.exceptionClassList, false);
 				}
 			}
 			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
@@ -1171,9 +1183,23 @@ public final class MethodVisitor extends EmptyVisitor implements
 					.getDescriptionByClassName(referenceTpe.toString());
 			MethodVisitor methodVisitor = null;
 			if (description != null) {
+				String initKey = description.getClassName() + "." + methodName
+						+ "(" + params + ")";
+				boolean alreadyHas = false;
 				Description copiedDescription = null;
 				if (methodName.equalsIgnoreCase("<init>")) {
-					copiedDescription = description.copy();
+					if (params.isEmpty()) {
+						alreadyHas = StaticValues.initializedDescriotions
+								.containsKey(initKey);
+					}
+					if (alreadyHas) {
+						copiedDescription = StaticValues.initializedDescriotions
+								.get(initKey).copyAll();
+					} else {
+						copiedDescription = description.copy();
+					}
+					// copiedDescription = description.copy();
+					// alreadyHas = false;
 				} else {
 					copiedDescription = this.description;
 				}
@@ -1193,7 +1219,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 				}
 				if (methodVisitor != null) {
 					methodVisitor.start(this.node, params, this.isStaticCall,
-							this.exceptionClassList);
+							this.exceptionClassList, alreadyHas);
+					if (!alreadyHas && params.isEmpty()) {
+						StaticValues.initializedDescriotions.put(initKey,
+								copiedDescription);
+					}
 				}
 			} else {
 				if (isCollectionsOrMap(referenceTpe.toString())) {
@@ -1234,7 +1264,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 				if (methodVisitor != null) {
 					// do something for array type, try to capture all values
 					returnType = methodVisitor.start(this.node, params, false,
-							this.exceptionClassList);
+							this.exceptionClassList, false);
 				}
 			}
 			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
@@ -1326,13 +1356,13 @@ public final class MethodVisitor extends EmptyVisitor implements
 					}
 				}
 				if (result) {
-					Description.addLibraryEdge(source, target);
-					return Description.addEdge(source, target);
+					StaticValues.addLibraryEdge(source, target);
+					return StaticValues.addEdge(source, target);
 				} else {
 					return false;
 				}
 			}
-			return Description.addEdge(source, target);
+			return StaticValues.addEdge(source, target);
 		}
 		return false;
 		// make a return type

@@ -75,14 +75,14 @@ public final class JCallGraph {
 			// }
 			// print edges
 			System.out.println("EDGES\n_____________________");
-			java.util.List<String> edges = Description.getUnSortedEdges();
+			java.util.List<String> edges = StaticValues.getUnSortedEdges();
 			System.out.println("All Edges...\n");
 			for (int i = 0; i < edges.size(); i++) {
 				System.out.println((i + 1) + ".\t" + edges.get(i) + "\n");
 			}
 
 			System.out.println("\n\nLIBRARY EDGES\n_____________________");
-			java.util.List<String> libedges = Description
+			java.util.List<String> libedges = StaticValues
 					.getUnSortedLibraryEdges();
 			System.out
 					.println("Edges...(That has no further access to the class or assume library classes)\n");
@@ -92,7 +92,7 @@ public final class JCallGraph {
 
 			System.out
 					.println("\n\nLIBRARY CLASS OR METHOD NO ACCESS\n_____________________");
-			java.util.List<String> noAccessLibedges = Description
+			java.util.List<String> noAccessLibedges = StaticValues
 					.getUnSortdLibraryClassOrMethodNoAccess();
 			System.out
 					.println("List of Classes or Methods that has no access, assume library classes\n");

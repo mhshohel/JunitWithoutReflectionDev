@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,10 +80,6 @@ public final class Description implements Comparable<Description> {
 	private List<Description> interfaces = null;
 	private Description superClass = null;
 	public Map<String, Stack<Object>> staticFields = new LinkedHashMap<String, Stack<Object>>();
-	private static List<String> nodes = new ArrayList<String>();
-	private static List<String> edges = new ArrayList<String>();
-	private static List<String> libEdges = new ArrayList<String>();
-	private static List<String> noAccessedClassesOrMethod = new ArrayList<String>();
 	public boolean isSuperClassObjectInitiated = false;
 	public boolean isVisitedToCheckStaticField = false;
 
@@ -169,7 +164,7 @@ public final class Description implements Comparable<Description> {
 					methodVisitor = new MethodVisitor(description,
 							description.getClassVisitor(), method, methodGen);
 					description.methods.put(method, methodVisitor);
-					Description.nodes.add(methodVisitor.toString());
+					StaticValues.nodes.add(methodVisitor.toString());
 				}
 				// Collections.sort(description.nodes);
 			} else {
@@ -209,6 +204,26 @@ public final class Description implements Comparable<Description> {
 		dummy.clas = this.clas;
 		dummy.javaClass = this.javaClass;
 		dummy.classVisitor = this.classVisitor.copy();
+		dummy.constants = this.constants;
+		dummy.classDescriptions = this.classDescriptions;
+		dummy.interfaces = this.interfaces;
+		dummy.superClass = this.superClass;
+		dummy.classCategory = this.classCategory;
+		dummy.classInputStream = this.classInputStream;
+		dummy.classType = this.classType;
+		dummy.staticFields = this.staticFields;
+		dummy.isSuperClassObjectInitiated = (this.superClass == null) ? true
+				: false;
+		initializeMethodVisitor(dummy, true);
+		dummy.isVisitedToCheckStaticField = this.isVisitedToCheckStaticField;
+		return dummy;
+	}
+
+	public final Description copyAll() {
+		Description dummy = new Description();
+		dummy.clas = this.clas;
+		dummy.javaClass = this.javaClass;
+		dummy.classVisitor = this.classVisitor.copyAll();
 		dummy.constants = this.constants;
 		dummy.classDescriptions = this.classDescriptions;
 		dummy.interfaces = this.interfaces;
@@ -298,60 +313,6 @@ public final class Description implements Comparable<Description> {
 			}
 		}
 		return fields;
-	}
-
-	public final static List<String> getNodes() {
-		return nodes;
-	}
-
-	public final static boolean addEdge(String source, String target) {
-		String edge = source.concat(" -- > ").concat(target).trim();
-		StaticValues.out("\t\t\tEdge: " + edge);
-		if (edges.contains(edge)) {
-			return true;
-		}
-		edges.add(edge);
-		return false;
-	}
-
-	public final static boolean addLibraryEdge(String source, String target) {
-		String libEdge = source.concat(" -- > ").concat(target).trim();
-		StaticValues.out("\t\t\tLib Edge: " + libEdge);
-		if (!noAccessedClassesOrMethod.contains(target)) {
-			noAccessedClassesOrMethod.add(target);
-		}
-		if (libEdges.contains(libEdge)) {
-			return true;
-		}
-		libEdges.add(libEdge);
-		return false;
-	}
-
-	public final static List<String> getSortedEdges() {
-		Collections.sort(edges);
-		return edges;
-	}
-
-	public final static List<String> getUnSortedEdges() {
-		return edges;
-	}
-
-	public final static List<String> getSorteLibraryEdges() {
-		Collections.sort(libEdges);
-		return libEdges;
-	}
-
-	public final static List<String> getUnSortedLibraryEdges() {
-		return libEdges;
-	}
-
-	public final static List<String> getSortdLibraryClassOrMethodNoAccess() {
-		Collections.sort(noAccessedClassesOrMethod);
-		return noAccessedClassesOrMethod;
-	}
-
-	public final static List<String> getUnSortdLibraryClassOrMethodNoAccess() {
-		return noAccessedClassesOrMethod;
 	}
 
 	public final List<Description> getInterfaces() {

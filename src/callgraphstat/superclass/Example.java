@@ -54,13 +54,26 @@ public class Example {
 
 	public static void main(String[] args) {
 		G g = new G();
-		H a = new H();
+		H h = new H();
+		h.a = new A();
+		new H();
+		new H();
+		new H();
+		new H();
+		new H();
+		new H();
+		new H();
+		new H();
+		new H();
+		new H();
+		new H();
+		new H();
 		new H();
 		new H();
 		new H();
 
 		H b = new H(444);
-		g.vals = a;
+		g.vals = h;
 		g.vals = b;
 
 		// Stack<Object> vas = new Stack<Object>();

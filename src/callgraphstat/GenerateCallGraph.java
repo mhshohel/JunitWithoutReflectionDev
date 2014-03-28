@@ -30,7 +30,7 @@ public final class GenerateCallGraph {
 	private void start() throws Exception {
 		try {
 			this.mainMethod.start(null, new ArrayList<Object>(), false,
-					new HashSet<String>());
+					new HashSet<String>(), false);
 			this.mainMethod = null;
 			this.mainClass = null;
 		} catch (Exception e) {

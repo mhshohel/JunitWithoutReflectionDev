@@ -77,6 +77,28 @@ public final class ClassVisitor extends EmptyVisitor {
 		return classVisitor;
 	}
 
+	public final ClassVisitor copyAll() {
+		ClassVisitor classVisitor = new ClassVisitor();
+		classVisitor.description = this.description;
+		classVisitor.javaClass = this.javaClass;
+		classVisitor.constants = this.constants;
+		classVisitor.fields = new LinkedHashMap<String, Stack<Object>>();
+		Field[] fields = this.javaClass.getFields();
+		for (Field field : fields) {
+			if (!field.isStatic()) {
+				Stack<Object> values = new Stack<Object>();
+				Stack<Object> oldValues = this.fields.get(field.getName());
+				for (int i = 0; i < oldValues.size(); i++) {
+					values.add(oldValues.get(i));
+				}
+
+				classVisitor.fields.put(field.getName(), values);
+			}
+		}
+		classVisitor.classReferenceFormat = this.classReferenceFormat;
+		return classVisitor;
+	}
+
 	// check for other type not description
 	public Object getValueFromField(Object targetClass, String fieldName,
 			ReferenceType referenceType) {
