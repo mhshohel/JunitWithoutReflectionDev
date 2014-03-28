@@ -50,9 +50,15 @@ public class Example {
 	// return c;
 	// }
 
+	static H hhh = new H();
+
 	public static void main(String[] args) {
 		G g = new G();
 		H a = new H();
+		new H();
+		new H();
+		new H();
+
 		H b = new H(444);
 		g.vals = a;
 		g.vals = b;

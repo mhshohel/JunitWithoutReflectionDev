@@ -237,8 +237,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 					this.description
 							.getMethodVisitorByName("<clinit>")
 							.get(0)
-							.start(null, new ArrayList<Object>(), true,
-									exceptions);
+							.start((source != null) ? source
+									: this.description.getClassName(),
+									new ArrayList<Object>(), true, exceptions);
 				}
 			} catch (Exception e) {
 				StaticValues
@@ -294,11 +295,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 		// ------------------------------------------------------------------------------
 
 		// ------------------------Add Edges--------------------------------
-		if (!isStaticCall) {
-			if (source != null) {
-				Description.addEdge(source, target);
-			}
+		// if (!isStaticCall) {
+		if (source != null) {
+			Description.addEdge(source, target);
 		}
+		// }
 		// ------------------------------------------------------------------------------
 
 		// ---------------------Read Instructions------------------
@@ -1176,7 +1177,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 				} else {
 					copiedDescription = this.description;
 				}
-
 				this.temporalVariables.add(copiedDescription);
 				// TODO Remove me
 				StaticValues.out("STACK: " + this.temporalVariables);
@@ -1199,7 +1199,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 				if (isCollectionsOrMap(referenceTpe.toString())) {
 					this.temporalVariables.add(new CollectionObjectProvider());
 				} else {
-					this.temporalVariables.add(referenceTpe);
+					this.temporalVariables
+							.add(getDescriptionCopy(referenceTpe));
 				}
 			}
 			createEdgeIfMethodNotFound(description, methodVisitor, this.node,

@@ -2,7 +2,8 @@ package callgraphstat.superclass;
 
 public class H {
 	int i = 0;
-	String name;
+	static String name;
+	static G g = new G();
 
 	H() {
 
