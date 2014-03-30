@@ -50,31 +50,32 @@ public class Example {
 	// return c;
 	// }
 
-	static H hhh = new H();
+	// static H hhh = new H();
 
 	public static void main(String[] args) {
-		G g = new G();
-		H h = new H();
-		h.a = new A();
-		new H();
-		new H();
-		new H();
-		new H();
-		new H();
-		new H();
-		new H();
-		new H();
-		new H();
-		new H();
-		new H();
-		new H();
-		new H();
-		new H();
-		new H();
+		// G g = new G();
+		// H h = new H();
+		// h.a = new A();
 
-		H b = new H(444);
-		g.vals = h;
-		g.vals = b;
+		int i = 0;
+		E e = new E();
+		SuperClassA ds = null;
+
+		if (i == 5) {
+			F f = new F();
+
+			SuperClassA data = (i == 0) ? new A() : new B();
+			SuperClassA dataA = (i == 0) ? new A() : new D();
+			SuperClassA dataAB = (i == 0) ? new A() : (e == null) ? new B()
+					: new C();
+			data = dataAB;
+			ds = data;
+		}
+
+		// SuperClassA dataA = (i == 0) ? new A() : (e == null) ? new B()
+		// : new C();
+		// ds = data;
+		// data = new A();
 
 		// Stack<Object> vas = new Stack<Object>();
 		// vas.add(new A());

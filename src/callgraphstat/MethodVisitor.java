@@ -61,6 +61,7 @@ import org.apache.bcel.generic.FSTORE;
 import org.apache.bcel.generic.FieldInstruction;
 import org.apache.bcel.generic.GETFIELD;
 import org.apache.bcel.generic.GETSTATIC;
+import org.apache.bcel.generic.GotoInstruction;
 import org.apache.bcel.generic.IALOAD;
 import org.apache.bcel.generic.IASTORE;
 import org.apache.bcel.generic.ILOAD;
@@ -69,6 +70,7 @@ import org.apache.bcel.generic.INVOKESPECIAL;
 import org.apache.bcel.generic.INVOKESTATIC;
 import org.apache.bcel.generic.INVOKEVIRTUAL;
 import org.apache.bcel.generic.ISTORE;
+import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionConstants;
 import org.apache.bcel.generic.InstructionHandle;
@@ -90,6 +92,7 @@ import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ReturnInstruction;
 import org.apache.bcel.generic.SALOAD;
 import org.apache.bcel.generic.SASTORE;
+import org.apache.bcel.generic.Select;
 import org.apache.bcel.generic.StoreInstruction;
 import org.apache.bcel.generic.Type;
 
@@ -117,6 +120,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 	private Set<String> exceptionClassList = null;
 	// keep return type of unknown or restricted objects
 	private Class<?> collectionMethodReturnType = null;
+	// keep temp Group value, so that it can close them after each method
+	// traverse, it requires so that field can get the flag to store value
+	// without group
+	private Stack<GroupOfValues> tempGroupValues = new Stack<GroupOfValues>();
 
 	public MethodVisitor(Description description, ClassVisitor classVisitor,
 			Method method, MethodGen methodGen) {
@@ -219,10 +226,15 @@ public final class MethodVisitor extends EmptyVisitor implements
 				&& !(i instanceof ConstantPushInstruction) && !(i instanceof ReturnInstruction));
 	}
 
+	private boolean isConditons = false;
+	private int conditionLineNumber = -1;
+	private int currentLineNumber = -1;
+
 	public Object start(String source, List<Object> params,
 			boolean isStaticCall, Set<String> exceptions, boolean alreadyHas) {
+		// initialize temp group values
+		tempGroupValues = new Stack<GroupOfValues>();
 		this.castType = null;
-		System.err.println(source);
 		// -------------------Initialize Static Values--------------------
 		if (!this.description.isVisitedToCheckStaticField) {
 			this.description.isVisitedToCheckStaticField = true;
@@ -250,8 +262,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 		// ------------------------------------------------------------------------------
 
-		// ------------------------Read
-		// Parameters----------------------------
+		// ----------------------Read Parameters---------------------
 		this.isStaticCall = isStaticCall;
 		this.temporalVariables = new Stack<Object>();
 		Type returnType = this.method.getReturnType();
@@ -302,10 +313,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 		// ------------------------Add Edges--------------------------------
 		// if (!isStaticCall) {
 		if (source != null) {
-			boolean res = StaticValues.addEdge(source, target);
-			if (res) {
-				System.err.println("\t\t\tDuplicate Edges Found");
-			}
+			StaticValues.addEdge(source, target);
 		}
 
 		if (!alreadyHas) {
@@ -325,6 +333,30 @@ public final class MethodVisitor extends EmptyVisitor implements
 					.getInstructionList().getStart(); ihInstructionHandle != null; ihInstructionHandle = ihInstructionHandle
 					.getNext()) {
 				Instruction i = ihInstructionHandle.getInstruction();
+				this.currentLineNumber = ihInstructionHandle.getPosition();
+				if (this.currentLineNumber >= this.conditionLineNumber
+						&& this.isConditons) {
+					this.isConditons = false;
+					this.conditionLineNumber = -1;
+					for (GroupOfValues govs : this.tempGroupValues) {
+						govs.close();
+					}
+					this.tempGroupValues.clear();
+					System.err.println("\t\t\t\t\tIN-ACTIVATED");
+				}
+				if (this.isConditons) {
+					System.err.println("Current Line: "
+							+ this.currentLineNumber);
+					System.err.println("Condition Line: "
+							+ this.conditionLineNumber);
+					System.err.println("Is: " + this.isConditons);
+				} else {
+					System.err.println("\t\t\tCurrent Line: "
+							+ this.currentLineNumber);
+					System.err.println("\t\t\tCondition Line: "
+							+ this.conditionLineNumber);
+					System.err.println("\t\t\tIs: " + this.isConditons);
+				}
 				// TODO: Remove me
 				StaticValues.out(i.getName());
 				StaticValues.out("\t\tBefore\n-------------------");
@@ -337,7 +369,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 					if (i instanceof ConstantPushInstruction
 							|| i instanceof LDC || i instanceof LDC_W
 							|| i instanceof LDC2_W) {
-						this.temporalVariables.add(StaticValues.PRIMITIVE);
+						addToTemporalVariable(StaticValues.PRIMITIVE);
 						StaticValues.out(StaticValues.PRIMITIVE);
 					} else if (i instanceof StoreInstruction) {
 						storeValueToLocalVariable((StoreInstruction) i);
@@ -348,12 +380,40 @@ public final class MethodVisitor extends EmptyVisitor implements
 					} else if (i instanceof NEWARRAY || i instanceof ANEWARRAY
 							|| i instanceof MULTIANEWARRAY) {
 						createNewArrayProviderObject();
+					} else if (i instanceof IfInstruction) {
+						this.conditionLineNumber = ((IfInstruction) i)
+								.getTarget().getPosition();
+						// if (!this.isConditons
+						// && this.currentLineNumber <=
+						// this.conditionLineNumber) {
+						addToTemporalVariable(new GroupOfValues());
+						System.err.println("\t\t\t\t\tACTIVATED");
+						// }
+						this.isConditons = true;
+					} else if (i instanceof GotoInstruction) {
+						this.conditionLineNumber = ((GotoInstruction) i)
+								.getTarget().getPosition();
+						if (!this.isConditons
+								&& this.currentLineNumber <= this.conditionLineNumber) {
+							addToTemporalVariable(new GroupOfValues());
+							System.err.println("\t\t\t\t\tACTIVATED");
+						}
+						this.isConditons = true;
+					} else if (i instanceof Select) {
+						this.conditionLineNumber = ((Select) i).getTarget()
+								.getPosition();
+						if (!this.isConditons
+								&& this.currentLineNumber <= this.conditionLineNumber) {
+							addToTemporalVariable(new GroupOfValues());
+							System.err.println("\t\t\t\t\tACTIVATED");
+						}
+						this.isConditons = true;
 					} else {
 						i.accept(this);
 					}
 				} else {
 					if (i instanceof ACONST_NULL) {
-						this.temporalVariables.add(StaticValues.NULL);
+						addToTemporalVariable(StaticValues.NULL);
 					} else if (i instanceof ArrayInstruction) {
 						arrayInstructions((ArrayInstruction) i);
 					}
@@ -432,7 +492,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 	}
 
 	private void addToLoaclVariable(String variableName, Object currentValue,
-			ReferenceType referenceType) {
+			ReferenceType referenceType, Type type) {
 		try {
 			List<Object> values = this.localVariables.get(variableName);
 			if (values != null) {
@@ -443,7 +503,58 @@ public final class MethodVisitor extends EmptyVisitor implements
 						break;
 					}
 				}
-				values.add(currentValue);
+				Object lastValue = (values.isEmpty()) ? null : values
+						.get(values.size() - 1);
+				if (currentValue instanceof GroupOfValues) {
+					GroupOfValues cgov = (GroupOfValues) currentValue;
+					if (lastValue != null) {
+						if (lastValue instanceof GroupOfValues) {
+							GroupOfValues lgov = (GroupOfValues) lastValue;
+							if (lgov.isOpen) {
+								for (Object object : cgov.getValues()) {
+									lgov.add(object);
+								}
+							} else {
+								values.add(cgov);
+							}
+						} else {
+							if (cgov.isOpen) {
+								cgov.add(lastValue);
+							}
+							values.add(cgov);
+						}
+					} else {
+						values.add(cgov);
+					}
+				} else if (lastValue instanceof GroupOfValues) {
+					GroupOfValues lgov = (GroupOfValues) lastValue;
+					if (lgov.isOpen) {
+						lgov.add(currentValue);
+					} else {
+						values.add(currentValue);
+					}
+				} else {
+					values.add(currentValue);
+				}
+				// boolean isAdded = false;
+				// if (lastValue != null) {
+				// if (lastValue instanceof GroupOfValues) {
+				// GroupOfValues gov = ((GroupOfValues) lastValue);
+				// if (gov.isOpen) {
+				// isAdded = true;
+				// if (currentValue instanceof GroupOfValues) {
+				// // do something
+				// } else {
+				// gov.add(currentValue);
+				// }
+				// }
+				// }
+				// } else if (!isAdded && currentValue instanceof GroupOfValues)
+				// {
+				// // do something
+				// } else {
+				// // values.add(currentValue);
+				// }
 			}
 		} catch (Exception e) {
 		}
@@ -486,6 +597,45 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
+	// private List<Object> getVerifiedGroupValues(GroupOfValues gov,
+	// ReferenceType referenceType) {
+	// List<Object> values = new ArrayList<Object>();
+	// for(Object)
+	// return (!values.isEmpty()) ? values : null;
+	// }
+
+	private Object getValueFromGroupOfValues(Object value) {
+		if (value instanceof GroupOfValues) {
+			GroupOfValues gov = ((GroupOfValues) value);
+			if (gov.isEmpty()) {
+				if (gov.isOpen) {
+					return null;
+				} else {
+					this.temporalVariables.pop();
+					return null;
+				}
+			} else {
+				if ((gov.peek() instanceof GroupOfValues)) {
+					value = ((GroupOfValues) value).peek();
+					if (value instanceof GroupOfValues) {
+						value = getValueFromGroupOfValues(value);
+					} else {
+						if (((GroupOfValues) value).isOpen) {
+							return ((GroupOfValues) value).peek();
+						} else {
+							return ((GroupOfValues) value).pop();
+						}
+					}
+				} else {
+					return this.temporalVariables.peek();
+				}
+			}
+		} else {
+			return this.temporalVariables.pop();
+		}
+		return value;
+	}
+
 	private void storeValues(String flag, String variableName, Type type,
 			ReferenceType referenceType) {
 		try {
@@ -500,36 +650,60 @@ public final class MethodVisitor extends EmptyVisitor implements
 			try {
 				value = (this.temporalVariables != null && !this.temporalVariables
 						.isEmpty()) ? this.temporalVariables.pop() : null;
-				if (isCollectionType) {
-					StaticValues.err("List found: " + variableName);
-					if (!(value instanceof CollectionObjectProvider)) {
-						value = new CollectionObjectProvider();
-					}
-				} else if (isPrimitiveType(type)) {
-					if (!value.toString().equalsIgnoreCase(StaticValues.NULL)) {
-						value = StaticValues.PRIMITIVE;
-					}
-				} else if (value != null
-						&& value.toString().equals(StaticValues.NULL)) {
-					value = StaticValues.NULL;
-				} else {
-					if (value != null) {
-						if (value.toString().equalsIgnoreCase(
-								StaticValues.PRIMITIVE)
-								|| value instanceof String) {
-							if (isPrimitiveType(type)) {
-								value = StaticValues.PRIMITIVE;
+
+				// if (value != null) {
+				// value = getValueFromGroupOfValues(value);
+				// }
+				//
+				// if (value instanceof GroupOfValues) {
+				// GroupOfValues gov = ((GroupOfValues) value);
+				// if (!gov.isEmpty()) {
+				// if (!(gov.peek() instanceof GroupOfValues)) {
+				// this.temporalVariables.pop();
+				// } else {
+				// value = ((GroupOfValues) value).pop();
+				// }
+				// } else {
+				// this.temporalVariables.pop();
+				// }
+				// } else {
+				// this.temporalVariables.pop();
+				// }
+				// if (isCollectionType) {
+				// StaticValues.err("List found: " + variableName);
+				// if (!(value instanceof CollectionObjectProvider)) {
+				// value = new CollectionObjectProvider();
+				// }
+				// } else
+				//
+				if (!(value instanceof GroupOfValues)) {
+					if (isPrimitiveType(type)) {
+						if (!value.toString().equalsIgnoreCase(
+								StaticValues.NULL)) {
+							value = StaticValues.PRIMITIVE;
+						}
+					} else if (value != null
+							&& value.toString().equals(StaticValues.NULL)) {
+						value = StaticValues.NULL;
+					} else {
+						if (value != null) {
+							if (value.toString().equalsIgnoreCase(
+									StaticValues.PRIMITIVE)
+									|| value instanceof String) {
+								if (isPrimitiveType(type)) {
+									value = StaticValues.PRIMITIVE;
+								} else {
+									value = null;
+								}
 							} else {
-								value = null;
-							}
-						} else {
-							boolean result = isSameType(type.toString(),
-									value.toString());
-							if (!result) {
-								value = getDescriptionCopy(value);
-								if (!isSameType(type.toString(),
-										value.toString())) {
-									value = getDescriptionCopy(type);
+								boolean result = isSameType(type.toString(),
+										value.toString());
+								if (!result) {
+									value = getDescriptionCopy(value);
+									if (!isSameType(type.toString(),
+											value.toString())) {
+										value = getDescriptionCopy(type);
+									}
 								}
 							}
 						}
@@ -547,7 +721,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 			}
 			switch (flag) {
 			case "ASTORE":
-				addToLoaclVariable(variableName, value, referenceType);
+				addToLoaclVariable(variableName, value, referenceType, type);
 				break;
 			case "PUTFIELD":
 				this.classVisitor
@@ -606,7 +780,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 			}
 			// TODO: verify by array instance and others core factor
 			if (value != null) {
-				this.temporalVariables.add(value);
+				// this.temporalVariables.add(value);
+				addToTemporalVariable(value);
 			}
 			// TODO: may not required
 			this.castType = null;
@@ -1203,7 +1378,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 				} else {
 					copiedDescription = this.description;
 				}
-				this.temporalVariables.add(copiedDescription);
+				addToTemporalVariable(copiedDescription);
 				// TODO Remove me
 				StaticValues.out("STACK: " + this.temporalVariables);
 				methodVisitor = copiedDescription
@@ -1229,8 +1404,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 				if (isCollectionsOrMap(referenceTpe.toString())) {
 					this.temporalVariables.add(new CollectionObjectProvider());
 				} else {
-					this.temporalVariables
-							.add(getDescriptionCopy(referenceTpe));
+					// this.temporalVariables
+					// .add(getDescriptionCopy(referenceTpe));
+					addToTemporalVariable(getDescriptionCopy(referenceTpe));
 				}
 			}
 			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
@@ -1242,6 +1418,37 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 		// Verify and remove remaining primitive data
 		removePrimitiveData();
+	}
+
+	private void addToTemporalVariable(Object object) {
+		if (object instanceof GroupOfValues) {
+			if (!this.tempGroupValues.contains((GroupOfValues) object)) {
+				this.tempGroupValues.add((GroupOfValues) object);
+			}
+		}
+		Object lastValue = (!this.temporalVariables.isEmpty()) ? this.temporalVariables
+				.peek() : null;
+		if (lastValue != null) {
+			if (lastValue instanceof GroupOfValues
+					&& !(object instanceof GroupOfValues)) {
+				GroupOfValues gov = (GroupOfValues) lastValue;
+				if (gov.isOpen) {
+					// if (!object.toString().equalsIgnoreCase(
+					// StaticValues.PRIMITIVE)
+					// && !object.toString().equalsIgnoreCase(
+					// StaticValues.NULL)) {
+					// gov.setType(object.toString());
+					// }
+					gov.add(object);
+				} else {
+					this.temporalVariables.add(object);
+				}
+			} else {
+				this.temporalVariables.add(object);
+			}
+		} else {
+			this.temporalVariables.add(object);
+		}
 	}
 
 	@Override

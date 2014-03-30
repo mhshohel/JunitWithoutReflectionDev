@@ -89,6 +89,6 @@ public class StaticValues {
 	}
 
 	public static void err(Object obj) {
-		System.err.println((obj == null) ? "null" : obj);
+		System.out.println((obj == null) ? "null" : obj);
 	}
 }
