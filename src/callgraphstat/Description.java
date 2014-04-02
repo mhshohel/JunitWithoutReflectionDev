@@ -1,6 +1,6 @@
 /**
  *
- * @ProjectName JunitTestWithActualLib
+ * @ProjectName StaticCallGraph
  *
  * @PackageName callgraphstat
  *
@@ -164,7 +164,7 @@ public final class Description implements Comparable<Description> {
 					methodVisitor = new MethodVisitor(description,
 							description.getClassVisitor(), method, methodGen);
 					description.methods.put(method, methodVisitor);
-					StaticValues.nodes.add(methodVisitor.toString());
+					Static.nodes.add(methodVisitor.toString());
 				}
 				// Collections.sort(description.nodes);
 			} else {

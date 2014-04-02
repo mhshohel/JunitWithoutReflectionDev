@@ -2,7 +2,7 @@
  *
  * @ProjectName JunitTestWithActualLib
  *
- * @PackageName tools.code.gen
+ * @PackageName callgraphstat
  *
  * @FileName ClassVisitor.java
  * 
@@ -121,7 +121,7 @@ public final class ClassVisitor extends EmptyVisitor {
 		}
 		// return (value == referenceType.toString()) ? StaticValues.NULL :
 		// value;
-		return (value == null) ? StaticValues.NULL : value;
+		return (value == null) ? Static.NULL : value;
 	}
 
 	// check for other type not description

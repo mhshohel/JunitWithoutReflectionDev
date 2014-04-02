@@ -1,75 +1,138 @@
+/**
+ *
+ * @ProjectName StaticCallGraph
+ *
+ * @PackageName callgraphstat
+ *
+ * @FileName GroupOfValues.java
+ * 
+ * @FileCreated Mar 24, 2014
+ *
+ * @Author MD. SHOHEL SHAMIM
+ *
+ * @CivicRegistration 19841201-0533
+ *
+ * MSc. in Software Technology
+ *
+ * Linnaeus University, Växjö, Sweden
+ *
+ */
 package callgraphstat;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
+
+import org.apache.bcel.generic.Type;
 
 public class GroupOfValues {
 	private Stack<Object> values = null;
 	public boolean isOpen = true;
 	private int id = -1;
+	private int endLineNumber = -1;
 
-	// Type will be added only once, when it will create first time
-	// private String baseType = null;
-	//
-	// public void setType(String type) {
-	// if (this.baseType == null) {
-	// this.baseType = type.replace("[]", "");
-	// }
-	// }
+	public void setEndLineNumber(int number) {
+		this.endLineNumber = number;
+	}
+
+	public int getEndlineNumber() {
+		return this.endLineNumber;
+	}
 
 	public GroupOfValues() {
 		this.isOpen = true;
 		values = new Stack<Object>();
-		this.id = StaticValues.getNewID();
+		this.id = Static.getNewID();
 	}
 
 	// if isOpen false then value will be not added
 	public void add(Object value) {
 		if (isOpen) {
-			for (int i = 0; i < values.size(); i++) {
-				if (values.get(i).hashCode() == value.hashCode()) {
-					values.remove(i);
-					break;
+			// if (value instanceof GroupOfValues) {
+			// if (!this.values.isEmpty()) {
+			// this.values.pop();
+			// }
+			// if (!this.values.isEmpty()) {
+			// if (this.values.peek().toString()
+			// .equalsIgnoreCase(Static.PRIMITIVE)) {
+			// this.values.pop();
+			// }
+			// }
+			// }
+			// do not check contains here, because it will keep values like
+			// tempStack, it should keep multiple values of same type
+			this.values.add(value);
+		}
+	}
+
+	// add values that needs GroupValues close
+	public void forceAdd(Object value) {
+		open();
+		this.add(value);
+		close();
+	}
+
+	// Object fail to add normal way
+	public void addAtLast(Object object) {
+		if (!this.values.isEmpty()) {
+			this.add(object);
+		} else {
+			if (this.values.peek() instanceof GroupOfValues) {
+				GroupOfValues gov = (GroupOfValues) this.values.peek();
+				if (gov.isOpen) {
+					gov.addAtLast(object);
+				} else {
+					this.add(object);
 				}
-			}
-			if (!value.toString().equalsIgnoreCase(StaticValues.NULL)
-					&& !value.toString().equalsIgnoreCase(
-							StaticValues.PRIMITIVE)) {
-				// if (isSameType(value.toString()))
-				this.values.add(value);
+			} else {
+				this.add(object);
 			}
 		}
 	}
 
-	// private boolean isSameType(String currentValueType) {
-	// try {
-	// if (!this.baseType.equalsIgnoreCase(currentValueType)) {
-	// Class<?> stack = Class.forName(this.baseType);
-	// Class<?> param = Class.forName(currentValueType);
-	// if (param.isAssignableFrom(stack)
-	// || stack.isAssignableFrom(param)) {
-	// return true;
-	// }
-	// } else {
-	// return true;
-	// }
-	// } catch (Exception e) {
-	// return false;
-	// }
-	// return false;
-	// }
+	private List<Object> allValues = new ArrayList<Object>();
 
-	// public void forceAdd(Object value) {
-	// this.isOpen = true;
-	// this.add(value);
-	// close();
-	// }
+	public List<Object> getAllValues(Type type, Description description) {
+		this.allValues = new ArrayList<Object>();
+		getValuesFromGroup(this, type, description);
+
+		return (this.allValues.isEmpty()) ? null : this.allValues;
+	}
+
+	private Object getValuesFromGroup(GroupOfValues gov, Type type,
+			Description description) {
+		for (Object object : gov.values) {
+			if (object instanceof GroupOfValues) {
+				getValuesFromGroup(((GroupOfValues) object), type, description);
+			} else if (!this.allValues.contains(object)) {
+				if (!object.toString().equalsIgnoreCase(Static.NULL)) {
+					object = Static.verifyTypeFromObjectsToStore(object, type,
+							description);
+					if (object != null) {
+						this.allValues.add(object);
+					}
+				}
+			}
+		}
+		return this.allValues;
+	}
 
 	public int size() {
 		return this.values.size();
 	}
 
+	public void close(int number) {
+		if (this.endLineNumber <= number) {
+			close();
+		}
+	}
+
 	public void close() {
 		this.isOpen = false;
+	}
+
+	public void open() {
+		this.isOpen = true;
 	}
 
 	public void reopen() {
@@ -103,5 +166,25 @@ public class GroupOfValues {
 			return ((GroupOfValues) object).id == this.id;
 		}
 		return false;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		String msg = "(id=" + this.id + ",endline=" + this.endLineNumber + ","
+				+ this.isOpen + "): ";
+		if (this.values.isEmpty()) {
+			sb.append("[" + msg + "none]");
+		} else {
+			String prefix = "";
+			sb.append("[").append(msg);
+			for (Object object : this.values) {
+				sb.append(prefix);
+				prefix = ",";
+				sb.append(object);
+			}
+			sb.append("]");
+		}
+		return sb.toString();
 	}
 }
