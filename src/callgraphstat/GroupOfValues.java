@@ -48,19 +48,11 @@ public class GroupOfValues {
 	// if isOpen false then value will be not added
 	public void add(Object value) {
 		if (isOpen) {
-			// if (value instanceof GroupOfValues) {
-			// if (!this.values.isEmpty()) {
-			// this.values.pop();
-			// }
-			// if (!this.values.isEmpty()) {
-			// if (this.values.peek().toString()
-			// .equalsIgnoreCase(Static.PRIMITIVE)) {
-			// this.values.pop();
-			// }
-			// }
-			// }
 			// do not check contains here, because it will keep values like
 			// tempStack, it should keep multiple values of same type
+
+			// TODO verify it???
+			this.values.remove(value);
 			this.values.add(value);
 		}
 	}
@@ -95,7 +87,6 @@ public class GroupOfValues {
 	public List<Object> getAllValues(Type type, Description description) {
 		this.allValues = new ArrayList<Object>();
 		getValuesFromGroup(this, type, description);
-
 		return (this.allValues.isEmpty()) ? null : this.allValues;
 	}
 
@@ -105,10 +96,12 @@ public class GroupOfValues {
 			if (object instanceof GroupOfValues) {
 				getValuesFromGroup(((GroupOfValues) object), type, description);
 			} else if (!this.allValues.contains(object)) {
-				if (!object.toString().equalsIgnoreCase(Static.NULL)) {
+				if (!object.toString().equalsIgnoreCase(Static.NULL)
+						&& !object.toString()
+								.equalsIgnoreCase(Static.PRIMITIVE)) {
 					object = Static.verifyTypeFromObjectsToStore(object, type,
 							description);
-					if (object != null) {
+					if (object != null && !this.allValues.contains(object)) {
 						this.allValues.add(object);
 					}
 				}

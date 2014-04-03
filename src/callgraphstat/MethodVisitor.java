@@ -308,15 +308,16 @@ public final class MethodVisitor extends EmptyVisitor implements
 			Static.err("\t\tSTART METHOD:\n\t\t\t-----" + source
 					+ "\n\t\t\t\t--->" + target + "\n");
 
-			if (methodGen.isAbstract() || methodGen.isNative()) {
+			if (this.methodGen.isAbstract() || this.methodGen.isNative()) {
 				return Static.getDescriptionCopy(this.description, returnType);
 			}
 
 			// InstructionList instructionList = methodGen.getInstructionList();
-			for (InstructionHandle ihInstructionHandle = methodGen
+			for (InstructionHandle ihInstructionHandle = this.methodGen
 					.getInstructionList().getStart(); ihInstructionHandle != null; ihInstructionHandle = ihInstructionHandle
 					.getNext()) {
 				Instruction i = ihInstructionHandle.getInstruction();
+
 				this.currentLineNumber = ihInstructionHandle.getPosition();
 				if (this.currentLineNumber >= this.conditionLineNumber
 						&& this.isConditons) {
@@ -335,20 +336,17 @@ public final class MethodVisitor extends EmptyVisitor implements
 					// govs.close(this.currentLineNumber);
 					// }
 					// this.tempGroupValues.clear();
-					System.err.println("\t\t\t\t\tIN-ACTIVATED");
+					Static.err("\t\t\t\t\tIN-ACTIVATED");
 				}
 				if (this.isConditons) {
-					System.err.println("Current Line: "
-							+ this.currentLineNumber);
-					System.err.println("Condition Line: "
-							+ this.conditionLineNumber);
-					System.err.println("Is: " + this.isConditons);
+					Static.err("Current Line: " + this.currentLineNumber);
+					Static.err("Condition Line: " + this.conditionLineNumber);
+					Static.err("Is: " + this.isConditons);
 				} else {
-					System.err.println("\t\t\tCurrent Line: "
-							+ this.currentLineNumber);
-					System.err.println("\t\t\tCondition Line: "
+					Static.err("\t\t\tCurrent Line: " + this.currentLineNumber);
+					Static.err("\t\t\tCondition Line: "
 							+ this.conditionLineNumber);
-					System.err.println("\t\t\tIs: " + this.isConditons);
+					Static.err("\t\t\tIs: " + this.isConditons);
 				}
 				// TODO: Remove me
 				Static.out(i.getName());
@@ -358,52 +356,74 @@ public final class MethodVisitor extends EmptyVisitor implements
 				Static.out("\t\tField:" + this.classVisitor.fields);
 				Static.out("\t\tStaticField:"
 						+ this.description.getStaticFields());
+				// TODO: Remove me
+				String lineMsg = "\t\t\t======? LINE: "
+						+ this.currentLineNumber + " ?======";
 				if (!visitInstruction(i)) {
 					if (i instanceof ConstantPushInstruction
 							|| i instanceof LDC || i instanceof LDC_W
 							|| i instanceof LDC2_W) {
+						Static.err(lineMsg);
 						addToTemporalVariable(Static.PRIMITIVE);
 						Static.out(Static.PRIMITIVE);
 					} else if (i instanceof StoreInstruction) {
+						Static.err(lineMsg);
+						Static.err("LINE: " + this.currentLineNumber);
+						Static.err("INDEX: "
+								+ ((StoreInstruction) i).getIndex());
 						storeValueToLocalVariable((StoreInstruction) i);
 					} else if (i instanceof LoadInstruction) {
+						Static.err(lineMsg);
+						Static.err("LINE: " + this.currentLineNumber);
+						Static.err("INDEX: " + ((LoadInstruction) i).getIndex());
 						loadValueFromLocalVariable((LoadInstruction) i);
 					} else if (i instanceof FieldInstruction) {
+						Static.err(lineMsg);
 						fieldValueInstructor((FieldInstruction) i);
 					} else if (i instanceof NEWARRAY || i instanceof ANEWARRAY
 							|| i instanceof MULTIANEWARRAY) {
+						Static.err(lineMsg);
 						createNewArrayProviderObject();
 					} else if (i instanceof IfInstruction) {
+						Static.err(lineMsg);
 						this.conditionLineNumber = ((IfInstruction) i)
 								.getTarget().getPosition();
-						// if (!this.isConditons
-						// && this.currentLineNumber <=
-						// this.conditionLineNumber) {
-						GroupOfValues gov = new GroupOfValues();
-						gov.setEndLineNumber(this.conditionLineNumber);
-						addToTemporalVariable(gov);
-						this.tempGroupValues.add(gov);
-						// this.tempGroupValues.add(gov);
-						System.err.println("\t\t\t\t\tACTIVATED");
-						// }
-						this.isConditons = true;
+						if (this.currentLineNumber <= this.conditionLineNumber) {
+							GroupOfValues gov = new GroupOfValues();
+							gov.setEndLineNumber(this.conditionLineNumber);
+							addToTemporalVariable(gov);
+							this.tempGroupValues.add(gov);
+							Static.err("\t\t\t\t\tACTIVATED");
+							this.isConditons = true;
+						}
 					} else if (i instanceof GotoInstruction) {
+						Static.err(lineMsg);
 						this.conditionLineNumber = ((GotoInstruction) i)
 								.getTarget().getPosition();
 						if (!this.tempGroupValues.isEmpty()) {
-							this.tempGroupValues.peek().setEndLineNumber(
-									this.conditionLineNumber);
+							if (this.tempGroupValues.peek().getEndlineNumber() > this.conditionLineNumber) {
+								GroupOfValues gov = new GroupOfValues();
+								gov.setEndLineNumber(this.conditionLineNumber);
+								addToTemporalVariable(gov);
+								this.tempGroupValues.add(gov);
+								Static.err("\t\t\t\t\tACTIVATED");
+							} else {
+								this.tempGroupValues.peek().setEndLineNumber(
+										this.conditionLineNumber);
+							}
+						} else {
 							if (!this.isConditons
 									&& this.currentLineNumber <= this.conditionLineNumber) {
 								GroupOfValues gov = new GroupOfValues();
 								gov.setEndLineNumber(this.conditionLineNumber);
 								addToTemporalVariable(gov);
 								this.tempGroupValues.add(gov);
-								System.err.println("\t\t\t\t\tACTIVATED");
+								Static.err("\t\t\t\t\tACTIVATED");
 							}
 							this.isConditons = true;
 						}
 					} else if (i instanceof Select) {
+						Static.err(lineMsg);
 						this.conditionLineNumber = ((Select) i).getTarget()
 								.getPosition();
 						if (!this.isConditons
@@ -412,16 +432,19 @@ public final class MethodVisitor extends EmptyVisitor implements
 							gov.setEndLineNumber(this.conditionLineNumber);
 							addToTemporalVariable(gov);
 							this.tempGroupValues.add(gov);
-							System.err.println("\t\t\t\t\tACTIVATED");
+							Static.err("\t\t\t\t\tACTIVATED");
 						}
 						this.isConditons = true;
 					} else {
+						Static.err(lineMsg);
 						i.accept(this);
 					}
 				} else {
 					if (i instanceof ACONST_NULL) {
+						Static.err(lineMsg);
 						addToTemporalVariable(Static.NULL);
 					} else if (i instanceof ArrayInstruction) {
+						Static.err(lineMsg);
 						arrayInstructions((ArrayInstruction) i);
 					}
 				}
@@ -523,17 +546,17 @@ public final class MethodVisitor extends EmptyVisitor implements
 		GroupOfValues gov = new GroupOfValues();
 		gov.setEndLineNumber(this.currentLineNumber);
 		gov.close();
-		if (this.isConditons) {
-			if (lastValue instanceof GroupOfValues) {
-				for (Object object : ((GroupOfValues) lastValue).getValues()) {
-					gov.forceAdd(object);
-				}
-			} else {
-				if (lastValue != null) {
-					gov.forceAdd(lastValue);
-				}
+		// if (this.isConditons) {
+		if (lastValue instanceof GroupOfValues) {
+			for (Object object : ((GroupOfValues) lastValue).getValues()) {
+				gov.forceAdd(object);
+			}
+		} else {
+			if (lastValue != null) {
+				gov.forceAdd(lastValue);
 			}
 		}
+		// }
 		if (currentValue instanceof List) {
 			if (!((ArrayList<?>) currentValue).isEmpty()) {
 				for (Object object : ((ArrayList<?>) currentValue)) {
@@ -547,7 +570,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 		// tempVariablesGroupValues will keep value till the end of method
 		// Invocation
-		if (this.isConditons || (currentValue instanceof List)) {
+		if (this.isConditons || (currentValue instanceof List)
+				|| (lastValue instanceof GroupOfValues)) {
 			this.tempVariablesGroupValues.add(gov);
 			return gov;
 		} else {
@@ -593,61 +617,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
-	// private List<Object> getVerifiedGroupValues(GroupOfValues gov,
-	// ReferenceType referenceType) {
-	// List<Object> values = new ArrayList<Object>();
-	// for(Object)
-	// return (!values.isEmpty()) ? values : null;
-	// }
-
-	// private Object getValueFromGroupOfValues(Object value) {
-	// if (value instanceof GroupOfValues) {
-	// GroupOfValues gov = ((GroupOfValues) value);
-	// if (gov.isEmpty()) {
-	// if (gov.isOpen) {
-	// return null;
-	// } else {
-	// this.temporalVariables.pop();
-	// return null;
-	// }
-	// } else {
-	// if ((gov.peek() instanceof GroupOfValues)) {
-	// value = ((GroupOfValues) value).peek();
-	// if (value instanceof GroupOfValues) {
-	// value = getValueFromGroupOfValues(value);
-	// } else {
-	// if (((GroupOfValues) value).isOpen) {
-	// return ((GroupOfValues) value).peek();
-	// } else {
-	// return ((GroupOfValues) value).pop();
-	// }
-	// }
-	// } else {
-	// return this.temporalVariables.peek();
-	// }
-	// }
-	// } else {
-	// return this.temporalVariables.pop();
-	// }
-	// return value;
-	// }
-
-	// private Object getLastObjectOrGroup(GroupOfValues gov) {
-	// if (gov.isOpen) {
-	// if (gov.getValues().isEmpty()) {
-	// return gov;
-	// }
-	// Object lastValue = gov.getValues().peek();
-	// if (lastValue instanceof GroupOfValues) {
-	// return getLastGroupFromParent((GroupOfValues) lastValue);
-	// } else {
-	// return gov.pop();
-	// }
-	// } else {
-	// return gov;
-	// }
-	// }
-
 	private void storeValues(String flag, String variableName, Type type,
 			ReferenceType referenceType) {
 		try {
@@ -679,7 +648,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 					} else {
 						// if close
 						// if close merge all data
-						value = gov.getAllValues(type, this.description);
+						if (Static.isPrimitiveType(type)) {
+							value = Static.PRIMITIVE;
+						} else {
+							value = gov.getAllValues(type, this.description);
+						}
 						this.temporalVariables.pop();
 					}
 				} else {
@@ -789,38 +762,89 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
-	private final int getLocalVariablesIndex(int index) {
-		for (int i = 0; i < this.localVariableArray.length; i++) {
-			if (this.localVariableArray[i].getIndex() == index) {
-				return i;
+	private final LocalVariableGen getLocalVariablesName(int index) {
+		// keep the line number for same indexed variable
+		List<Integer> list = new ArrayList<Integer>();
+		String name = null;
+		int currentIndex = -1;
+		int size = this.localVariableArray.length;
+		LocalVariable currentVariable = null;
+		for (int i = 0; i < size; i++) {
+			currentVariable = this.localVariableArray[i];
+			currentIndex = currentVariable.getIndex();
+			if (currentIndex == index) {
+				if (currentVariable.getStartPC() == this.currentLineNumber) {
+					name = currentVariable.getName();
+					break;
+				} else {
+					list.add(currentVariable.getStartPC());
+					// have to be less than the end_pc
+					list.add(currentVariable.getStartPC()
+							+ currentVariable.getLength() - 1);
+				}
+				if (i + 1 < size && list.size() < 3) {
+					if (this.localVariableArray[i + 1].getIndex() != index) {
+						name = currentVariable.getName();
+						break;
+					}
+				}
+			} else if (currentIndex > index) {
+				break;
 			}
 		}
-		return -1;
+		if (!list.isEmpty() && list.size() != 1 && name == null) {
+			Collections.sort(list);
+		}
+		if (name == null) {
+			if (list.size() == 1) {
+				name = this.localVariableTable.getLocalVariable(index,
+						list.get(0)).getName();
+			} else {
+				for (int val : list) {
+					if (val > this.currentLineNumber) {
+						name = this.localVariableTable.getLocalVariable(index,
+								val).getName();
+						break;
+					}
+				}
+			}
+		}
+		System.err.println(name);
+		LocalVariableGen localVariableGen = null;
+		for (LocalVariableGen lvg : this.localVariableGens) {
+			if (lvg.getName().equalsIgnoreCase(name)) {
+				localVariableGen = lvg;
+				break;
+			}
+		}
+
+		return localVariableGen;
 	}
 
 	private void storeValueToLocalVariable(StoreInstruction obj) {
 		int index = -1;
+		LocalVariableGen localVariableGen = null;
 		if (obj instanceof ISTORE) {
-			index = getLocalVariablesIndex(((ISTORE) obj).getIndex());
+			localVariableGen = getLocalVariablesName(((ISTORE) obj).getIndex());
 		} else if (obj instanceof LSTORE) {
-			index = getLocalVariablesIndex(((LSTORE) obj).getIndex());
+			localVariableGen = getLocalVariablesName(((LSTORE) obj).getIndex());
 		} else if (obj instanceof DSTORE) {
-			index = getLocalVariablesIndex(((DSTORE) obj).getIndex());
+			localVariableGen = getLocalVariablesName(((DSTORE) obj).getIndex());
 		} else if (obj instanceof FSTORE) {
-			index = getLocalVariablesIndex(((FSTORE) obj).getIndex());
+			localVariableGen = getLocalVariablesName(((FSTORE) obj).getIndex());
 		} else if (obj instanceof ASTORE) {
-			index = getLocalVariablesIndex(((ASTORE) obj).getIndex());
+			localVariableGen = getLocalVariablesName(((ASTORE) obj).getIndex());
 		}
 		try {
 			// removeUnknownValueIfPushInstruction(ASTORE.class);
-			if (index != -1) {
-				String name = this.localVariableGens[index].getName();// localVariable.getName();
-				Static.out("STORE: " + name + "   "
-						+ this.localVariableGens[index].getType()
-						+ "\t\tIs ArrayType: "
+			if (localVariableGen != null) {
+				// String name = this.localVariableGens[index].getName();//
+				// localVariable.getName();
+				Static.out("STORE: " + localVariableGen.getName() + "   "
+						+ localVariableGen.getType() + "\t\tIs ArrayType: "
 						+ obj.getType(constantPoolGen).getClass().isArray());
-				storeValues("ASTORE", name,
-						this.localVariableGens[index].getType(), null);
+				storeValues("ASTORE", localVariableGen.getName(),
+						localVariableGen.getType(), null);
 				// must remove primitive values, because storeValue not deleted
 				// primitive values
 				removePrimitiveData();
@@ -832,27 +856,29 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	private void loadValueFromLocalVariable(LoadInstruction obj) {
 		int index = -1;
+		LocalVariableGen localVariableGen = null;
 		if (obj instanceof ILOAD) {
-			index = getLocalVariablesIndex(((ILOAD) obj).getIndex());
+			localVariableGen = getLocalVariablesName(((ILOAD) obj).getIndex());
 		} else if (obj instanceof LLOAD) {
-			index = getLocalVariablesIndex(((LLOAD) obj).getIndex());
+			localVariableGen = getLocalVariablesName(((LLOAD) obj).getIndex());
 		} else if (obj instanceof DLOAD) {
-			index = getLocalVariablesIndex(((DLOAD) obj).getIndex());
+			localVariableGen = getLocalVariablesName(((DLOAD) obj).getIndex());
 		} else if (obj instanceof FLOAD) {
-			index = getLocalVariablesIndex(((FLOAD) obj).getIndex());
+			localVariableGen = getLocalVariablesName(((FLOAD) obj).getIndex());
 		} else if (obj instanceof ALOAD) {
-			index = getLocalVariablesIndex(((ALOAD) obj).getIndex());
+			localVariableGen = getLocalVariablesName(((ALOAD) obj).getIndex());
 		}
 		try {
 			// removeUnknownValueIfPushInstruction(ALOAD.class);
-			if (index != -1) {
-				String name = this.localVariableGens[index].getName();// localVariable.getName();
-				loadValues("ALOAD", name,
-						this.localVariableGens[index].getType(), null);
+			if (localVariableGen != null) {
+				// String name = this.localVariableGens[index].getName();//
+				// localVariable.getName();
+				loadValues("ALOAD", localVariableGen.getName(),
+						localVariableGen.getType(), null);
 				Static.out("LOAD: "
-						+ name
+						+ localVariableGen.getName()
 						+ "   "
-						+ this.localVariableGens[index].getType()
+						+ localVariableGen.getType()
 						+ "\t"
 						+ ((this.temporalVariables != null && !this.temporalVariables
 								.isEmpty()) ? this.temporalVariables.peek()
