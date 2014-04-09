@@ -19,8 +19,7 @@
  */
 package callgraphstat;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.Stack;
 
 import org.apache.bcel.generic.Type;
@@ -82,10 +81,14 @@ public class GroupOfValues {
 		}
 	}
 
-	private List<Object> allValues = new ArrayList<Object>();
+	private Stack<Object> allValues = new Stack<Object>();
 
-	public List<Object> getAllValues(Type type, Description description) {
-		this.allValues = new ArrayList<Object>();
+	public Stack<Object> getAllValues(Type type, Description description) {
+		this.allValues = new Stack<Object>();
+		if (Static.isPrimitiveType(type)) {
+			this.allValues.add(Static.PRIMITIVE);
+			return this.allValues;
+		}
 		getValuesFromGroup(this, type, description);
 		return (this.allValues.isEmpty()) ? null : this.allValues;
 	}
@@ -95,12 +98,23 @@ public class GroupOfValues {
 		for (Object object : gov.values) {
 			if (object instanceof GroupOfValues) {
 				getValuesFromGroup(((GroupOfValues) object), type, description);
+			}
+			if (object instanceof Collection) {
+				for (Object stackValues : (Collection<?>) object) {
+					if (!(stackValues.toString()
+							.equalsIgnoreCase(Static.PRIMITIVE))) {
+						Object thisValue = Static
+								.verifyTypeFromObjectsToStoreFromGOV(
+										stackValues, type, description);
+						if (!(allValues.contains(thisValue))) {
+							allValues.add(thisValue);
+						}
+					}
+				}
 			} else if (!this.allValues.contains(object)) {
-				if (!object.toString().equalsIgnoreCase(Static.NULL)
-						&& !object.toString()
-								.equalsIgnoreCase(Static.PRIMITIVE)) {
-					object = Static.verifyTypeFromObjectsToStore(object, type,
-							description);
+				if (!object.toString().equalsIgnoreCase(Static.PRIMITIVE)) {
+					object = Static.verifyTypeFromObjectsToStoreFromGOV(object,
+							type, description);
 					if (object != null && !this.allValues.contains(object)) {
 						this.allValues.add(object);
 					}

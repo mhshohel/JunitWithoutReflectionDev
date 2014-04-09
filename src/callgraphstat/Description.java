@@ -104,7 +104,7 @@ public final class Description implements Comparable<Description> {
 	public List<Object> vals = new ArrayList<Object>();
 
 	private void initialize() {
-		// this.id = StaticValues.getNewID();
+		this.id = Static.getNewID();
 		this.isVisitedToCheckStaticField = false;
 		this.classDescriptions = new LinkedHashMap<String, Description>();
 		this.methods = new LinkedHashMap<Method, MethodVisitor>();

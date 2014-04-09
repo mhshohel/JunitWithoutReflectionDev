@@ -1,6 +1,8 @@
 package callgraphstat.superclass;
 
 public class SuperClassA {
+	public SuperClassA val;
+	public F fval;
 	// public SuperClassA aVal;
 	// protected E eval = null;
 	//

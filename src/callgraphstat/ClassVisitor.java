@@ -19,6 +19,7 @@
  */
 package callgraphstat;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -28,6 +29,7 @@ import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.ReferenceType;
+import org.apache.bcel.generic.Type;
 
 public final class ClassVisitor extends EmptyVisitor {
 	private JavaClass javaClass;
@@ -103,13 +105,15 @@ public final class ClassVisitor extends EmptyVisitor {
 	public Object getValueFromField(Object targetClass, String fieldName,
 			ReferenceType referenceType) {
 		Stack<Object> field = null;
+		// if target class is gov make sure to get as list and return as gov
 		Object value = null;
 		if (targetClass != null && targetClass instanceof Description) {
 			Description description = (Description) targetClass;
 			ClassVisitor classVisitor = description.getClassVisitor();
 			field = classVisitor.fields.get(fieldName);
 			if (field != null) {
-				return field.peek();
+				return field;// return whole stack
+				// return field.peek();
 			} else {
 				// no need to have copy of Description for Super Class
 				if (description.getSuperClassDescription() != null) {
@@ -126,7 +130,8 @@ public final class ClassVisitor extends EmptyVisitor {
 
 	// check for other type not description
 	public void addValueToField(Object targetClass, String fieldName,
-			Object value, ReferenceType referenceType) {
+			Object currentValue, Type type, ReferenceType referenceType,
+			boolean isConditions) {
 		Stack<Object> field = null;
 		if (targetClass != null && targetClass instanceof Description) {
 			Description description = (Description) targetClass;
@@ -134,18 +139,48 @@ public final class ClassVisitor extends EmptyVisitor {
 			field = classVisitor.fields.get(fieldName);
 			if (field != null) {
 				int size = field.size();
-				for (int i = 0; i < size; i++) {
-					if (field.get(i).hashCode() == value.hashCode()) {
-						field.remove(i);
-						break;
+				if (!isConditions) {
+					if (!field.isEmpty()) {
+						field.clear();
 					}
 				}
-				field.add(value);
+				if (currentValue instanceof Collection) {
+					for (Object stackValues : (Collection<?>) currentValue) {
+						Object thisValue = Static.verifyTypeFromObjectsToStore(
+								stackValues, type, description);
+						if (!(field.contains(thisValue))) {
+							field.add(thisValue);
+						}
+					}
+				} else {
+					if (!(field.contains(currentValue))) {
+						field.add(currentValue);
+					}
+				}
+				// if (!(field.contains(currentValue))) {
+				// field.add(currentValue);
+				// }
+
+				// int size = field.size();
+				// for (int i = 0; i < size; i++) {
+				// if (field.get(i).hashCode() == currentValue.hashCode()) {
+				// field.remove(i);
+				// break;
+				// }
+				// }
+				// Object lastValue = (field.isEmpty()) ? null : field.get(field
+				// .size() - 1);
+				// currentValue = Static.getSingleValueOrGroupOfValues(
+				// currentValue, lastValue, 0);
+				// field.add(currentValue);
+
+				// field.add(currentValue);
 			} else {
 				// no need to have copy of Description for Super Class
 				if (description.getSuperClassDescription() != null) {
 					addValueToField(description.getSuperClassDescription(),
-							fieldName, value, referenceType);
+							fieldName, currentValue, type, referenceType,
+							isConditions);
 				}
 			}
 		}

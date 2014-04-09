@@ -138,6 +138,25 @@ public class Static {
 		return false;
 	}
 
+	public static Object verifyTypeFromObjectsToStoreFromGOV(Object value,
+			Type type, Description description) {
+		try {
+			if (value != null && value.toString().equals(Static.NULL)) {
+				value = Static.NULL;
+			} else {
+				if (value != null) {
+					boolean result = isSameType(type.toString(),
+							value.toString());
+					if (!result) {
+						value = Static.NULL;
+					}
+				}
+			}
+		} catch (Exception e) {
+		}
+		return value;
+	}
+
 	public static Object verifyTypeFromObjectsToStore(Object value, Type type,
 			Description description) {
 		try {
@@ -182,6 +201,55 @@ public class Static {
 		}
 		return value;
 	}
+
+	// // get single value or group of values depending on required conditions
+	// public static Object getSingleValueOrGroupOfValues(Object currentValue,
+	// Object lastValue, int lineNumber) {
+	// // need a closed GroupOfValues so that it can keep values without
+	// // creating any problem for global stack
+	// GroupOfValues gov = new GroupOfValues();
+	// gov.setEndLineNumber(lineNumber);
+	// gov.close();
+	// // if (this.isConditons) {
+	// if (lastValue instanceof GroupOfValues) {
+	// for (Object object : ((GroupOfValues) lastValue).getValues()) {
+	// gov.forceAdd(object);
+	// }
+	// } else {
+	// if (lastValue != null) {
+	// gov.forceAdd(lastValue);
+	// }
+	// }
+	// // }
+	// if (currentValue instanceof List) {
+	// if (!((ArrayList<?>) currentValue).isEmpty()) {
+	// for (Object object : ((ArrayList<?>) currentValue)) {
+	// if (!(gov.getValues().contains(object))) {
+	// gov.forceAdd(object);
+	// }
+	// }
+	// }
+	// }
+	//
+	// // else {
+	// // gov.forceAdd(currentValue);
+	// // }
+	// // tempVariablesGroupValues will keep value till the end of method
+	// // Invocation
+	// // if (this.isConditons || (currentValue instanceof List)
+	// // || (lastValue instanceof GroupOfValues)) {
+	// // this.tempVariablesGroupValues.add(gov);
+	// // return gov;
+	// // } else {
+	// // gov = null;
+	// // return currentValue;
+	// // }
+	// if (gov.isEmpty()) {
+	// gov = null;
+	// return currentValue;
+	// }
+	// return gov;
+	// }
 
 	public final static List<String> getSortedEdges() {
 		Collections.sort(edges);

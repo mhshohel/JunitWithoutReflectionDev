@@ -1,124 +1,211 @@
 package callgraphstat.superclass;
 
 public class Example {
-	SuperClassA whatMethod() {
-		int i = 0;
-		if (i == 0) {
-			return new A();
-		} else if (i > 0) {
-			return new B();
-		}
-
-		return (i < 0) ? null : new D();
-	}
+	// SuperClassA whatMethod() {
+	// int i = 0;
+	// if (i == 0) {
+	// return new A();
+	// } else if (i > 0) {
+	// return new B();
+	// }
+	//
+	// return (i < 0) ? null : new D();
+	// }
 
 	public static void main(String[] args) {
-		int h = 9;
-		int b = 10;
-		A abs = null;
-		SuperClassA aaaa = null;
-		SuperClassA aaa = null;
-		switch (h) {
-		case 9:
-			aaa = new A();
-			break;
-		case 0:
-			aaa = new B();
-			C c = new C();
-			break;
-		case 7:
-		case 8:
-		case 19:
-			if (aaa instanceof SuperClassA) {
-				aaa = new C();
-			}
-			break;
-		default:
-			break;
-		}
-		abs = null;
-		for (int i = 0; i < 3; i--) {
-			if (b == 0) {
-				abs = new A();
-			}
-		}
-		abs = new A();
-		int i = 0;
-
-		if (i == 0) {
-			aaaa = new A();
-			aaa = aaaa;
-			A aaasa = new A();
-			if (i > 0) {
-				B bbbb = new B();
-			}
+		boolean tent = false;
+		SuperClassA a = new A();
+		SuperClassA b = new A();
+		SuperClassA d = null;
+		int c = -10;
+		int g = 9;
+		String s = null;
+		System.err.println();
+		if (a instanceof A) {
+			a = new D();
 		}
 
-		if (aaa instanceof SuperClassA) {
-			aaa = new C();
-		}
+		// int b = 1;
+		// SuperClassA a = new A();
+		// if (b == 0) {
+		// a = new C();
+		// } else {
+		// a = new B();
+		// }
+		// a.val = new D();
+		// SuperClassA ggg = new D();
+		// ggg.val = a.val;
+		// E e = new E();
+		//
+		// a.val = new D();
+		// SuperClassA bval = null;
+		// if (e != null) {
+		// bval = (e != new E() || a.fval != new F() && a.fval != null) ? new
+		// D()
+		// : null;
+		// }
+		// a.val = (a.fval != new F() && a.fval != null) ? new B() : bval;
+		// a = new D();
+		// a.val = new C();
+		// if (b == 0) {
+		// a.val = new A();
+		// }
+		// a.fval = new F();
+		// if (b == 10) {
+		// a = new C();
+		// } else {
+		// a = null;
+		// }
+		//
+		// a.val = (a.fval != new F() && a.fval != null) ? new B() : bval;
+		//
+		// SuperClassA how = a.val;
+		// SuperClassA hows = how;
+		// SuperClassA bo = null;
+		// // bo = (b == 10 && bo instanceof A) ? new C() : (b < 8) ? new D() :
+		// // null;
+		// if (b == 0) {
+		// bo = (b == 10 && bo instanceof A) ? new C() : (b < 8) ? new D()
+		// : null;
+		// a = bo;
+		// if (b > 8) {
+		// int u = 9;
+		// b = u;
+		// } else {
+		// a = new D();
+		// }
+		// } else {
+		// a = new C();
+		// }
+		//
+		// a = new D();
+		// bo = a;
+		// bo = null;
+		// int h = 9;
+		// // int b = 10;
+		// // A abs = null;
+		// // SuperClassA aaaa = null;
+		// SuperClassA aaa = null;
+		// //
+		// // // if (aaa == null) {
+		// // // if (abs != null) {
+		// switch (h) {
+		// case 9:
+		// aaa = new A();
+		// break;
+		// case 0:
+		// aaa = new B();
+		// C c = new C();
+		// break;
+		// case 7:
+		// case 8:
+		// case 19:
+		// if (aaa instanceof SuperClassA) {
+		// aaa = new C();
+		// }
+		// break;
+		// default:
+		// break;
+		// }
+		// }
+		// }
 
-		if (aaa instanceof SuperClassA) {
-			if (aaa != null) {
-				if (i > 0) {
-					if (b == 10) {
-						aaa = null;
-					}
-				}
-			}
-		}
-
-		if (i == 0) {
-			b = 11;
-		}
-
-		aaa = (i == 0) ? new A() : (i > 9) ? new B()
-				: (aaa != null && i != 0) ? new C() : new D();
-
-		for (int k = 0; k < 10; k++) {
-			if (aaa == null) {
-				for (int j = 0; j < b; j++) {
-					String s = "SHK";
-				}
-				aaa = new A();
-			} else {
-				aaa = new B();
-			}
-		}
-
-		E e = new E();
-		int cg = 0;
-		E v = e;
-		SuperClassA dataAB = (i == 0) ? new A() : (e == null) ? new B()
-				: (e != null && i != 0) ? new C() : new D();
-		if (i == 0) {
-			A aa = new A();
-			if (i > 0) {
-				B nb = new B();
-			} else {
-				C c = new C();
-			}
-			new D();
-			SuperClassA dataABn = (i == 0) ? new A() : null;
-		}
-		SuperClassA a = null;
-		SuperClassA sa = null;
-
-		while (a != null) {
-			sa = new A();
-			if (b > 0) {
-				sa = new C();
-			}
-			sa = (sa == null) ? new A() : (sa != null) ? new B() : new C();
-		}
-
-		while (a != null) {
-			sa = new A();
-		}
-
-		do {
-			sa = new D();
-		} while (a != null);
+		// abs = null;
+		// for (int i = 0; i < 3; i--) {
+		// if (b == 0) {
+		// abs = new A();
+		// }
+		// }
+		// abs = new A();
+		// int i = 0;
+		// int bs = 10;
+		// for (int k = 0; k < bs; k++) {
+		// if (aaa == null) {
+		// for (int j = 0; j < b; j++) {
+		// String s = "SHK";
+		// }
+		// aaa = new A();
+		// } else {
+		// aaa = new B();
+		// }
+		// }
+		// aaa = (i == 0) ? new A() : (i > 9) ? new B()
+		// : (aaa != null && i != 0) ? new C() : new D();
+		// //
+		// if (i == 0) {
+		// aaaa = new A();
+		// aaa = aaaa;
+		// A aaasa = new A();
+		// if (i > 0) {
+		// B bbbb = new B();
+		// }
+		// }
+		//
+		// if (aaa instanceof SuperClassA) {
+		// aaa = new C();
+		// }
+		//
+		// if (aaa instanceof SuperClassA) {
+		// if (aaa != null) {
+		// if (i > 0) {
+		// if (b == 10) {
+		// aaa = null;
+		// }
+		// }
+		// }
+		// }
+		//
+		// if (i == 0) {
+		// b = 11;
+		// }
+		//
+		// aaa = (i == 0) ? new A() : (i > 9) ? new B()
+		// : (aaa != null && i != 0) ? new C() : new D();
+		//
+		// for (int k = 0; k < 10; k++) {
+		// if (aaa == null) {
+		// for (int j = 0; j < b; j++) {
+		// String s = "SHK";
+		// }
+		// aaa = new A();
+		// } else {
+		// aaa = new B();
+		// }
+		// }
+		//
+		// E e = new E();
+		// int cg = 0;
+		// E v = e;
+		// SuperClassA dataAB = (i == 0) ? new A() : (e == null) ? new B()
+		// : (e != null && i != 0) ? new C() : new D();
+		// if (i == 0) {
+		// A aa = new A();
+		// if (i > 0) {
+		// B nb = new B();
+		// } else {
+		// C c = new C();
+		// }
+		// new D();
+		// SuperClassA dataABn = (i == 0) ? new A() : null;
+		// }
+		// SuperClassA a = null;
+		// SuperClassA sa = null;
+		//
+		// while (a != null) {
+		// sa = new A();
+		// if (b > 0) {
+		// sa = new C();
+		// }
+		// sa = (sa == null) ? new A() : (sa != null) ? new B() : new C();
+		// }
+		//
+		// while (a != null) {
+		// sa = new A();
+		// }
+		//
+		// do {
+		// sa = new D();
+		// } while (a != null);
 
 	}
 }
