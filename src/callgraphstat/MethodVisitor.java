@@ -1037,7 +1037,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 				// TODO: MAKE IT PARFECT
 				if (list.size() < 3) {
-					if (i + 1 > size) {
+					if (i + 1 < size) {
 						if (this.localVariableArray[i + 1].getIndex() != index) {
 							name = currentVariable.getName();
 							break;
