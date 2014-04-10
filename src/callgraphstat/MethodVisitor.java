@@ -143,6 +143,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 	// it will keep alive group values of each variable add field till the end
 	// of method
 	private Stack<GroupOfValues> tempVariablesGroupValues = new Stack<GroupOfValues>();
+	private String source = null;
+	private Set<String> exceptions = null;
 
 	public MethodVisitor(Description description, ClassVisitor classVisitor,
 			Method method, MethodGen methodGen) {
@@ -230,36 +232,75 @@ public final class MethodVisitor extends EmptyVisitor implements
 	private int conditionLineNumber = -1;
 	private int currentLineNumber = -1;
 
+	private void initializeStaticFields(Description description, String source,
+			Set<String> exceptions, boolean forGetStatic) {
+		// -------------------Initialize Static Values--------------------
+		if (!description.isVisitedToCheckStaticField) {
+			description.isVisitedToCheckStaticField = true;
+			// set value to the parent, because its for static field
+			description.getDescriptionByClassName(description.toString()).isVisitedToCheckStaticField = true;
+			try {
+				List<MethodVisitor> list = description
+						.getMethodVisitorByName("<clinit>");
+				if (list != null && !list.isEmpty() && list.get(0) != null) {
+					// TODO Remove me
+					Static.err("\t\t\t\t STATIC VALS FOUND: " + description);
+					description
+							.getMethodVisitorByName("<clinit>")
+							.get(0)
+							.start((source != null) ? source
+									: description.getClassName(),
+									new ArrayList<Object>(), true, exceptions,
+									false);
+				} else if (forGetStatic) {
+					if (description.getSuperClassDescription() != null) {
+						initializeStaticFields(
+								description.getSuperClassDescription(), source,
+								exceptions, forGetStatic);
+					}
+				}
+			} catch (Exception e) {
+				Static.err("SOME ERROR FOUND: public Object start(String source, List<Object> params, boolean isStaticCall");
+			}
+		}
+		// ------------------------------------------------------------------------------
+	}
+
 	public Object start(String source, List<Object> params,
 			boolean isStaticCall, Set<String> exceptions, boolean alreadyHas) {
 		// initialize temp group values
 		this.tempGroupValues = new Stack<GroupOfValues>();
 		this.tempVariablesGroupValues = new Stack<GroupOfValues>();
 		this.castType = null;
+		this.source = source;
+		this.exceptions = exceptions;
 		// -------------------Initialize Static Values--------------------
-		if (!this.description.isVisitedToCheckStaticField) {
-			this.description.isVisitedToCheckStaticField = true;
-			// set value to the parent, because its for static field
-			this.description.getDescriptionByJavaClass(this.javaClass).isVisitedToCheckStaticField = true;
-			try {
-				List<MethodVisitor> list = this.description
-						.getMethodVisitorByName("<clinit>");
-				if (list != null && !list.isEmpty() && list.get(0) != null) {
-					// TODO Remove me
-					Static.err("\t\t\t\t STATIC VALS FOUND: "
-							+ this.description);
-					this.description
-							.getMethodVisitorByName("<clinit>")
-							.get(0)
-							.start((source != null) ? source
-									: this.description.getClassName(),
-									new ArrayList<Object>(), true, exceptions,
-									false);
-				}
-			} catch (Exception e) {
-				Static.err("SOME ERROR FOUND: public Object start(String source, List<Object> params, boolean isStaticCall");
-			}
-		}
+		initializeStaticFields(this.description, this.source, this.exceptions,
+				false);
+		// if (!this.description.isVisitedToCheckStaticField) {
+		// this.description.isVisitedToCheckStaticField = true;
+		// // set value to the parent, because its for static field
+		// this.description.getDescriptionByJavaClass(this.javaClass).isVisitedToCheckStaticField
+		// = true;
+		// try {
+		// List<MethodVisitor> list = this.description
+		// .getMethodVisitorByName("<clinit>");
+		// if (list != null && !list.isEmpty() && list.get(0) != null) {
+		// // TODO Remove me
+		// Static.err("\t\t\t\t STATIC VALS FOUND: "
+		// + this.description);
+		// this.description
+		// .getMethodVisitorByName("<clinit>")
+		// .get(0)
+		// .start((source != null) ? source
+		// : this.description.getClassName(),
+		// new ArrayList<Object>(), true, exceptions,
+		// false);
+		// }
+		// } catch (Exception e) {
+		// Static.err("SOME ERROR FOUND: public Object start(String source, List<Object> params, boolean isStaticCall");
+		// }
+		// }
 		// ------------------------------------------------------------------------------
 
 		// ----------------------Read Parameters---------------------
@@ -995,6 +1036,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 					}
 					break;
 				case "GETSTATIC":
+					Description description = this.description
+							.getDescriptionByClassName(referenceType.toString());
+					initializeStaticFields(description, this.source,
+							this.exceptions, true);
+
 					value = this.description.getValueFromStaticField(
 							this.description, variableName, referenceType);
 					break;

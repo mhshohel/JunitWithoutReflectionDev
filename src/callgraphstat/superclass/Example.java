@@ -11,13 +11,14 @@ public class Example {
 	//
 	// return (i < 0) ? null : new D();
 	// }
-
 	public static void main(String[] args) {
 		B bol = A.b;
-		// int b = 1;
-		SuperClassA a = new A();
-		a.val = new B();
-		SuperClassA c = a.val;
+
+		// // int b = 1;
+		// SuperClassA a = new A();
+		// a.val = new B();
+		// SuperClassA c = a.val;
+		// c.val = a.val;
 		// SuperClassA cc = new B();
 		// SuperClassA jjj = new A();
 		// jjj = a.val;

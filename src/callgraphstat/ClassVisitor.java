@@ -169,33 +169,15 @@ public final class ClassVisitor extends EmptyVisitor {
 							field.add(currentValue);
 						}
 					} else {
-						GroupOfValues gv = (GroupOfValues) currentValue;
-						for (Object gvv : gv.getAllValues(type, description)) {
-							if (!(field.contains(gvv))) {
-								field.add(gvv);
+						GroupOfValues gov = (GroupOfValues) currentValue;
+						for (Object govObject : gov.getAllValues(type,
+								description)) {
+							if (!(field.contains(govObject))) {
+								field.add(govObject);
 							}
 						}
 					}
 				}
-
-				// if (!(field.contains(currentValue))) {
-				// field.add(currentValue);
-				// }
-
-				// int size = field.size();
-				// for (int i = 0; i < size; i++) {
-				// if (field.get(i).hashCode() == currentValue.hashCode()) {
-				// field.remove(i);
-				// break;
-				// }
-				// }
-				// Object lastValue = (field.isEmpty()) ? null : field.get(field
-				// .size() - 1);
-				// currentValue = Static.getSingleValueOrGroupOfValues(
-				// currentValue, lastValue, 0);
-				// field.add(currentValue);
-
-				// field.add(currentValue);
 			} else {
 				// no need to have copy of Description for Super Class
 				if (description.getSuperClassDescription() != null) {

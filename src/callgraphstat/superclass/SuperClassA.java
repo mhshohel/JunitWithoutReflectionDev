@@ -1,6 +1,7 @@
 package callgraphstat.superclass;
 
 public class SuperClassA {
+	static B b = new B();
 	public SuperClassA val;
 	public F fval;
 	// public SuperClassA aVal;

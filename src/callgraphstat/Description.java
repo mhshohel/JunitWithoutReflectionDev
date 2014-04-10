@@ -239,6 +239,8 @@ public final class Description implements Comparable<Description> {
 		return dummy;
 	}
 
+	// add single value only not GroupOfValue class
+	// TODO: FIX IT
 	public void addValueToStaticField(Description description,
 			String fieldName, Object value, ReferenceType referenceType) {
 		try {
@@ -294,6 +296,8 @@ public final class Description implements Comparable<Description> {
 		return fields;
 	}
 
+	// return static value stack, not single value
+	// TODO: FIX IT
 	public final Object getValueFromStaticField(Description description,
 			String fieldName, ReferenceType referenceType) {
 		Stack<Object> fields = getValuesFromStaticField(description, fieldName);

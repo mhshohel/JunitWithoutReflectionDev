@@ -1,7 +1,7 @@
 package callgraphstat.superclass;
 
 public class A extends SuperClassA {
-	static B b = new B();
+	// static B b = new B();
 	// public B b = null;
 	// public D dval = null;
 	// Object oObject = null;
