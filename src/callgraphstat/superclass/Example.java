@@ -13,24 +13,18 @@ public class Example {
 	// }
 
 	public static void main(String[] args) {
-		boolean tent = false;
-		SuperClassA a = new A();
-		SuperClassA b = new A();
-		SuperClassA d = null;
-		int c = -10;
-		int g = 9;
-		String s = null;
-		System.err.println();
-		if (a instanceof A) {
-			a = new D();
-		}
-
+		B bol = A.b;
 		// int b = 1;
-		// SuperClassA a = new A();
+		SuperClassA a = new A();
+		a.val = new B();
+		SuperClassA c = a.val;
+		// SuperClassA cc = new B();
+		// SuperClassA jjj = new A();
+		// jjj = a.val;
 		// if (b == 0) {
 		// a = new C();
 		// } else {
-		// a = new B();
+		// a.val = new B();
 		// }
 		// a.val = new D();
 		// SuperClassA ggg = new D();
@@ -39,12 +33,18 @@ public class Example {
 		//
 		// a.val = new D();
 		// SuperClassA bval = null;
-		// if (e != null) {
+		//
+		// if (e != null && a != null) {
+		// a = new D();
+		// new F();
 		// bval = (e != new E() || a.fval != new F() && a.fval != null) ? new
 		// D()
-		// : null;
+		// : new C();
+		// e = null;
 		// }
 		// a.val = (a.fval != new F() && a.fval != null) ? new B() : bval;
+		// cc.val = a.val;
+
 		// a = new D();
 		// a.val = new C();
 		// if (b == 0) {

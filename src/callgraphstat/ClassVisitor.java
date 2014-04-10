@@ -138,7 +138,6 @@ public final class ClassVisitor extends EmptyVisitor {
 			ClassVisitor classVisitor = description.getClassVisitor();
 			field = classVisitor.fields.get(fieldName);
 			if (field != null) {
-				int size = field.size();
 				if (!isConditions) {
 					if (!field.isEmpty()) {
 						field.clear();
@@ -146,17 +145,39 @@ public final class ClassVisitor extends EmptyVisitor {
 				}
 				if (currentValue instanceof Collection) {
 					for (Object stackValues : (Collection<?>) currentValue) {
-						Object thisValue = Static.verifyTypeFromObjectsToStore(
-								stackValues, type, description);
-						if (!(field.contains(thisValue))) {
-							field.add(thisValue);
+
+						if (!(stackValues instanceof GroupOfValues)) {
+							Object thisValue = Static
+									.verifyTypeFromObjectsToStore(stackValues,
+											type, description);
+							if (!(field.contains(thisValue))) {
+								field.add(thisValue);
+							}
+						} else {
+							GroupOfValues gv = (GroupOfValues) stackValues;
+							for (Object gvv : gv
+									.getAllValues(type, description)) {
+								if (!(field.contains(gvv))) {
+									field.add(gvv);
+								}
+							}
 						}
 					}
 				} else {
-					if (!(field.contains(currentValue))) {
-						field.add(currentValue);
+					if (!(currentValue instanceof GroupOfValues)) {
+						if (!(field.contains(currentValue))) {
+							field.add(currentValue);
+						}
+					} else {
+						GroupOfValues gv = (GroupOfValues) currentValue;
+						for (Object gvv : gv.getAllValues(type, description)) {
+							if (!(field.contains(gvv))) {
+								field.add(gvv);
+							}
+						}
 					}
 				}
+
 				// if (!(field.contains(currentValue))) {
 				// field.add(currentValue);
 				// }

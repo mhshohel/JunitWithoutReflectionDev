@@ -50,8 +50,10 @@ public class GroupOfValues {
 			// do not check contains here, because it will keep values like
 			// tempStack, it should keep multiple values of same type
 
-			// TODO verify it???
-			this.values.remove(value);
+			// do not check contains or remove same type of value, because it
+			// can be used for conditions, conditions need type values to remove
+			// before creating "if", if object of same type removed then it will
+			// miss important things, better compare it when try to store.
 			this.values.add(value);
 		}
 	}
