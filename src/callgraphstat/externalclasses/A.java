@@ -1,7 +1,7 @@
 package callgraphstat.externalclasses;
 
 public class A extends B {
-	public C otherC = null;
+	public static B b = null;
 
 	public void abc() {
 

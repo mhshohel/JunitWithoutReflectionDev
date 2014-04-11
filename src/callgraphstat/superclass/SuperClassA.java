@@ -1,9 +1,10 @@
 package callgraphstat.superclass;
 
 public class SuperClassA {
-	static B b = new B();
-	public SuperClassA val;
-	public F fval;
+	static SuperClassA b = null;
+	// static SuperClassA b = new C();
+	// public SuperClassA val;
+	// public F fval;
 	// public SuperClassA aVal;
 	// protected E eval = null;
 	//

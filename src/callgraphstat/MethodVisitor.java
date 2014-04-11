@@ -914,7 +914,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 				break;
 			case "PUTSTATIC":
 				this.description.addValueToStaticField(this.description,
-						variableName, value, referenceType);
+						variableName, value, type, referenceType,
+						this.isConditons);
 				break;
 			}
 			this.castType = null;
@@ -1038,11 +1039,18 @@ public final class MethodVisitor extends EmptyVisitor implements
 				case "GETSTATIC":
 					Description description = this.description
 							.getDescriptionByClassName(referenceType.toString());
-					initializeStaticFields(description, this.source,
-							this.exceptions, true);
+					if (description != null) {
+						// get the actual link
+						initializeStaticFields(
+								description,
+								(this.source != null) ? this.source : this.node,
+								this.exceptions, true);
 
-					value = this.description.getValueFromStaticField(
-							this.description, variableName, referenceType);
+						value = this.description.getValueFromStaticField(
+								description, variableName, referenceType);
+					} else {
+						value = Static.NULL;
+					}
 					break;
 				}
 			} catch (Exception e) {

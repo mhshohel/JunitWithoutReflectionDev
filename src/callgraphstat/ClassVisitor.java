@@ -105,15 +105,13 @@ public final class ClassVisitor extends EmptyVisitor {
 	public Object getValueFromField(Object targetClass, String fieldName,
 			ReferenceType referenceType) {
 		Stack<Object> field = null;
-		// if target class is gov make sure to get as list and return as gov
 		Object value = null;
 		if (targetClass != null && targetClass instanceof Description) {
 			Description description = (Description) targetClass;
 			ClassVisitor classVisitor = description.getClassVisitor();
 			field = classVisitor.fields.get(fieldName);
 			if (field != null) {
-				return field;// return whole stack
-				// return field.peek();
+				return field;
 			} else {
 				// no need to have copy of Description for Super Class
 				if (description.getSuperClassDescription() != null) {
@@ -123,8 +121,6 @@ public final class ClassVisitor extends EmptyVisitor {
 				}
 			}
 		}
-		// return (value == referenceType.toString()) ? StaticValues.NULL :
-		// value;
 		return (value == null) ? Static.NULL : value;
 	}
 

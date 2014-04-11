@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -242,25 +243,53 @@ public final class Description implements Comparable<Description> {
 	// add single value only not GroupOfValue class
 	// TODO: FIX IT
 	public void addValueToStaticField(Description description,
-			String fieldName, Object value, ReferenceType referenceType) {
+			String fieldName, Object currentValue, Type type,
+			ReferenceType referenceType, boolean isConditions) {
 		try {
-			Stack<Object> field = getValuesFromStaticField(description,
-					fieldName);
-			if (field != null) {
-				int size = field.size();
-				for (int i = 0; i < size; i++) {
-					if (field.get(i).hashCode() == value.hashCode()) {
-						field.remove(i);
-						break;
+			Description referanceDescription = this.classDescriptions
+					.get(referenceType.toString());
+			if (referanceDescription != null) {
+				Stack<Object> field = getValuesFromStaticField(
+						referanceDescription, fieldName);
+				if (field != null) {
+					if (!isConditions) {
+						if (!field.isEmpty()) {
+							field.clear();
+						}
 					}
-				}
-				field.add(value);
-			} else {
-				if (referenceType != null) {
-					try {
-						this.classDescriptions.get(referenceType.toString())
-								.addStaticFieldsValue(fieldName, value);
-					} catch (Exception e) {
+					if (currentValue instanceof Collection) {
+						for (Object stackValues : (Collection<?>) currentValue) {
+							if (!(stackValues instanceof GroupOfValues)) {
+								Object thisValue = Static
+										.verifyTypeFromObjectsToStore(
+												stackValues, type, description);
+								if (!(field.contains(thisValue))) {
+									field.add(thisValue);
+								}
+							} else {
+								GroupOfValues gv = (GroupOfValues) stackValues;
+								for (Object gvv : gv.getAllValues(type,
+										description)) {
+									if (!(field.contains(gvv))) {
+										field.add(gvv);
+									}
+								}
+							}
+						}
+					} else {
+						if (!(currentValue instanceof GroupOfValues)) {
+							if (!(field.contains(currentValue))) {
+								field.add(currentValue);
+							}
+						} else {
+							GroupOfValues gov = (GroupOfValues) currentValue;
+							for (Object govObject : gov.getAllValues(type,
+									description)) {
+								if (!(field.contains(govObject))) {
+									field.add(govObject);
+								}
+							}
+						}
 					}
 				}
 			}
@@ -269,6 +298,7 @@ public final class Description implements Comparable<Description> {
 	}
 
 	public void addStaticFieldsValue(String key, Object value) {
+		// if not found must look into super class
 		if (!this.staticFields.containsKey(key)) {
 			this.staticFields.put(key, new Stack<Object>());
 		} else {
@@ -296,27 +326,14 @@ public final class Description implements Comparable<Description> {
 		return fields;
 	}
 
-	// return static value stack, not single value
-	// TODO: FIX IT
 	public final Object getValueFromStaticField(Description description,
 			String fieldName, ReferenceType referenceType) {
 		Stack<Object> fields = getValuesFromStaticField(description, fieldName);
-		if (fields != null && !fields.isEmpty()) {
-			return fields.peek();
-		} else if (referenceType != null) {
-			try {
-				fields = this.classDescriptions.get(referenceType.toString())
-						.getStaticFieldValues(fieldName);
-				if (!fields.isEmpty()) {
-					return fields.peek();
-				} else {
-					return referenceType.toString();
-				}
-			} catch (Exception e) {
-				return referenceType.toString();
-			}
+		if (fields != null) {
+			return fields;
+		} else {
+			return Static.NULL;
 		}
-		return fields;
 	}
 
 	public final List<Description> getInterfaces() {
