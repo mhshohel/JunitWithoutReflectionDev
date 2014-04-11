@@ -277,30 +277,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 		// -------------------Initialize Static Values--------------------
 		initializeStaticFields(this.description, this.source, this.exceptions,
 				false);
-		// if (!this.description.isVisitedToCheckStaticField) {
-		// this.description.isVisitedToCheckStaticField = true;
-		// // set value to the parent, because its for static field
-		// this.description.getDescriptionByJavaClass(this.javaClass).isVisitedToCheckStaticField
-		// = true;
-		// try {
-		// List<MethodVisitor> list = this.description
-		// .getMethodVisitorByName("<clinit>");
-		// if (list != null && !list.isEmpty() && list.get(0) != null) {
-		// // TODO Remove me
-		// Static.err("\t\t\t\t STATIC VALS FOUND: "
-		// + this.description);
-		// this.description
-		// .getMethodVisitorByName("<clinit>")
-		// .get(0)
-		// .start((source != null) ? source
-		// : this.description.getClassName(),
-		// new ArrayList<Object>(), true, exceptions,
-		// false);
-		// }
-		// } catch (Exception e) {
-		// Static.err("SOME ERROR FOUND: public Object start(String source, List<Object> params, boolean isStaticCall");
-		// }
-		// }
 		// ------------------------------------------------------------------------------
 
 		// ----------------------Read Parameters---------------------
@@ -400,10 +376,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 						this.conditionLineNumber = this.tempGroupValues.peek()
 								.getEndlineNumber();
 					}
-					// for (GroupOfValues govs : this.tempGroupValues) {
-					// govs.close(this.currentLineNumber);
-					// }
-					// this.tempGroupValues.clear();
 					Static.err("\t\t\t\t\tIN-ACTIVATED");
 				}
 				if (this.isConditons) {
@@ -1493,31 +1465,72 @@ public final class MethodVisitor extends EmptyVisitor implements
 		// -------------------------------------
 	}
 
-	private Description getInvokedDescription(String classType) {
+	private Stack<Description> getInvokedDescription(ReferenceType type) {
 		// especially for Interface, it will match the type first to send values
-		Description value = null;
+		String classType = type.toString();
+		Stack<Description> values = new Stack<Description>();
+		GroupOfValues gov = null;
 		try {
-			Object stackObject = (this.temporalVariables != null && !this.temporalVariables
-					.isEmpty()) ? this.temporalVariables.pop() : Static.NULL;
-			String stackType = stackObject.toString();
-			if (Static.isSameType(classType, stackType)) {
-				classType = stackType;
+			Object value = (this.temporalVariables != null && !this.temporalVariables
+					.isEmpty()) ? this.temporalVariables.peek() : Static.NULL;
+
+			if (value instanceof GroupOfValues) {
+				gov = (GroupOfValues) value;
+				if (gov.isOpen) {
+					// not close get last group and marge
+					if (!this.tempGroupValues.isEmpty()) {
+						value = this.tempGroupValues.peek().pop();
+						if (value instanceof GroupOfValues) {
+							// get all values including child
+							value = ((GroupOfValues) value).getAllValues(type,
+									this.description);
+						} else if (value instanceof Collection) {
+							Stack<Object> allValues = new Stack<Object>();
+							for (Object stackValues : (Collection<?>) value) {
+								Object thisValue = Static
+										.verifyTypeFromObjectsToStore(
+												stackValues, type, description);
+								if (!(allValues.contains(thisValue))) {
+									allValues.add(thisValue);
+								}
+							}
+							value = allValues;
+						}
+					}
+				} else {
+					// if close
+					value = gov.getAllValues(type, this.description);
+					this.temporalVariables.pop();
+				}
+			} else {
+				this.temporalVariables.pop();
 			}
-			if (stackObject instanceof Description) {
-				value = (Description) stackObject;
+			if (!Static.someValues.isEmpty()) {
+				Static.someValues.clear();
 			}
+			if (value instanceof Collection) {
+				for (Object stackObject : (Collection<?>) value) {
+					String stackType = stackObject.toString();
+					if (Static.isSameType(classType, stackType)) {
+						if (stackObject instanceof Description) {
+							values.add((Description) stackObject);
+						} else {
+							Static.someValues.add(stackObject);
+						}
+					}
+				}
+			} else {
+				if (value instanceof Description) {
+					values.add((Description) value);
+				} else {
+					Static.someValues.add(value);
+				}
+			}
+
 		} catch (Exception e) {
+			System.err.println("ERROR");
 		}
-		// no problem to return null, this null value should handle by invoked
-		// method
-		if (value == null) {
-			Object object = Static.getDescriptionCopy(this.description,
-					classType);
-			if (object instanceof Description) {
-				value = (Description) object;
-			}
-		}
-		return value;
+		return values;
 	}
 
 	@Override
@@ -1532,71 +1545,71 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	@Override
 	public void visitINVOKEINTERFACE(INVOKEINTERFACE i) {
-		try {
-			Type[] types = i.getArgumentTypes(constantPoolGen);
-			String methodName = i.getMethodName(constantPoolGen);
-			// TODO: decide as output requirement
-			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
-					methodName, "I");
-			List<Object> params = getParameters(types, methodName);
-			ReferenceType referenceTpe = i.getReferenceType(constantPoolGen);
-			// keep value from stack so that it can compare for Collection Type
-			Object instance = this.temporalVariables.peek();
-			Description description = getInvokedDescription(referenceTpe
-					.toString());
-			Static.out(referenceTpe.toString());
-			MethodVisitor methodVisitor = null;
-			Object returnType = null;
-			if (description != null) {
-				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
-						description, methodName, types, true);
-				if (methodVisitor != null) {
-					returnType = methodVisitor.start(this.node, params, false,
-							this.exceptionClassList, false);
-				}
-			}
-			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
-					referenceTpe.toString(), methodName, params, types);
-			if (description == null
-					&& isCollectionsOrMap(referenceTpe.toString())) {// code for
-				// collection
-				// type
-				// check for return type, if required, check void or other in
-				// return
-				Static.err(this.collectionMethodReturnType);
-
-				if (instance instanceof CollectionObjectProvider) {
-					addValuesForCollection((CollectionObjectProvider) instance,
-							params);
-					// if true then keep value at return else not
-					if (Static
-							.isPrimitiveTypeString(this.collectionMethodReturnType
-									.getName())) {
-						returnType = Static.PRIMITIVE;
-					} else if (!this.collectionMethodReturnType.getName()
-							.equalsIgnoreCase("void")) {
-						returnType = null;
-					} else {
-						// keep values, if return has type means it should
-						// return
-						// values of current type, make a list of Values a new
-						// class, if return type is Array type then make a list
-						// of
-						// array
-					}
-					Static.err(returnType);
-				}
-			}
-			if (returnType != null
-					&& !returnType.toString().equalsIgnoreCase("void")) {
-				this.temporalVariables.add(returnType);
-			}
-			Static.out("------------------------");
-		} catch (Exception e) {
-			Static.err("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
-		}
-		// Verify and remove remaining primitive data
-		removePrimitiveData();
+		// try {
+		// Type[] types = i.getArgumentTypes(constantPoolGen);
+		// String methodName = i.getMethodName(constantPoolGen);
+		// // TODO: decide as output requirement
+		// printObjectInvoke(types, i.getReferenceType(constantPoolGen),
+		// methodName, "I");
+		// List<Object> params = getParameters(types, methodName);
+		// ReferenceType referenceTpe = i.getReferenceType(constantPoolGen);
+		// // keep value from stack so that it can compare for Collection Type
+		// Object instance = this.temporalVariables.peek();
+		// Description description = getInvokedDescription(referenceTpe
+		// .toString());
+		// Static.out(referenceTpe.toString());
+		// MethodVisitor methodVisitor = null;
+		// Object returnType = null;
+		// if (description != null) {
+		// methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
+		// description, methodName, types, true);
+		// if (methodVisitor != null) {
+		// returnType = methodVisitor.start(this.node, params, false,
+		// this.exceptionClassList, false);
+		// }
+		// }
+		// createEdgeIfMethodNotFound(description, methodVisitor, this.node,
+		// referenceTpe.toString(), methodName, params, types);
+		// if (description == null
+		// && isCollectionsOrMap(referenceTpe.toString())) {// code for
+		// // collection
+		// // type
+		// // check for return type, if required, check void or other in
+		// // return
+		// Static.err(this.collectionMethodReturnType);
+		//
+		// if (instance instanceof CollectionObjectProvider) {
+		// addValuesForCollection((CollectionObjectProvider) instance,
+		// params);
+		// // if true then keep value at return else not
+		// if (Static
+		// .isPrimitiveTypeString(this.collectionMethodReturnType
+		// .getName())) {
+		// returnType = Static.PRIMITIVE;
+		// } else if (!this.collectionMethodReturnType.getName()
+		// .equalsIgnoreCase("void")) {
+		// returnType = null;
+		// } else {
+		// // keep values, if return has type means it should
+		// // return
+		// // values of current type, make a list of Values a new
+		// // class, if return type is Array type then make a list
+		// // of
+		// // array
+		// }
+		// Static.err(returnType);
+		// }
+		// }
+		// if (returnType != null
+		// && !returnType.toString().equalsIgnoreCase("void")) {
+		// this.temporalVariables.add(returnType);
+		// }
+		// Static.out("------------------------");
+		// } catch (Exception e) {
+		// Static.err("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
+		// }
+		// // Verify and remove remaining primitive data
+		// removePrimitiveData();
 	}
 
 	private void addValuesForCollection(CollectionObjectProvider instance,
@@ -1615,43 +1628,57 @@ public final class MethodVisitor extends EmptyVisitor implements
 			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
 					methodName, "O");
 			List<Object> params = getParameters(types, methodName);
-			ReferenceType referenceTpe = i.getReferenceType(constantPoolGen);
+			ReferenceType referenceType = i.getReferenceType(constantPoolGen);
 			// check Exception class and then keep them
-			if (Static.isSameType(referenceTpe.toString(),
+			if (Static.isSameType(referenceType.toString(),
 					"java.lang.Exception")) {
-				if (!referenceTpe.toString().equalsIgnoreCase(
+				if (!referenceType.toString().equalsIgnoreCase(
 						"java.lang.Object")) {
-					this.exceptionClassList.add(referenceTpe.toString());
+					this.exceptionClassList.add(referenceType.toString());
 				}
 			}
-			Description description = getInvokedDescription(referenceTpe
-					.toString());
-			Static.out(referenceTpe.toString());
-			MethodVisitor methodVisitor = null;
-			Object returnType = null;
-			if (description != null) {
-				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
-						description, methodName, types, true);
-				if (methodVisitor != null) {
-					returnType = methodVisitor.start(this.node, params, false,
-							this.exceptionClassList, false);
+			List<Description> listDescriptions = getInvokedDescription(referenceType);
+			if (listDescriptions != null && !listDescriptions.isEmpty()) {
+				for (Description des : listDescriptions) {
+					Description description = des;// getInvokedDescription(referenceType);
+					Static.out(referenceType.toString());
+					MethodVisitor methodVisitor = null;
+					Object returnType = null;
+					if (description != null) {
+						methodVisitor = description
+								.getMethodVisitorByNameAndTypeArgs(description,
+										methodName, types, true);
+						if (methodVisitor != null) {
+							returnType = methodVisitor.start(this.node, params,
+									false, this.exceptionClassList, false);
+						}
+					}
+					// check Exception class and then print edges, print all
+					if (Static.isSameType(referenceType.toString(),
+							"java.lang.Exception")) {
+						for (String ex : this.exceptionClassList) {
+							createEdgeIfMethodNotFound(null, null, this.node,
+									ex, methodName, params, types);
+						}
+					}
+					if (returnType != null
+							&& !returnType.toString().equalsIgnoreCase("void")) {
+						this.temporalVariables.add(returnType);
+					}
+					Static.out("------------------------");
+				}
+			} else {
+				if (!Static.someValues.isEmpty()) {
+					while (!Static.someValues.isEmpty()) {
+						createEdgeIfMethodNotFound(null, null, this.node,
+								Static.someValues.pop().toString(), methodName,
+								params, types);
+					}
 				}
 			}
-			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
-					referenceTpe.toString(), methodName, params, types);
-			// check Exception class and then print edges, print all
-			if (Static.isSameType(referenceTpe.toString(),
-					"java.lang.Exception")) {
-				for (String ex : this.exceptionClassList) {
-					createEdgeIfMethodNotFound(null, null, this.node, ex,
-							methodName, params, types);
-				}
+			if (!Static.someValues.isEmpty()) {
+				Static.someValues.clear();
 			}
-			if (returnType != null
-					&& !returnType.toString().equalsIgnoreCase("void")) {
-				this.temporalVariables.add(returnType);
-			}
-			Static.out("------------------------");
 		} catch (Exception e) {
 			Static.err("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
 		}
@@ -1829,13 +1856,13 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	// generate edges which has no description or method visitor recorded
 	private boolean createEdgeIfMethodNotFound(Description description,
-			MethodVisitor methodVisitor, String source, String referenceTpe,
+			MethodVisitor methodVisitor, String source, String referenceType,
 			String methodName, List<Object> params, Type[] types) {
 		collectionMethodReturnType = null;
-		boolean hasDescription = this.description.hasDescription(referenceTpe
+		boolean hasDescription = this.description.hasDescription(referenceType
 				.toString());
 		if (description == null) {
-			String target = referenceTpe + "." + methodName;
+			String target = referenceType + "." + methodName;
 			String type = "(";
 			if (params != null && !params.isEmpty()) {
 				int length = params.size();
@@ -1861,7 +1888,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 				} else {
 					try {
 						// should set new target
-						Class<?> clas = Class.forName(referenceTpe.toString());
+						Class<?> clas = Class.forName(referenceType.toString());
 						java.lang.reflect.Method[] methods = clas.getMethods();
 						for (java.lang.reflect.Method method : methods) {
 							if (method.getName().equalsIgnoreCase(methodName)) {

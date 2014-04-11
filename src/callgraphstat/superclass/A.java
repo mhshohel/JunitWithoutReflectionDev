@@ -17,10 +17,10 @@ public class A extends SuperClassA {
 	//
 	// }
 	//
-	// void aValEx() {
-	// System.err.println("I am From A");
-	// // b();
-	// }
+	public void aValEx() {
+		System.err.println("I am From A");
+		// b();
+	}
 	//
 	// SuperClassA getVal() {
 	// b = new B();

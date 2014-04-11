@@ -12,19 +12,30 @@ public class Example {
 	// return (i < 0) ? null : new D();
 	// }
 	public static void main(String[] args) {
-
-		A.b = new A();
-
-		// SuperClassA s = A.b;
-		int b = 11;
-		if (b < 1) {
-			A.b = new B();
-		} else {
-			A.b = new C();
+		callgraphstat.externalclasses.B av = new callgraphstat.externalclasses.A();
+		av.abc();
+		int bs = 11;
+		if (bs > 0) {
+			av = new callgraphstat.externalclasses.C();
 		}
-		SuperClassA bol = A.b;
-		A.b = new D();
-		bol = A.b;
+		av.abc();
+		// SuperClassA b = new A();
+		// if (bs > 1) {
+		// b = new B();
+		// b.aValEx();
+		// }
+
+		//
+		// // SuperClassA s = A.b;
+		// int b = 11;
+		// if (b < 1) {
+		// A.b = new B();
+		// } else {
+		// A.b = new C();
+		// }
+		// SuperClassA bol = A.b;
+		// A.b = new D();
+		// bol = A.b;
 
 		// // int b = 1;
 		// SuperClassA a = new A();

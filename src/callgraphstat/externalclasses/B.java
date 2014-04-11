@@ -8,4 +8,8 @@ public class B {
 	public void bb(int a) {
 
 	}
+
+	public void abc() {
+
+	}
 }

@@ -2,6 +2,7 @@ package callgraphstat.superclass;
 
 public class SuperClassA {
 	static SuperClassA b = null;
+
 	// static SuperClassA b = new C();
 	// public SuperClassA val;
 	// public F fval;
@@ -28,4 +29,8 @@ public class SuperClassA {
 	//
 	// void exam() {
 	// }
+
+	public void aValEx() {
+		// System.err.println("I am from SuperClass");
+	}
 }

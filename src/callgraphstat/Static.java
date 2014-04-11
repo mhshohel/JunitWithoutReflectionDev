@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import org.apache.bcel.generic.Type;
 
@@ -45,6 +46,9 @@ public class Static {
 	private static int id = 0;
 	// keep Description objects that once is initialized, to avoid duplicate
 	public static Map<String, Description> initializedDescriotions = new LinkedHashMap<String, Description>();
+	// keep values that is not Description type, before us it please clear all
+	// values
+	public static Stack<Object> someValues = new Stack<Object>();
 
 	public final static List<String> getNodes() {
 		return nodes;
