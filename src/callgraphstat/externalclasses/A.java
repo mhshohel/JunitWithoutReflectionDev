@@ -3,6 +3,10 @@ package callgraphstat.externalclasses;
 public class A extends B {
 	public static B b = null;
 
+	public static void lol() {
+
+	}
+
 	public void abc() {
 
 	}

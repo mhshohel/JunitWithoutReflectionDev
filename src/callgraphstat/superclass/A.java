@@ -2,7 +2,8 @@ package callgraphstat.superclass;
 
 public class A extends SuperClassA {
 	// static SuperClassA b = null;
-	// public B b = null;
+	public B b = null;
+
 	// public D dval = null;
 	// Object oObject = null;
 	//
@@ -17,14 +18,24 @@ public class A extends SuperClassA {
 	//
 	// }
 	//
+
+	public A(SuperClassA b) {
+
+	}
+
+	public A() {
+
+	}
+
 	public static void lol() {
 
 	}
 
 	public void aValEx() {
 		System.err.println("I am From A");
-		// b();
+		b();
 	}
+
 	//
 	// SuperClassA getVal() {
 	// b = new B();
@@ -39,20 +50,20 @@ public class A extends SuperClassA {
 	// ((A) val).b();
 	// }
 	//
-	// private void b() {
-	// c();
-	// }
-	//
-	// private void c() {
-	// d();
-	// }
-	//
-	// private void d() {
-	// e();
-	// }
-	//
-	// private void e() {
-	// F f = f();
-	// f.h();
-	// }
+	private void b() {
+		c();
+	}
+
+	private void c() {
+		d();
+	}
+
+	private void d() {
+		e();
+	}
+
+	private void e() {
+		F f = f();
+		f.h();
+	}
 }

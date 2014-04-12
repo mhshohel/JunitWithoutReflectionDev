@@ -13,28 +13,32 @@ public class SuperClassA {
 	// public SuperClassA aVal;
 	// protected E eval = null;
 	//
-	// public void have() {
-	// new E();
-	// }
-	//
-	// void aValEx() {
-	// System.err.println("I am From SuperClassA");
-	// f();
-	// }
-	//
-	// protected F f() {
-	// F f = new F();
-	// return f;
-	// }
+	public void have() {
+		new E();
+		this.aValEx();
+		this.exam();
+	}
+
+	void aValEx() {
+		System.err.println("I am From SuperClassA");
+		f();
+		lol();
+	}
+
+	protected F f() {
+		F f = new F();
+		return f;
+	}
+
 	//
 	// void add(A a) {
 	//
 	// }
 	//
-	// void exam() {
-	// }
-
-	public void aValEx() {
-		// System.err.println("I am from SuperClass");
+	void exam() {
 	}
+
+	// public void aValEx() {
+	// // System.err.println("I am from SuperClass");
+	// }
 }

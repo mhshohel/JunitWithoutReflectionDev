@@ -12,32 +12,60 @@ public class Example {
 	// return (i < 0) ? null : new D();
 	// }
 	public static void main(String[] args) {
-		callgraphstat.externalclasses.IInterface ol = new callgraphstat.externalclasses.J();
-		ol.foo();
-
-		// callgraphstat.externalclasses.B av = new
-		// callgraphstat.externalclasses.A();
-		// av.abc();
-		int bs = 11;
-		if (bs > 0) {
-			ol = new callgraphstat.externalclasses.I();
-			ol.foo();
-			// av = new callgraphstat.externalclasses.C();
+		int b = 0;
+		A dfdf = new A(new C());
+		SuperClassA kkk = null;
+		if (b != 0) {
+			SuperClassA sd = ((b < 0) ? new B() : new C());
+			if (b > 22) {
+				kkk = new A(sd);
+			}
 		}
 
-		IInterfacePart lo = new J();
-		lo.foofoos();
-		if (bs < 99) {
-			lo = null;
-		}
-		lo = null;
+		// callgraphstat.externalclasses.A.lol();
+		// SuperClassA.lol();
+		//
 
-		// av.abc();
-		SuperClassA b = new A();
-		if (bs > 1) {
-			b = new B();
-			b.aValEx();
-		}
+		// int j = 9;
+		// SuperClassA dddd = null;
+		// if (j < 3) {
+		// dddd = (j == 3) ? new A() : new B();
+		// }
+		// SuperClassA sdsd = dddd;
+
+		// A sdf = new A();
+		//
+		// B sdsd = sdf.b;
+		// SuperClassA kdl = new A();
+		// kdl.aValEx();
+
+		// callgraphstat.externalclasses.IInterface ol = new
+		// callgraphstat.externalclasses.J();
+		// ol.foo();
+		//
+		// // callgraphstat.externalclasses.B av = new
+		// // callgraphstat.externalclasses.A();
+		// // av.abc();
+		// int bs = 11;
+		// if (bs > 0) {
+		// ol = new callgraphstat.externalclasses.I();
+		// ol.foo();
+		// // av = new callgraphstat.externalclasses.C();
+		// }
+		//
+		// IInterfacePart lo = new J();
+		// lo.foofoos();
+		// if (bs < 99) {
+		// lo = null;
+		// }
+		// lo = null;
+		//
+		// // av.abc();
+		// SuperClassA b = new A();
+		// if (bs > 1) {
+		// b = new B();
+		// b.aValEx();
+		// }
 
 		//
 		// // SuperClassA s = A.b;

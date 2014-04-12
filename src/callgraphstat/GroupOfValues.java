@@ -59,11 +59,11 @@ public class GroupOfValues {
 	}
 
 	// add values that needs GroupValues close
-	public void forceAdd(Object value) {
-		open();
-		this.add(value);
-		close();
-	}
+	// public void forceAddz(Object value) {
+	// open();
+	// this.add(value);
+	// close();
+	// }
 
 	// Object fail to add normal way
 	public void addAtLast(Object object) {
