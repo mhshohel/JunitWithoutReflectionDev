@@ -1,4 +1,4 @@
-package callgraphstat.superclass;
+package callgraphstat.externalclasses;
 
 public interface IInterface {
 	public void foo();

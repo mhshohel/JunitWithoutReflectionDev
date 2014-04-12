@@ -17,6 +17,10 @@ public class A extends SuperClassA {
 	//
 	// }
 	//
+	public static void lol() {
+
+	}
+
 	public void aValEx() {
 		System.err.println("I am From A");
 		// b();

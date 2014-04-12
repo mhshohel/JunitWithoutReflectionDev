@@ -3,6 +3,10 @@ package callgraphstat.superclass;
 public class SuperClassA {
 	static SuperClassA b = null;
 
+	public static void lol() {
+
+	}
+
 	// static SuperClassA b = new C();
 	// public SuperClassA val;
 	// public F fval;

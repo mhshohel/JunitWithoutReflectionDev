@@ -12,18 +12,32 @@ public class Example {
 	// return (i < 0) ? null : new D();
 	// }
 	public static void main(String[] args) {
-		callgraphstat.externalclasses.B av = new callgraphstat.externalclasses.A();
-		av.abc();
+		callgraphstat.externalclasses.IInterface ol = new callgraphstat.externalclasses.J();
+		ol.foo();
+
+		// callgraphstat.externalclasses.B av = new
+		// callgraphstat.externalclasses.A();
+		// av.abc();
 		int bs = 11;
 		if (bs > 0) {
-			av = new callgraphstat.externalclasses.C();
+			ol = new callgraphstat.externalclasses.I();
+			ol.foo();
+			// av = new callgraphstat.externalclasses.C();
 		}
-		av.abc();
-		// SuperClassA b = new A();
-		// if (bs > 1) {
-		// b = new B();
-		// b.aValEx();
-		// }
+
+		IInterfacePart lo = new J();
+		lo.foofoos();
+		if (bs < 99) {
+			lo = null;
+		}
+		lo = null;
+
+		// av.abc();
+		SuperClassA b = new A();
+		if (bs > 1) {
+			b = new B();
+			b.aValEx();
+		}
 
 		//
 		// // SuperClassA s = A.b;

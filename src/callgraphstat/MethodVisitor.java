@@ -90,6 +90,7 @@ import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionConstants;
 import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.InvokeInstruction;
 import org.apache.bcel.generic.LALOAD;
 import org.apache.bcel.generic.LASTORE;
 import org.apache.bcel.generic.LDC;
@@ -1533,100 +1534,14 @@ public final class MethodVisitor extends EmptyVisitor implements
 		return values;
 	}
 
-	@Override
-	public void visitCHECKCAST(CHECKCAST obj) {
-		Static.err("CAST");
-		Static.out("\t\t" + obj.getName() + "   --->   "
-				+ obj.getType(constantPoolGen).getSignature());
-		Static.out("\t\t" + obj.getType(constantPoolGen));
-		Static.out("\t\t" + obj.getLoadClassType(constantPoolGen));
-		this.castType = null;// obj.getType(constantPoolGen).toString();
-	}
-
-	@Override
-	public void visitINVOKEINTERFACE(INVOKEINTERFACE i) {
-		// try {
-		// Type[] types = i.getArgumentTypes(constantPoolGen);
-		// String methodName = i.getMethodName(constantPoolGen);
-		// // TODO: decide as output requirement
-		// printObjectInvoke(types, i.getReferenceType(constantPoolGen),
-		// methodName, "I");
-		// List<Object> params = getParameters(types, methodName);
-		// ReferenceType referenceTpe = i.getReferenceType(constantPoolGen);
-		// // keep value from stack so that it can compare for Collection Type
-		// Object instance = this.temporalVariables.peek();
-		// Description description = getInvokedDescription(referenceTpe
-		// .toString());
-		// Static.out(referenceTpe.toString());
-		// MethodVisitor methodVisitor = null;
-		// Object returnType = null;
-		// if (description != null) {
-		// methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
-		// description, methodName, types, true);
-		// if (methodVisitor != null) {
-		// returnType = methodVisitor.start(this.node, params, false,
-		// this.exceptionClassList, false);
-		// }
-		// }
-		// createEdgeIfMethodNotFound(description, methodVisitor, this.node,
-		// referenceTpe.toString(), methodName, params, types);
-		// if (description == null
-		// && isCollectionsOrMap(referenceTpe.toString())) {// code for
-		// // collection
-		// // type
-		// // check for return type, if required, check void or other in
-		// // return
-		// Static.err(this.collectionMethodReturnType);
-		//
-		// if (instance instanceof CollectionObjectProvider) {
-		// addValuesForCollection((CollectionObjectProvider) instance,
-		// params);
-		// // if true then keep value at return else not
-		// if (Static
-		// .isPrimitiveTypeString(this.collectionMethodReturnType
-		// .getName())) {
-		// returnType = Static.PRIMITIVE;
-		// } else if (!this.collectionMethodReturnType.getName()
-		// .equalsIgnoreCase("void")) {
-		// returnType = null;
-		// } else {
-		// // keep values, if return has type means it should
-		// // return
-		// // values of current type, make a list of Values a new
-		// // class, if return type is Array type then make a list
-		// // of
-		// // array
-		// }
-		// Static.err(returnType);
-		// }
-		// }
-		// if (returnType != null
-		// && !returnType.toString().equalsIgnoreCase("void")) {
-		// this.temporalVariables.add(returnType);
-		// }
-		// Static.out("------------------------");
-		// } catch (Exception e) {
-		// Static.err("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
-		// }
-		// // Verify and remove remaining primitive data
-		// removePrimitiveData();
-	}
-
-	private void addValuesForCollection(CollectionObjectProvider instance,
-			List<Object> params) {
-		// instance.add(key, value);
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i) {
+	private void invokedVirtualAndInterface(String flag, InvokeInstruction i) {
+		// TODO: Remove flag at the end of everything
 		try {
 			Type[] types = i.getArgumentTypes(constantPoolGen);
 			String methodName = i.getMethodName(constantPoolGen);
 			// TODO: decide as output requirement
 			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
-					methodName, "O");
+					methodName, flag);
 			List<Object> params = getParameters(types, methodName);
 			ReferenceType referenceType = i.getReferenceType(constantPoolGen);
 			// check Exception class and then keep them
@@ -1684,6 +1599,163 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 		// Verify and remove remaining primitive data
 		removePrimitiveData();
+	}
+
+	@Override
+	public void visitCHECKCAST(CHECKCAST obj) {
+		Static.err("CAST");
+		Static.out("\t\t" + obj.getName() + "   --->   "
+				+ obj.getType(constantPoolGen).getSignature());
+		Static.out("\t\t" + obj.getType(constantPoolGen));
+		Static.out("\t\t" + obj.getLoadClassType(constantPoolGen));
+		this.castType = null;// obj.getType(constantPoolGen).toString();
+	}
+
+	@Override
+	public void visitINVOKEINTERFACE(INVOKEINTERFACE i) {
+		invokedVirtualAndInterface("I", i);
+		// try {
+		// Type[] types = i.getArgumentTypes(constantPoolGen);
+		// String methodName = i.getMethodName(constantPoolGen);
+		// // TODO: decide as output requirement
+		// printObjectInvoke(types, i.getReferenceType(constantPoolGen),
+		// methodName, "I");
+		// List<Object> params = getParameters(types, methodName);
+		// ReferenceType referenceType = i.getReferenceType(constantPoolGen);
+		// // check Exception class and then keep them
+		// if (Static.isSameType(referenceType.toString(),
+		// "java.lang.Exception")) {
+		// if (!referenceType.toString().equalsIgnoreCase(
+		// "java.lang.Object")) {
+		// this.exceptionClassList.add(referenceType.toString());
+		// }
+		// }
+		// List<Description> listDescriptions =
+		// getInvokedDescription(referenceType);
+		// if (listDescriptions != null && !listDescriptions.isEmpty()) {
+		// for (Description des : listDescriptions) {
+		// Description description = des;//
+		// getInvokedDescription(referenceType);
+		// Static.out(referenceType.toString());
+		// MethodVisitor methodVisitor = null;
+		// Object returnType = null;
+		// if (description != null) {
+		// methodVisitor = description
+		// .getMethodVisitorByNameAndTypeArgs(description,
+		// methodName, types, true);
+		// if (methodVisitor != null) {
+		// returnType = methodVisitor.start(this.node, params,
+		// false, this.exceptionClassList, false);
+		// }
+		// }
+		// // check Exception class and then print edges, print all
+		// if (Static.isSameType(referenceType.toString(),
+		// "java.lang.Exception")) {
+		// for (String ex : this.exceptionClassList) {
+		// createEdgeIfMethodNotFound(null, null, this.node,
+		// ex, methodName, params, types);
+		// }
+		// }
+		// if (returnType != null
+		// && !returnType.toString().equalsIgnoreCase("void")) {
+		// this.temporalVariables.add(returnType);
+		// }
+		// Static.out("------------------------");
+		// }
+		// } else {
+		// if (!Static.someValues.isEmpty()) {
+		// while (!Static.someValues.isEmpty()) {
+		// createEdgeIfMethodNotFound(null, null, this.node,
+		// Static.someValues.pop().toString(), methodName,
+		// params, types);
+		// }
+		// }
+		// }
+		// if (!Static.someValues.isEmpty()) {
+		// Static.someValues.clear();
+		// }
+		// } catch (Exception e) {
+		// Static.err("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
+		// }
+		// // Verify and remove remaining primitive data
+		// removePrimitiveData();
+	}
+
+	private void addValuesForCollection(CollectionObjectProvider instance,
+			List<Object> params) {
+		// instance.add(key, value);
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i) {
+		invokedVirtualAndInterface("O", i);
+		// try {
+		// Type[] types = i.getArgumentTypes(constantPoolGen);
+		// String methodName = i.getMethodName(constantPoolGen);
+		// // TODO: decide as output requirement
+		// printObjectInvoke(types, i.getReferenceType(constantPoolGen),
+		// methodName, "O");
+		// List<Object> params = getParameters(types, methodName);
+		// ReferenceType referenceType = i.getReferenceType(constantPoolGen);
+		// // check Exception class and then keep them
+		// if (Static.isSameType(referenceType.toString(),
+		// "java.lang.Exception")) {
+		// if (!referenceType.toString().equalsIgnoreCase(
+		// "java.lang.Object")) {
+		// this.exceptionClassList.add(referenceType.toString());
+		// }
+		// }
+		// List<Description> listDescriptions =
+		// getInvokedDescription(referenceType);
+		// if (listDescriptions != null && !listDescriptions.isEmpty()) {
+		// for (Description des : listDescriptions) {
+		// Description description = des;//
+		// getInvokedDescription(referenceType);
+		// Static.out(referenceType.toString());
+		// MethodVisitor methodVisitor = null;
+		// Object returnType = null;
+		// if (description != null) {
+		// methodVisitor = description
+		// .getMethodVisitorByNameAndTypeArgs(description,
+		// methodName, types, true);
+		// if (methodVisitor != null) {
+		// returnType = methodVisitor.start(this.node, params,
+		// false, this.exceptionClassList, false);
+		// }
+		// }
+		// // check Exception class and then print edges, print all
+		// if (Static.isSameType(referenceType.toString(),
+		// "java.lang.Exception")) {
+		// for (String ex : this.exceptionClassList) {
+		// createEdgeIfMethodNotFound(null, null, this.node,
+		// ex, methodName, params, types);
+		// }
+		// }
+		// if (returnType != null
+		// && !returnType.toString().equalsIgnoreCase("void")) {
+		// this.temporalVariables.add(returnType);
+		// }
+		// Static.out("------------------------");
+		// }
+		// } else {
+		// if (!Static.someValues.isEmpty()) {
+		// while (!Static.someValues.isEmpty()) {
+		// createEdgeIfMethodNotFound(null, null, this.node,
+		// Static.someValues.pop().toString(), methodName,
+		// params, types);
+		// }
+		// }
+		// }
+		// if (!Static.someValues.isEmpty()) {
+		// Static.someValues.clear();
+		// }
+		// } catch (Exception e) {
+		// Static.err("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
+		// }
+		// // Verify and remove remaining primitive data
+		// removePrimitiveData();
 	}
 
 	@Override
@@ -1770,6 +1842,43 @@ public final class MethodVisitor extends EmptyVisitor implements
 		removePrimitiveData();
 	}
 
+	@Override
+	public void visitINVOKESTATIC(INVOKESTATIC i) {
+		try {
+			Type[] types = i.getArgumentTypes(constantPoolGen);
+			String methodName = i.getMethodName(constantPoolGen);
+			// TODO: decide as output requirement
+			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
+					methodName, "S");
+			List<Object> params = getParameters(types, methodName);
+			ReferenceType referenceTpe = i.getReferenceType(constantPoolGen);
+			Description description = this.description
+					.getDescriptionByKey(referenceTpe.toString());
+			MethodVisitor methodVisitor = null;
+			Object returnType = null;
+			if (description != null) {
+				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
+						description, methodName, types, true);
+				if (methodVisitor != null) {
+					// do something for array type, try to capture all values
+					returnType = methodVisitor.start(this.node, params, false,
+							this.exceptionClassList, false);
+				}
+			}
+			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
+					referenceTpe.toString(), methodName, params, types);
+			if (returnType != null
+					&& !returnType.toString().equalsIgnoreCase("void")) {
+				this.temporalVariables.add(returnType);
+			}
+			Static.out("------------------------");
+		} catch (Exception e) {
+			Static.err("SOME ERROR FOUND: public void visitINVOKESTATIC(INVOKESTATIC i)");
+		}
+		// Verify and remove remaining primitive data
+		removePrimitiveData();
+	}
+
 	// private GroupOfValues getLastGroupFromParent(GroupOfValues gov) {
 	// if (gov.isOpen) {
 	// if (gov.getValues().isEmpty()) {
@@ -1810,43 +1919,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 		} else {
 			this.temporalVariables.add(object);
 		}
-	}
-
-	@Override
-	public void visitINVOKESTATIC(INVOKESTATIC i) {
-		try {
-			Type[] types = i.getArgumentTypes(constantPoolGen);
-			String methodName = i.getMethodName(constantPoolGen);
-			// TODO: decide as output requirement
-			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
-					methodName, "S");
-			List<Object> params = getParameters(types, methodName);
-			ReferenceType referenceTpe = i.getReferenceType(constantPoolGen);
-			Description description = this.description
-					.getDescriptionByKey(referenceTpe.toString());
-			MethodVisitor methodVisitor = null;
-			Object returnType = null;
-			if (description != null) {
-				methodVisitor = description.getMethodVisitorByNameAndTypeArgs(
-						description, methodName, types, true);
-				if (methodVisitor != null) {
-					// do something for array type, try to capture all values
-					returnType = methodVisitor.start(this.node, params, false,
-							this.exceptionClassList, false);
-				}
-			}
-			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
-					referenceTpe.toString(), methodName, params, types);
-			if (returnType != null
-					&& !returnType.toString().equalsIgnoreCase("void")) {
-				this.temporalVariables.add(returnType);
-			}
-			Static.out("------------------------");
-		} catch (Exception e) {
-			Static.err("SOME ERROR FOUND: public void visitINVOKESTATIC(INVOKESTATIC i)");
-		}
-		// Verify and remove remaining primitive data
-		removePrimitiveData();
 	}
 
 	private Object addValuesForCollection(List<Object> params) {
