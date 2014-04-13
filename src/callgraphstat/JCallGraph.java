@@ -38,14 +38,8 @@ public final class JCallGraph {
 			File file = new File(loc);
 			JCallGraph jCallGraph = new JCallGraph(file, "callgraphstat");
 			// JCallGraph jCallGraph = new JCallGraph(file, "observer");
-			// Map<String, Description> ssss =
-			// jCallGraph.getClassDescriptions();
-			// System.out.println(ssss.get(
-			// "callgraphstat.testclasses.JonasTestMain").getClassName());
 			Description des = jCallGraph.getClassDescriptions().get(mainClass);
-			// System.out.println(des.printNode());
 			// make single call means check edges first
-
 			// Get the Java runtime
 			Runtime runtime = Runtime.getRuntime();
 			// Run the garbage collector
@@ -61,18 +55,12 @@ public final class JCallGraph {
 			// Calculate the used memory
 			long memory = runtime.totalMemory() - runtime.freeMemory();
 
-			// des.getClassVisitor().print();
-			// Description d = des.copy();
-			// d.getClassVisitor().print();
-			// d.getClassVisitor().num = 100;
-			// des.getClassVisitor().print();
 			// print nodes
-
-			// System.out.println("NODES\n_____________________");
-			// java.util.List<String> nodes = Description.getNodes();
-			// for (String node : nodes) {
-			// System.out.println(node);
-			// }
+			System.out.println("NODES\n_____________________");
+			java.util.List<String> nodes = Static.getSortedNodes();
+			for (int i = 0; i < nodes.size(); i++) {
+				System.out.println((i + 1) + ".\t" + nodes.get(i) + "\n");
+			}
 			// print edges
 			System.out.println("EDGES\n_____________________");
 			java.util.List<String> edges = Static.getUnSortedEdges();
@@ -97,6 +85,16 @@ public final class JCallGraph {
 					.println("List of Classes or Methods that has no access, assume library classes\n");
 			for (int i = 0; i < noAccessLibedges.size(); i++) {
 				System.out.println((i + 1) + ".\t" + noAccessLibedges.get(i)
+						+ "\n");
+			}
+
+			System.out.println("\n\nNO ACCESSED CLASS\n_____________________");
+			java.util.List<String> noAccessClass = Static
+					.getSortdNoAccessLibraryClass();
+			System.out
+					.println("List of Classes that has no access, assume library classes\n");
+			for (int i = 0; i < noAccessClass.size(); i++) {
+				System.out.println((i + 1) + ".\t" + noAccessClass.get(i)
 						+ "\n");
 			}
 			System.out.println("\n\n\n\t\t\t\t\tElapsed Time: "

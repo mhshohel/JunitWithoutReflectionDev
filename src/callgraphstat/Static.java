@@ -43,6 +43,7 @@ public class Static {
 	public static List<String> edges = new ArrayList<String>();
 	public static List<String> libEdges = new ArrayList<String>();
 	public static List<String> noAccessedClassesOrMethod = new ArrayList<String>();
+	public static List<String> noAccessedClasses = new ArrayList<String>();
 	private static int id = 0;
 	// keep Description objects that once is initialized, to avoid duplicate
 	public static Map<String, Description> initializedDescriptions = new LinkedHashMap<String, Description>();
@@ -50,7 +51,12 @@ public class Static {
 	// values
 	public static Stack<Object> someValues = new Stack<Object>();
 
-	public final static List<String> getNodes() {
+	public final static List<String> getUnsortedNodes() {
+		return nodes;
+	}
+
+	public final static List<String> getSortedNodes() {
+		Collections.sort(nodes);
 		return nodes;
 	}
 
@@ -64,11 +70,15 @@ public class Static {
 		return false;
 	}
 
-	public final static boolean addLibraryEdge(String source, String target) {
+	public final static boolean addLibraryEdge(String source, String target,
+			String className) {
 		String libEdge = source.concat(" -- > ").concat(target).trim();
 		Static.out("\t\t\tLib Edge: " + libEdge);
 		if (!noAccessedClassesOrMethod.contains(target)) {
 			noAccessedClassesOrMethod.add(target);
+		}
+		if (!noAccessedClasses.contains(className)) {
+			noAccessedClasses.add(className);
 		}
 		if (libEdges.contains(libEdge)) {
 			return true;
@@ -206,55 +216,6 @@ public class Static {
 		return value;
 	}
 
-	// // get single value or group of values depending on required conditions
-	// public static Object getSingleValueOrGroupOfValues(Object currentValue,
-	// Object lastValue, int lineNumber) {
-	// // need a closed GroupOfValues so that it can keep values without
-	// // creating any problem for global stack
-	// GroupOfValues gov = new GroupOfValues();
-	// gov.setEndLineNumber(lineNumber);
-	// gov.close();
-	// // if (this.isConditons) {
-	// if (lastValue instanceof GroupOfValues) {
-	// for (Object object : ((GroupOfValues) lastValue).getValues()) {
-	// gov.forceAdd(object);
-	// }
-	// } else {
-	// if (lastValue != null) {
-	// gov.forceAdd(lastValue);
-	// }
-	// }
-	// // }
-	// if (currentValue instanceof List) {
-	// if (!((ArrayList<?>) currentValue).isEmpty()) {
-	// for (Object object : ((ArrayList<?>) currentValue)) {
-	// if (!(gov.getValues().contains(object))) {
-	// gov.forceAdd(object);
-	// }
-	// }
-	// }
-	// }
-	//
-	// // else {
-	// // gov.forceAdd(currentValue);
-	// // }
-	// // tempVariablesGroupValues will keep value till the end of method
-	// // Invocation
-	// // if (this.isConditons || (currentValue instanceof List)
-	// // || (lastValue instanceof GroupOfValues)) {
-	// // this.tempVariablesGroupValues.add(gov);
-	// // return gov;
-	// // } else {
-	// // gov = null;
-	// // return currentValue;
-	// // }
-	// if (gov.isEmpty()) {
-	// gov = null;
-	// return currentValue;
-	// }
-	// return gov;
-	// }
-
 	public final static List<String> getSortedEdges() {
 		Collections.sort(edges);
 		return edges;
@@ -280,6 +241,15 @@ public class Static {
 
 	public final static List<String> getUnSortdLibraryClassOrMethodNoAccess() {
 		return noAccessedClassesOrMethod;
+	}
+
+	public final static List<String> getSortdNoAccessLibraryClass() {
+		Collections.sort(noAccessedClasses);
+		return noAccessedClasses;
+	}
+
+	public final static List<String> getUnSortdNoAccessLibraryClass() {
+		return noAccessedClasses;
 	}
 
 	public static int getNewID() {

@@ -2026,7 +2026,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 					}
 				}
 				if (result) {
-					Static.addLibraryEdge(source, target);
+					Static.addLibraryEdge(source, target, referenceType);
 					return Static.addEdge(source, target);
 				} else {
 					return false;
