@@ -45,7 +45,7 @@ public class Static {
 	public static List<String> noAccessedClassesOrMethod = new ArrayList<String>();
 	private static int id = 0;
 	// keep Description objects that once is initialized, to avoid duplicate
-	public static Map<String, Description> initializedDescriotions = new LinkedHashMap<String, Description>();
+	public static Map<String, Description> initializedDescriptions = new LinkedHashMap<String, Description>();
 	// keep values that is not Description type, before us it please clear all
 	// values
 	public static Stack<Object> someValues = new Stack<Object>();

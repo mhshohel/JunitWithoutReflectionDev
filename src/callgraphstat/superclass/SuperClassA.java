@@ -3,6 +3,10 @@ package callgraphstat.superclass;
 public class SuperClassA {
 	static SuperClassA b = null;
 
+	public SuperClassA(E e) {
+
+	}
+
 	public static void lol() {
 
 	}
@@ -13,6 +17,11 @@ public class SuperClassA {
 	// public SuperClassA aVal;
 	// protected E eval = null;
 	//
+
+	protected B retB() {
+		return new B(null);
+	}
+
 	public void have() {
 		new E();
 		this.aValEx();

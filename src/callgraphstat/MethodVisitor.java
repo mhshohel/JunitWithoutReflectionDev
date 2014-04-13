@@ -40,6 +40,7 @@ import org.apache.bcel.generic.AASTORE;
 import org.apache.bcel.generic.ACONST_NULL;
 import org.apache.bcel.generic.ALOAD;
 import org.apache.bcel.generic.ANEWARRAY;
+import org.apache.bcel.generic.ARETURN;
 import org.apache.bcel.generic.ASTORE;
 import org.apache.bcel.generic.ArrayInstruction;
 import org.apache.bcel.generic.BALOAD;
@@ -52,11 +53,13 @@ import org.apache.bcel.generic.ConstantPushInstruction;
 import org.apache.bcel.generic.DALOAD;
 import org.apache.bcel.generic.DASTORE;
 import org.apache.bcel.generic.DLOAD;
+import org.apache.bcel.generic.DRETURN;
 import org.apache.bcel.generic.DSTORE;
 import org.apache.bcel.generic.EmptyVisitor;
 import org.apache.bcel.generic.FALOAD;
 import org.apache.bcel.generic.FASTORE;
 import org.apache.bcel.generic.FLOAD;
+import org.apache.bcel.generic.FRETURN;
 import org.apache.bcel.generic.FSTORE;
 import org.apache.bcel.generic.FieldInstruction;
 import org.apache.bcel.generic.GETFIELD;
@@ -85,6 +88,7 @@ import org.apache.bcel.generic.INVOKEINTERFACE;
 import org.apache.bcel.generic.INVOKESPECIAL;
 import org.apache.bcel.generic.INVOKESTATIC;
 import org.apache.bcel.generic.INVOKEVIRTUAL;
+import org.apache.bcel.generic.IRETURN;
 import org.apache.bcel.generic.ISTORE;
 import org.apache.bcel.generic.IfInstruction;
 import org.apache.bcel.generic.Instruction;
@@ -97,6 +101,7 @@ import org.apache.bcel.generic.LDC;
 import org.apache.bcel.generic.LDC2_W;
 import org.apache.bcel.generic.LDC_W;
 import org.apache.bcel.generic.LLOAD;
+import org.apache.bcel.generic.LRETURN;
 import org.apache.bcel.generic.LSTORE;
 import org.apache.bcel.generic.LoadInstruction;
 import org.apache.bcel.generic.LocalVariableGen;
@@ -146,6 +151,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 	private Stack<GroupOfValues> tempVariablesGroupValues = new Stack<GroupOfValues>();
 	private String source = null;
 	private Set<String> exceptions = null;
+	private boolean isConditons = false;
+	private int conditionLineNumber = -1;
+	private int currentLineNumber = -1;
+	private Stack<Object> returnValues = new Stack<Object>();
 
 	public MethodVisitor(Description description, ClassVisitor classVisitor,
 			Method method, MethodGen methodGen) {
@@ -229,10 +238,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 				&& !(i instanceof ConstantPushInstruction) && !(i instanceof ReturnInstruction));
 	}
 
-	private boolean isConditons = false;
-	private int conditionLineNumber = -1;
-	private int currentLineNumber = -1;
-
 	private void initializeStaticFields(Description description, String source,
 			Set<String> exceptions, boolean forGetStatic) {
 		// -------------------Initialize Static Values--------------------
@@ -288,34 +293,23 @@ public final class MethodVisitor extends EmptyVisitor implements
 		// store values into local variable from parameters, note: each
 		// variable
 		// name of parameters is a local variable
-		if (length > 0) {
-			int k = -1;
-			Stack<Object> object = null;
-			for (Entry<String, Stack<Object>> key : this.localVariables
-					.entrySet()) {
-				k++;
-				if (key.getKey().equalsIgnoreCase(Static.THIS)) {
-					k--;
-				} else {
-					if (k < length) {
-						object = new Stack<Object>();
-						object.add(params.get(k));
-						key.setValue(object);
-					} else {
-						key.setValue(new Stack<Object>());
-					}
-				}
-			}
-		}
+		addValuesToLocalVariableFromParameters(length, params);
 		// generate parameters for edges
 		String target = "";
 		String type = "(";
 		if (length != 0) {
 			String actualParam = "";
+			Object param = null;
 			for (int i = 0; i < length; i++) {
-				actualParam = (this.description.hasDescription(params.get(i)
-						.toString())) ? actualParam = params.get(i).toString()
-						: this.types[i].toString();
+				param = params.get(i);
+				if (param instanceof Collection<?>) {
+					if (((Collection<?>) param).size() == 1) {
+						param = ((List<?>) param).get(0);
+					}
+				}
+				actualParam = (this.description
+						.hasDescription(param.toString())) ? actualParam = param
+						.toString() : this.types[i].toString();
 				type += ((i + 1) == length) ? actualParam : actualParam + ",";
 			}
 			type += ")";
@@ -478,6 +472,17 @@ public final class MethodVisitor extends EmptyVisitor implements
 							}
 							this.isConditons = true;
 						}
+					} else if (i instanceof ReturnInstruction) {
+						Static.err("A RETURN TYPE");
+						if ((i instanceof DRETURN) || (i instanceof FRETURN)
+								|| (i instanceof IRETURN)
+								|| (i instanceof LRETURN)) {
+							// return or store PRIMITIVE
+							addReturnValues(true, returnType);
+						} else if (i instanceof ARETURN) {
+							// store values
+							addReturnValues(false, returnType);
+						}// RETURN is VOID
 					} else {
 						Static.err(lineMsg);
 						i.accept(this);
@@ -501,8 +506,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 			}
 			Static.err("\t\t-----END METHOD:\n\t\t\t" + source
 					+ "\n\t\t\t\t--->" + target + "\n");
-			// ------------------------------------------------------------------------------
-			// -----------FixException---------
+			// -----------------------FixException---------
 			for (String ex : this.exceptionClassList) {
 				exceptions.add(ex);
 			}
@@ -526,37 +530,58 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 		// -------------------Initialize ReturnValues--------------------
 		// TODO verify return type
-		Object value = null;
+		// Object value = null;
 
 		if (returnType.toString() != "void") {
-			value = (this.temporalVariables != null && !this.temporalVariables
-					.isEmpty()) ? this.temporalVariables.pop() : null;
+			// value = (this.temporalVariables != null &&
+			// !this.temporalVariables
+			// .isEmpty()) ? this.temporalVariables.pop() : null;
 			// TODO:Remove me
-			Static.out("RETURN TYPE: " + value);
-			if (value != null) {
-				// ArrayObjectProvider returnObject = null;
-				// if (value instanceof ArrayObjectProvider) {
-				// returnObject = (ArrayObjectProvider) value;
-				// if (returnObject.getType() == null) {
-				// returnObject.setType(returnType.toString());
-				// }
-				// if (returnType.toString().contains("[]")) {
-				// return returnObject;
-				// } else {
-				// Object object = getSingleDataFromArray(
-				// returnObject, returnType.toString(),
-				// this.castType);
-				// return (object != null) ? object : returnType;
-				// }
-				// } else {
-				return value;
-				// }
+			// Static.out("RETURN TYPE: " + value);
+			// if (value != null) {
+			// return value;
+			// // }
+			// }
+			if (this.returnValues.isEmpty()) {
+				addReturnValues(Static.getDescriptionCopy(this.description,
+						returnType));
 			}
+			return this.returnValues;
 		}
 		// return value will return only Description type values or Same type of
 		// Description or Type, whether it contains null, no matter
-		return Static.getDescriptionCopy(this.description, returnType);
+		return null;// Static.getDescriptionCopy(this.description, returnType);
 		// ----------------------------------------------------------
+	}
+
+	// add values from params to local variable of Method
+	private void addValuesToLocalVariableFromParameters(int length,
+			List<Object> params) {
+		if (length > 0) {
+			int k = -1;
+			Stack<Object> object = null;
+			for (Entry<String, Stack<Object>> key : this.localVariables
+					.entrySet()) {
+				k++;
+				if (key.getKey().equalsIgnoreCase(Static.THIS)) {
+					k--;
+				} else {
+					if (k < length) {
+						object = new Stack<Object>();
+						if (params.get(k) instanceof Collection<?>) {
+							for (Object obj : (Collection<?>) params.get(k)) {
+								object.add(obj);
+							}
+						} else {
+							object.add(params.get(k));
+						}
+						key.setValue(object);
+					} else {
+						key.setValue(new Stack<Object>());
+					}
+				}
+			}
+		}
 	}
 
 	// remove value(s) that contains by if, if can one value or twos depending
@@ -716,6 +741,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 		Stack<Object> objects = getLocalVariablesByVarialbleName(variableName);
 		if (objects != null && !objects.isEmpty()) {
 			// return objects.peek();
+			if (variableName.equalsIgnoreCase("this")) {
+				return objects.peek();
+			}
 			return objects;
 		}
 		return null;
@@ -886,6 +914,31 @@ public final class MethodVisitor extends EmptyVisitor implements
 			this.castType = null;
 			Static.out("STACK: " + this.temporalVariables);
 		} catch (Exception e) {
+		}
+	}
+
+	private void addReturnValues(boolean isPrimitive, Type returnType) {
+		// TODO Auto-generated method stub
+		// must remove last value of group or other
+		// not save as group or collection
+		Object value = getValue(returnType);
+		if (isPrimitive) {
+			addReturnValues(Static.PRIMITIVE);
+		} else {
+			Static.err("Return Value for Referance Type");
+			if (value instanceof Collection<?>) {
+				for (Object object : (Collection<?>) value) {
+					addReturnValues(object);
+				}
+			} else {
+				addReturnValues(value);
+			}
+		}
+	}
+
+	private void addReturnValues(Object value) {
+		if (!this.returnValues.contains(value)) {
+			this.returnValues.add(value);
 		}
 	}
 
@@ -1150,7 +1203,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 				}
 			}
 		}
-		System.err.println(name);
+		Static.err(name);
 		LocalVariableGen localVariableGen = null;
 		for (LocalVariableGen lvg : this.localVariableGens) {
 			if (lvg.getName().equalsIgnoreCase(name)) {
@@ -1667,33 +1720,55 @@ public final class MethodVisitor extends EmptyVisitor implements
 			}
 			List<Description> listDescriptions = getInvokedDescription(referenceType);
 			if (listDescriptions != null && !listDescriptions.isEmpty()) {
+				Stack<Object> allReturnValues = new Stack<Object>();
+				Object returnType = null;
 				for (Description des : listDescriptions) {
-					Description description = des;// getInvokedDescription(referenceType);
-					Static.out(referenceType.toString());
-					MethodVisitor methodVisitor = null;
-					Object returnType = null;
-					if (description != null) {
-						methodVisitor = description
-								.getMethodVisitorByNameAndTypeArgs(description,
-										methodName, types, true);
-						if (methodVisitor != null) {
-							returnType = methodVisitor.start(this.node, params,
-									false, this.exceptionClassList, false);
+					if (!des.toString().equalsIgnoreCase(Static.NULL)) {
+						Description description = des;// getInvokedDescription(referenceType);
+						Static.out(referenceType.toString());
+						MethodVisitor methodVisitor = null;
+						if (description != null) {
+							methodVisitor = description
+									.getMethodVisitorByNameAndTypeArgs(
+											description, methodName, types,
+											true);
+							if (methodVisitor != null) {
+								returnType = methodVisitor.start(this.node,
+										params, false, this.exceptionClassList,
+										false);
+							}
 						}
-					}
-					// check Exception class and then print edges, print all
-					if (Static.isSameType(referenceType.toString(),
-							"java.lang.Exception")) {
-						for (String ex : this.exceptionClassList) {
-							createEdgeIfMethodNotFound(null, null, this.node,
-									ex, methodName, params, types);
+						// check Exception class and then print edges, print all
+						if (Static.isSameType(referenceType.toString(),
+								"java.lang.Exception")) {
+							for (String ex : this.exceptionClassList) {
+								createEdgeIfMethodNotFound(null, null,
+										this.node, ex, methodName, params,
+										types);
+							}
 						}
+						if (returnType != null
+								&& !returnType.toString().equalsIgnoreCase(
+										"void")) {
+							// this.temporalVariables.add(returnType);
+							if (returnType instanceof Collection<?>) {
+								for (Object obj : (Collection<?>) returnType) {
+									if (!allReturnValues.contains(obj)) {
+										allReturnValues.add(obj);
+									}
+								}
+							} else {
+								if (!allReturnValues.contains(returnType)) {
+									allReturnValues.add(returnType);
+								}
+							}
+						}
+						Static.out("------------------------");
 					}
 					if (returnType != null
 							&& !returnType.toString().equalsIgnoreCase("void")) {
-						this.temporalVariables.add(returnType);
+						addToTemporalVariable(allReturnValues);
 					}
-					Static.out("------------------------");
 				}
 			} else {
 				if (!Static.someValues.isEmpty()) {
@@ -1758,15 +1833,16 @@ public final class MethodVisitor extends EmptyVisitor implements
 			if (description != null) {
 				String initKey = description.getClassName() + "." + methodName
 						+ "(" + params + ")";
+				// already initialized Descriotions
 				boolean alreadyHas = false;
 				Description copiedDescription = null;
 				if (methodName.equalsIgnoreCase("<init>")) {
 					if (params.isEmpty()) {
-						alreadyHas = Static.initializedDescriotions
+						alreadyHas = Static.initializedDescriptions
 								.containsKey(initKey);
 					}
 					if (alreadyHas) {
-						copiedDescription = Static.initializedDescriotions.get(
+						copiedDescription = Static.initializedDescriptions.get(
 								initKey).copyAll();
 					} else {
 						copiedDescription = description.copy();
@@ -1794,7 +1870,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 					methodVisitor.start(this.node, params, this.isStaticCall,
 							this.exceptionClassList, alreadyHas);
 					if (!alreadyHas && params.isEmpty()) {
-						Static.initializedDescriotions.put(initKey,
+						Static.initializedDescriptions.put(initKey,
 								copiedDescription);
 					}
 				}
@@ -1845,7 +1921,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 					referenceType.toString(), methodName, params, types);
 			if (returnType != null
 					&& !returnType.toString().equalsIgnoreCase("void")) {
-				this.temporalVariables.add(returnType);
+				addToTemporalVariable(returnType);
 			}
 			Static.out("------------------------");
 		} catch (Exception e) {

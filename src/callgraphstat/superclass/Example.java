@@ -1,26 +1,76 @@
 package callgraphstat.superclass;
 
+import java.io.IOException;
+
 public class Example {
-	// SuperClassA whatMethod() {
-	// int i = 0;
-	// if (i == 0) {
-	// return new A();
-	// } else if (i > 0) {
-	// return new B();
-	// }
-	//
-	// return (i < 0) ? null : new D();
-	// }
-	public static void main(String[] args) {
-		int b = 0;
-		A dfdf = new A(new C());
-		SuperClassA kkk = null;
-		if (b != 0) {
-			SuperClassA sd = ((b < 0) ? new B() : new C());
-			if (b > 22) {
-				kkk = new A(sd);
-			}
+	static A getA() {
+		return new A();
+	}
+
+	static SuperClassA whatMethod() {
+		int i = 0;
+		if (i == 0) {
+			return new A();
+		} else if (i > 0) {
+			return new B(null);
 		}
+		// getA()
+		return (i < 0) ? getA() : new D(null);
+	}
+
+	static int addition() {
+		int i = 0;
+		int k = 5;
+		return i + 6 - k;
+	}
+
+	public static void main(String[] args) {
+		E ev = new E();
+		B bv = new B(ev);
+		try {
+			A av = new A().getAVal(bv);
+		} catch (IOException ee) {
+			// TODO Auto-generated catch block
+			ee.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// int i = 99;
+		// SuperClassA val = null;
+		//
+		// if (i < 0) {
+		// val = new A();
+		// } else if (i > 99) {
+		// val = new A().getB();
+		// } else {
+		// val = C.getC();
+		// }
+		//
+		// val.aValEx();
+
+		// SuperClassA someValues = whatMethod();
+		// int hhh = addition();
+
+		// int b = 0;
+		// int c = 9;
+		// String dd = "sd";
+		// A a = new A();
+		// try {
+		// A dfdf = new A("sds", new D(), (b > 0) ? new C() : new D(), null,
+		// (b == 0 && c > 9 || dd != null) ? new A()
+		// : (b > 4) ? new B() : (b < 4) ? new C() : null);
+		// } catch (Exception e) {
+		// System.err.println(e.getMessage());
+		// }
+		// SuperClassA kkk = null;
+		// if (b != 0) {
+		// SuperClassA sd = ((b < 0) ? new B() : new C());
+		// if (b > 22) {
+		// kkk = new A(sd);
+		// }
+		// }
 
 		// callgraphstat.externalclasses.A.lol();
 		// SuperClassA.lol();
