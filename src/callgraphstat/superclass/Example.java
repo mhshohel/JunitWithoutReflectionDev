@@ -1,8 +1,5 @@
 package callgraphstat.superclass;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Example {
 	// static A getA() {
 	// return new A();
@@ -26,9 +23,62 @@ public class Example {
 	// }
 
 	public static void main(String[] args) {
+		int[] ii = new int[4];
+		ii[0] = 9;
+		A[] array = new A[10];
+		array[0] = new A();
+
+		// Map<String, SuperClassA> maps = new HashMap<String, SuperClassA>();
+		// maps.put("A", new A());
+
+		// Stack<SuperClassA> stack = new Stack<SuperClassA>();
+		// stack.push(new B(null));
+		// stack.push(new C(null));
+		// stack.push(new D(null));
+		//
+		// Stack<SuperClassA> stackA = new Stack<SuperClassA>();
+		// //
+		// // stack.add(null);
+		// for (int i = 0; i < stack.size(); i++) {
+		// stackA.push(new A());
+		// stackA.peek().exam();
+		// }
+		//
+		// Object oo = stack.pop();
+		// Object ooo = stack.peek();
+
+		// B.add(new C(new E()));
+		// List<SuperClassA> list = B.getList();
+
+		// int i = 9;
 		// A aval = new A();
 		// B bval = new B(null);
-		List<E> values = new ArrayList<E>();
+		// List<SuperClassA> values = new ArrayList<SuperClassA>();
+		// boolean re = values.add((i == 9) ? aval : bval);
+		// values.add(bval);
+		// values.add(bval);
+		// values.add(bval);
+		//
+		// if (i == 0) {
+		// values.add(bval);
+		// } else {
+		// values.add(new C(null));
+		// }
+		// values.add(new B(new E()));
+		// values.add(new C(new E()));
+		// values.add(new D(null));
+		// SuperClassA eval = values.get(0);
+		// I ii = values.get(0).testMethod();
+		//
+		// List<SuperClassA> oo = new ArrayList<SuperClassA>();
+		// oo.add(new A());
+		// I ip = oo.get(0).testMethod();
+
+		// eval.testMethod();
+		// List<E> evalList = new ArrayList<E>();
+		// evalList.add(new E());
+
+		// E ev = values.get(0);
 		// values.add(aval);
 		// values.add(bval);
 		// values.add(new C(new E()));

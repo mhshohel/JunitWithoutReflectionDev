@@ -20,6 +20,7 @@
 package callgraphstat;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -129,6 +130,31 @@ public class Static {
 		case "java.lang.Class":
 			return true;
 		default:
+			return false;
+		}
+	}
+
+	public static boolean isCollectionsOrMap(String classWithPackage) {
+		try {
+			if (Static.isPrimitiveTypeString(classWithPackage)) {
+				return false;
+			} else if (classWithPackage != "") {
+				Class<?> cls = Class.forName(classWithPackage);
+				if (Collection.class.isAssignableFrom(cls)
+						|| Map.class.isAssignableFrom(cls)) {
+					// TODO Remove me
+					Static.out("\t\t\t\tCollections or Map type: TRUE");
+					return true;
+				} else {
+					// TODO Remove me
+					Static.out("\t\t\t\tCollections or Map type: FALSE");
+					return false;
+				}
+			} else {
+				return false;
+			}
+		} catch (Exception e) {
+			Static.err("ERROR: isCollectionsOrMap");
 			return false;
 		}
 	}

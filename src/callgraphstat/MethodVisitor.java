@@ -662,9 +662,14 @@ public final class MethodVisitor extends EmptyVisitor implements
 				if (currentValue instanceof Collection) {
 					for (Object stackValues : (Collection<?>) currentValue) {
 						if (!(stackValues instanceof GroupOfValues)) {
-							Object thisValue = Static
-									.verifyTypeFromObjectsToStore(stackValues,
-											type, description);
+							Object thisValue = null;
+							if (!Static.isCollectionsOrMap(type.toString())) {
+								thisValue = Static
+										.verifyTypeFromObjectsToStore(
+												stackValues, type, description);
+							} else {
+								thisValue = stackValues;
+							}
 							if (!(values.contains(thisValue))) {
 								values.add(thisValue);
 							}
@@ -763,25 +768,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 		return null;
 	}
 
-	private boolean isCollectionsOrMap(String classWithPackage) {
-		try {
-			Class<?> cls = Class.forName(classWithPackage);
-			if (Collection.class.isAssignableFrom(cls)
-					|| Map.class.isAssignableFrom(cls)) {
-				// TODO Remove me
-				Static.out("\t\t\t\tCollections or Map type: TRUE");
-				return true;
-			} else {
-				// TODO Remove me
-				Static.out("\t\t\t\tCollections or Map type: FALSE");
-				return false;
-			}
-		} catch (Exception e) {
-			Static.err("ERROR: isCollectionsOrMap");
-			return false;
-		}
-	}
-
 	// // keep current loaded target classes
 	// private Stack<Object> tempLoadVals = new Stack<Object>();
 	// // keep the stack size when tempLoadVals takes target value
@@ -790,7 +776,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 	private void storeValues(String flag, String variableName, Type type,
 			ReferenceType referenceType) {
 		try {
-			Object value = getValue(type);
+			Object value = getValue(type, true);
 			// to store pass stack or group value that will converted to stack
 			// only, no gov directly
 			// Object value = null;
@@ -938,7 +924,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 			// TODO Auto-generated method stub
 			// must remove last value of group or other
 			// not save as group or collection
-			Object value = getValue(returnType);
+			Object value = getValue(returnType, true);
 			if (isPrimitive) {
 				addReturnValues(Static.PRIMITIVE);
 			} else {
@@ -962,7 +948,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
-	private Object getValue(Type type) {
+	private Object getValue(Type type, boolean shouldPOP) {
 		// to store pass stack or group value that will converted to stack
 		// only, no gov directly
 		Object value = null;
@@ -971,7 +957,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 		if (type.toString().contains("[]")) {
 			isArrayType = true;
 		} else {
-			isCollectionType = isCollectionsOrMap(type.toString());
+			isCollectionType = Static.isCollectionsOrMap(type.toString());
 		}
 		GroupOfValues gov = null;
 		boolean isOpenGroupFound = false;
@@ -984,7 +970,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 					isOpenGroupFound = true;
 					// not close get last group and marge
 					if (!this.tempGroupValues.isEmpty()) {
-						value = this.tempGroupValues.peek().pop();
+						if (shouldPOP) {
+							value = this.tempGroupValues.peek().pop();
+						} else {
+							value = this.tempGroupValues.peek().peek();
+						}
 						if (Static.isPrimitiveType(type)) {
 							value = Static.PRIMITIVE;
 						} else {
@@ -993,17 +983,19 @@ public final class MethodVisitor extends EmptyVisitor implements
 								value = ((GroupOfValues) value).getAllValues(
 										type, this.description);
 							} else if (value instanceof Collection) {
-								Stack<Object> allValues = new Stack<Object>();
-								for (Object stackValues : (Collection<?>) value) {
-									Object thisValue = Static
-											.verifyTypeFromObjectsToStore(
-													stackValues, type,
-													description);
-									if (!(allValues.contains(thisValue))) {
-										allValues.add(thisValue);
+								if (!isCollectionType) {
+									Stack<Object> allValues = new Stack<Object>();
+									for (Object stackValues : (Collection<?>) value) {
+										Object thisValue = Static
+												.verifyTypeFromObjectsToStore(
+														stackValues, type,
+														description);
+										if (!(allValues.contains(thisValue))) {
+											allValues.add(thisValue);
+										}
 									}
+									value = allValues;
 								}
-								value = allValues;
 							}
 						}
 					} else {
@@ -1017,10 +1009,14 @@ public final class MethodVisitor extends EmptyVisitor implements
 					} else {
 						value = gov.getAllValues(type, this.description);
 					}
-					this.temporalVariables.pop();
+					if (shouldPOP) {
+						this.temporalVariables.pop();
+					}
 				}
 			} else {
-				this.temporalVariables.pop();
+				if (shouldPOP) {
+					this.temporalVariables.pop();
+				}
 			}
 
 			// List<Object> values = new ArrayList<Object>();
@@ -1041,7 +1037,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 			}
 		} catch (Exception e) {
 			value = Static.getDescriptionCopy(this.description, type);
-			Static.err("ERROR: getValue");
+			if (Static.isPrimitiveTypeString(value.toString())) {
+				value = Static.PRIMITIVE;
+			}
+			Static.err("SOLVED: getValue; for any exception its solved inside the exception");
 		}
 		return value;
 	}
@@ -1148,7 +1147,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 						value = this.description.getValueFromStaticField(
 								description, variableName, referenceType);
 					} else {
-						value = Static.NULL;
+						value = type;// Static.NULL;
 					}
 					break;
 				}
@@ -1497,7 +1496,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 				for (int j = 0; j < length; j++) {
 					c--;
 					Type type = types[c];
-					Object value = getValue(type);
+					Object value = getValue(type, true);
 					// try {
 					// GroupOfValues gov = null;
 					// value = (this.temporalVariables != null &&
@@ -1748,9 +1747,11 @@ public final class MethodVisitor extends EmptyVisitor implements
 		return values;
 	}
 
+	@SuppressWarnings("unchecked")
 	private void invokedVirtualAndInterface(String flag, InvokeInstruction i) {
 		// TODO: Remove flag at the end of everything
 		try {
+			boolean isCollectionType = false;
 			Type[] types = i.getArgumentTypes(constantPoolGen);
 			String methodName = i.getMethodName(constantPoolGen);
 			// TODO: decide as output requirement
@@ -1758,6 +1759,32 @@ public final class MethodVisitor extends EmptyVisitor implements
 					methodName, flag);
 			List<Object> params = getParameters(types, methodName);
 			ReferenceType referenceType = i.getReferenceType(constantPoolGen);
+			// -------------For Collection or Map ----------------------
+			isCollectionType = Static.isCollectionsOrMap(referenceType
+					.toString());
+			Stack<Object> cols = null;
+			if (isCollectionType) {
+				Object obj = getValue(referenceType, false);
+				if (obj instanceof Collection) {
+					cols = (Stack<Object>) obj;
+					for (Object para : params) {
+						if (!cols.contains(para)) {
+							if (para instanceof Collection<?>) {
+								for (Object par : (Collection<?>) para) {
+									if (!cols.contains(par)) {
+										cols.add(par);
+									}
+								}
+							} else {
+								if (!cols.contains(para)) {
+									cols.add(para);
+								}
+							}
+						}
+					}
+				}
+			}
+			// -------------------------------------------------
 			// check Exception class and then keep them
 			if (Static.isSameType(referenceType.toString(),
 					"java.lang.Exception")) {
@@ -1792,7 +1819,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 							for (String ex : this.exceptionClassList) {
 								createEdgeIfMethodNotFound(null, null,
 										this.node, ex, methodName, params,
-										types);
+										types, false, null);
 							}
 						}
 						if (returnType != null
@@ -1823,7 +1850,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 					while (!Static.someValues.isEmpty()) {
 						createEdgeIfMethodNotFound(null, null, this.node,
 								Static.someValues.pop().toString(), methodName,
-								params, types);
+								params, types, isCollectionType, cols);
 					}
 				}
 			}
@@ -1945,7 +1972,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 				// }
 			}
 			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
-					referenceTpe.toString(), methodName, params, types);
+					referenceTpe.toString(), methodName, params, types, false,
+					null);
 			Static.out("------------------------");
 		} catch (Exception e) {
 			Static.err("SOME ERROR FOUND: public void visitINVOKESPECIAL(INVOKESPECIAL i) ");
@@ -1978,7 +2006,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 				}
 			}
 			createEdgeIfMethodNotFound(description, methodVisitor, this.node,
-					referenceType.toString(), methodName, params, types);
+					referenceType.toString(), methodName, params, types, false,
+					null);
 			if (returnType != null
 					&& !returnType.toString().equalsIgnoreCase("void")) {
 				addToTemporalVariable(returnType);
@@ -2025,8 +2054,9 @@ public final class MethodVisitor extends EmptyVisitor implements
 	// generate edges which has no description or method visitor recorded
 	private boolean createEdgeIfMethodNotFound(Description description,
 			MethodVisitor methodVisitor, String source, String referenceType,
-			String methodName, List<Object> params, Type[] types) {
-		collectionMethodReturnType = null;
+			String methodName, List<Object> params, Type[] types,
+			boolean isCollectionType, Object collectionVariableObject) {
+		this.collectionMethodReturnType = null;
 		boolean hasDescription = this.description.hasDescription(referenceType
 				.toString());
 		if (description == null) {
@@ -2099,6 +2129,23 @@ public final class MethodVisitor extends EmptyVisitor implements
 						}
 					} catch (ClassNotFoundException e) {
 						Static.err("ERROR in createEdgeIfMethodNotFound ");
+					}
+				}
+				// TODO:verify for unknown classes
+				if (this.collectionMethodReturnType != null
+						&& !(this.collectionMethodReturnType.toString()
+								.equalsIgnoreCase("void"))) {
+					if (Static
+							.isPrimitiveTypeString(this.collectionMethodReturnType
+									.toString())) {
+						addToTemporalVariable(Static.PRIMITIVE);
+					} else {
+						if (isCollectionType
+								&& collectionVariableObject != null) {
+							addToTemporalVariable(collectionVariableObject);
+						} else {
+							addToTemporalVariable(this.collectionMethodReturnType);
+						}
 					}
 				}
 				if (result) {

@@ -86,6 +86,7 @@ public class GroupOfValues {
 	private Stack<Object> allValues = new Stack<Object>();
 
 	public Stack<Object> getAllValues(Type type, Description description) {
+		// change here for collection
 		this.allValues = new Stack<Object>();
 		if (Static.isPrimitiveType(type)) {
 			this.allValues.add(Static.PRIMITIVE);
@@ -105,9 +106,14 @@ public class GroupOfValues {
 				for (Object stackValues : (Collection<?>) object) {
 					if (!(stackValues.toString()
 							.equalsIgnoreCase(Static.PRIMITIVE))) {
-						Object thisValue = Static
-								.verifyTypeFromObjectsToStoreFromGOV(
-										stackValues, type, description);
+						Object thisValue = null;
+						if (!Static.isCollectionsOrMap(type.toString())) {
+							thisValue = Static
+									.verifyTypeFromObjectsToStoreFromGOV(
+											stackValues, type, description);
+						} else {
+							thisValue = stackValues;
+						}
 						if (!(allValues.contains(thisValue))) {
 							allValues.add(thisValue);
 						}
@@ -115,8 +121,10 @@ public class GroupOfValues {
 				}
 			} else if (!this.allValues.contains(object)) {
 				if (!object.toString().equalsIgnoreCase(Static.PRIMITIVE)) {
-					object = Static.verifyTypeFromObjectsToStoreFromGOV(object,
-							type, description);
+					if (!Static.isCollectionsOrMap(type.toString())) {
+						object = Static.verifyTypeFromObjectsToStoreFromGOV(
+								object, type, description);
+					}
 					if (object != null && !this.allValues.contains(object)) {
 						this.allValues.add(object);
 					}

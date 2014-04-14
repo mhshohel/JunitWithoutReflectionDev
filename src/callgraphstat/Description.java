@@ -260,9 +260,15 @@ public final class Description implements Comparable<Description> {
 					if (currentValue instanceof Collection) {
 						for (Object stackValues : (Collection<?>) currentValue) {
 							if (!(stackValues instanceof GroupOfValues)) {
-								Object thisValue = Static
-										.verifyTypeFromObjectsToStore(
-												stackValues, type, description);
+								Object thisValue = null;
+								if (!Static.isCollectionsOrMap(type.toString())) {
+									thisValue = Static
+											.verifyTypeFromObjectsToStore(
+													stackValues, type,
+													description);
+								} else {
+									thisValue = stackValues;
+								}
 								if (!(field.contains(thisValue))) {
 									field.add(thisValue);
 								}

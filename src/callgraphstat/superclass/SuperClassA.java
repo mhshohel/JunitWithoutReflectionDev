@@ -11,6 +11,10 @@ public class SuperClassA {
 
 	}
 
+	protected I testMethod() {
+		return null;
+	}
+
 	// static SuperClassA b = new C();
 	// public SuperClassA val;
 	// public F fval;

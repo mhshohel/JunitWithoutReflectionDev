@@ -21,6 +21,11 @@ public class A extends SuperClassA {
 	// }
 	//
 
+	protected I testMethod() {
+		System.out.println("HI");
+		return new I();
+	}
+
 	public A getAVal(B b) throws Exception, IOException {
 		return getBVal(b);
 	}

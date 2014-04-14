@@ -1,9 +1,29 @@
 package callgraphstat.superclass;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class B extends SuperClassA {
+	private E evv = null;
+
 	public B(E e) {
 		super(e);
+		this.evv = e;
 		// TODO Auto-generated constructor stub
+	}
+
+	public static List<SuperClassA> someList = new ArrayList<SuperClassA>();
+
+	public static void add(SuperClassA value) {
+		if (value != null)
+			if (!someList.contains(value))
+				someList.add(value);
+	}
+
+	public static List<SuperClassA> getList() {
+		someList.add(new A());
+		someList.add(new B(null));
+		return someList;
 	}
 
 	static E e = new E();
