@@ -1,41 +1,54 @@
 package callgraphstat.superclass;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Example {
-	static A getA() {
-		return new A();
-	}
-
-	static SuperClassA whatMethod() {
-		int i = 0;
-		if (i == 0) {
-			return new A();
-		} else if (i > 0) {
-			return new B(null);
-		}
-		// getA()
-		return (i < 0) ? getA() : new D(null);
-	}
-
-	static int addition() {
-		int i = 0;
-		int k = 5;
-		return i + 6 - k;
-	}
+	// static A getA() {
+	// return new A();
+	// }
+	//
+	// static SuperClassA whatMethod() {
+	// int i = 0;
+	// if (i == 0) {
+	// return new A();
+	// } else if (i > 0) {
+	// return new B(null);
+	// }
+	// // getA()
+	// return (i < 0) ? getA() : new D(null);
+	// }
+	//
+	// static int addition() {
+	// int i = 0;
+	// int k = 5;
+	// return i + 6 - k;
+	// }
 
 	public static void main(String[] args) {
-		E ev = new E();
-		B bv = new B(ev);
-		try {
-			A av = new A().getAVal(bv);
-		} catch (IOException ee) {
-			// TODO Auto-generated catch block
-			ee.printStackTrace();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		// A aval = new A();
+		// B bval = new B(null);
+		List<E> values = new ArrayList<E>();
+		// values.add(aval);
+		// values.add(bval);
+		// values.add(new C(new E()));
+		// // values.add(2);
+		// // values.add(4);
+		//
+		// SuperClassA vv = values.get(0);
+		// values.get(0).aValEx();
+
+		// E ev = new E();
+		// B bv = new B(ev);
+		// try {
+		// A av = new A().getAVal(bv);
+		// } catch (IOException ee) {
+		// // TODO Auto-generated catch block
+		// ee.printStackTrace();
+		// } catch (Exception e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 
 		// int i = 99;
 		// SuperClassA val = null;

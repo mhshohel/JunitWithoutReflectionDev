@@ -55,12 +55,12 @@ public final class JCallGraph {
 			// Calculate the used memory
 			long memory = runtime.totalMemory() - runtime.freeMemory();
 
-			// print nodes
-			System.out.println("NODES\n_____________________");
-			java.util.List<String> nodes = Static.getSortedNodes();
-			for (int i = 0; i < nodes.size(); i++) {
-				System.out.println((i + 1) + ".\t" + nodes.get(i) + "\n");
-			}
+			// // print nodes
+			// System.out.println("NODES\n_____________________");
+			// java.util.List<String> nodes = Static.getSortedNodes();
+			// for (int i = 0; i < nodes.size(); i++) {
+			// System.out.println((i + 1) + ".\t" + nodes.get(i) + "\n");
+			// }
 			// print edges
 			System.out.println("EDGES\n_____________________");
 			java.util.List<String> edges = Static.getUnSortedEdges();
