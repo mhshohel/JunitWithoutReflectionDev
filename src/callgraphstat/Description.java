@@ -269,14 +269,16 @@ public final class Description implements Comparable<Description> {
 								} else {
 									thisValue = stackValues;
 								}
-								if (!(field.contains(thisValue))) {
+								if (!Static.containsElementInCollection(field,
+										thisValue)) {
 									field.add(thisValue);
 								}
 							} else {
 								GroupOfValues gv = (GroupOfValues) stackValues;
 								for (Object gvv : gv.getAllValues(type,
 										description)) {
-									if (!(field.contains(gvv))) {
+									if (!Static.containsElementInCollection(
+											field, gvv)) {
 										field.add(gvv);
 									}
 								}
@@ -284,14 +286,16 @@ public final class Description implements Comparable<Description> {
 						}
 					} else {
 						if (!(currentValue instanceof GroupOfValues)) {
-							if (!(field.contains(currentValue))) {
+							if (!Static.containsElementInCollection(field,
+									currentValue)) {
 								field.add(currentValue);
 							}
 						} else {
 							GroupOfValues gov = (GroupOfValues) currentValue;
 							for (Object govObject : gov.getAllValues(type,
 									description)) {
-								if (!(field.contains(govObject))) {
+								if (!Static.containsElementInCollection(field,
+										govObject)) {
 									field.add(govObject);
 								}
 							}

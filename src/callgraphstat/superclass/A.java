@@ -2,7 +2,7 @@ package callgraphstat.superclass;
 
 import java.io.IOException;
 
-public class A extends SuperClassA {
+public class A extends SuperClassA implements IInterface {
 	// static SuperClassA b = null;
 	public B b = null;
 
@@ -70,8 +70,26 @@ public class A extends SuperClassA {
 		return null;
 	}
 
+	SuperClassA alk = null;
+
 	public A() {
 		super(new E());
+	}
+
+	public void set() {
+		int i = 0;
+		if (i == 0) {
+			alk = new A();
+		} else {
+			alk = new A();
+		}
+	}
+
+	private B bv = null;
+
+	public A(B b) {
+		super(new E());
+		bv = b;
 	}
 
 	public static void lol() {
@@ -112,5 +130,11 @@ public class A extends SuperClassA {
 	private void e() {
 		F f = f();
 		f.h();
+	}
+
+	@Override
+	public void foo() {
+		// TODO Auto-generated method stub
+
 	}
 }

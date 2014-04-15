@@ -386,6 +386,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 					Static.err("\t\t\tIs: " + this.isConditons);
 				}
 				// TODO: Remove me
+				if (Static.num == 93) {
+					System.err.println("");
+				}
+				Static.printNum();
 				Static.out(i.getName());
 				Static.out("\t\tBefore\n-------------------");
 				Static.out("\t\tStack: " + this.temporalVariables);
@@ -647,14 +651,16 @@ public final class MethodVisitor extends EmptyVisitor implements
 							} else {
 								thisValue = stackValues;
 							}
-							if (!(values.contains(thisValue))) {
+							if (!Static.containsElementInCollection(values,
+									thisValue)) {
 								values.add(thisValue);
 							}
 						} else {
 							GroupOfValues gv = (GroupOfValues) stackValues;
 							for (Object gvv : gv
 									.getAllValues(type, description)) {
-								if (!(values.contains(gvv))) {
+								if (!Static.containsElementInCollection(values,
+										gvv)) {
 									values.add(gvv);
 								}
 							}
@@ -662,13 +668,15 @@ public final class MethodVisitor extends EmptyVisitor implements
 					}
 				} else {
 					if (!(currentValue instanceof GroupOfValues)) {
-						if (!(values.contains(currentValue))) {
+						if (!Static.containsElementInCollection(values,
+								currentValue)) {
 							values.add(currentValue);
 						}
 					} else {
 						GroupOfValues gv = (GroupOfValues) currentValue;
 						for (Object gvv : gv.getAllValues(type, description)) {
-							if (!(values.contains(gvv))) {
+							if (!Static
+									.containsElementInCollection(values, gvv)) {
 								values.add(gvv);
 							}
 						}
@@ -766,7 +774,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 	}
 
 	private void addReturnValues(Object value) {
-		if (!this.returnValues.contains(value)) {
+		if (!Static.containsElementInCollection(this.returnValues, value)) {
 			this.returnValues.add(value);
 		}
 	}
@@ -816,8 +824,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 																stackValues,
 																type,
 																description);
-												if (!(allValues
-														.contains(thisValue))) {
+												if (!Static
+														.containsElementInCollection(
+																allValues,
+																thisValue)) {
 													allValues.add(thisValue);
 												}
 											}
@@ -940,12 +950,15 @@ public final class MethodVisitor extends EmptyVisitor implements
 										object, variableName, referenceType);
 								if (value instanceof Collection<?>) {
 									for (Object val : (Collection<?>) value) {
-										if (!values.contains(val)) {
+										if (!Static
+												.containsElementInCollection(
+														values, val)) {
 											values.add(val);
 										}
 									}
 								} else {
-									if (!values.contains(value)) {
+									if (!Static.containsElementInCollection(
+											values, value)) {
 										values.add(value);
 									}
 								}
@@ -1204,30 +1217,32 @@ public final class MethodVisitor extends EmptyVisitor implements
 					break;
 				}
 			}
-
-			Static.err("Array Object: " + arrayObjcet);
-
 			if (arrayObjcet != null) {
 				if (arrayObjcet instanceof Collection<?>) {
 					Stack<Object> arrayCollection = (Stack<Object>) arrayObjcet;
 					if (value instanceof Collection) {
 						for (Object val : (Stack<Object>) value) {
-							if (!arrayCollection.contains(val)) {
+							if (!Static.containsElementInCollection(
+									arrayCollection, val)) {
 								if (val instanceof Collection<?>) {
 									for (Object par : (Collection<?>) val) {
-										if (!arrayCollection.contains(par)) {
+										if (!Static
+												.containsElementInCollection(
+														arrayCollection, par)) {
 											arrayCollection.add(par);
 										}
 									}
 								} else {
-									if (!arrayCollection.contains(val)) {
+									if (!Static.containsElementInCollection(
+											arrayCollection, val)) {
 										arrayCollection.add(val);
 									}
 								}
 							}
 						}
 					} else {
-						if (!arrayCollection.contains(value)) {
+						if (!Static.containsElementInCollection(
+								arrayCollection, value)) {
 							arrayCollection.add(value);
 						}
 					}
@@ -1302,7 +1317,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 
 	private void createNewArrayProviderObject() {
 		try {
-			removePrimitiveData();
+			// removePrimitiveData();
 			// this.temporalVariables.add(new ArrayObjectProvider());
 		} catch (Exception e) {
 			Static.err("ERROR: createNewArrayProviderObject");
@@ -1365,7 +1380,8 @@ public final class MethodVisitor extends EmptyVisitor implements
 								Object thisValue = Static
 										.verifyTypeFromObjectsToStore(
 												stackValues, type, description);
-								if (!(allValues.contains(thisValue))) {
+								if (!Static.containsElementInCollection(
+										allValues, thisValue)) {
 									allValues.add(thisValue);
 								}
 							}
@@ -1429,15 +1445,17 @@ public final class MethodVisitor extends EmptyVisitor implements
 				if (obj instanceof Collection) {
 					cols = (Stack<Object>) obj;
 					for (Object para : params) {
-						if (!cols.contains(para)) {
+						if (!Static.containsElementInCollection(cols, para)) {
 							if (para instanceof Collection<?>) {
 								for (Object par : (Collection<?>) para) {
-									if (!cols.contains(par)) {
+									if (!Static.containsElementInCollection(
+											cols, par)) {
 										cols.add(par);
 									}
 								}
 							} else {
-								if (!cols.contains(para)) {
+								if (!Static.containsElementInCollection(cols,
+										para)) {
 									cols.add(para);
 								}
 							}
@@ -1489,12 +1507,14 @@ public final class MethodVisitor extends EmptyVisitor implements
 							// this.temporalVariables.add(returnType);
 							if (returnType instanceof Collection<?>) {
 								for (Object obj : (Collection<?>) returnType) {
-									if (!allReturnValues.contains(obj)) {
+									if (!Static.containsElementInCollection(
+											allReturnValues, obj)) {
 										allReturnValues.add(obj);
 									}
 								}
 							} else {
-								if (!allReturnValues.contains(returnType)) {
+								if (!Static.containsElementInCollection(
+										allReturnValues, returnType)) {
 									allReturnValues.add(returnType);
 								}
 							}

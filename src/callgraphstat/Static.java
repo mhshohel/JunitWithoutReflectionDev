@@ -46,6 +46,15 @@ public class Static {
 	public static List<String> noAccessedClassesOrMethod = new ArrayList<String>();
 	public static List<String> noAccessedClasses = new ArrayList<String>();
 	private static int id = 0;
+	// TODO:REMOVE ME: JUST A TEST NUMBER FOR TRACE
+	public static int num = 0;
+
+	public static void printNum() {
+		System.err.println("COUNTER: ?=========================? " + (num++)
+				+ " ?=========================?");
+	}
+
+	// ------------------------------------
 	// keep Description objects that once is initialized, to avoid duplicate
 	public static Map<String, Description> initializedDescriptions = new LinkedHashMap<String, Description>();
 	// keep values that is not Description type, before us it please clear all
@@ -132,6 +141,21 @@ public class Static {
 		default:
 			return false;
 		}
+	}
+
+	public static boolean containsElementInCollection(Collection<?> elements,
+			Object value) {
+		for (Object element : elements) {
+			if (element instanceof Description && value instanceof Description) {
+				if (((Description) element).hashCode() == ((Description) value)
+						.hashCode()) {
+					return true;
+				}
+			} else if (element.toString().equalsIgnoreCase(value.toString())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static boolean isCollectionsOrMap(String classWithPackage) {

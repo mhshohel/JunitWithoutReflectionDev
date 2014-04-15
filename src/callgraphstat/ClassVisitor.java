@@ -20,6 +20,7 @@
 package callgraphstat;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -151,14 +152,16 @@ public final class ClassVisitor extends EmptyVisitor {
 							} else {
 								thisValue = stackValues;
 							}
-							if (!(field.contains(thisValue))) {
+							if (!Static.containsElementInCollection(field,
+									thisValue)) {
 								field.add(thisValue);
 							}
 						} else {
 							GroupOfValues gv = (GroupOfValues) stackValues;
 							for (Object gvv : gv
 									.getAllValues(type, description)) {
-								if (!(field.contains(gvv))) {
+								if (!Static.containsElementInCollection(field,
+										gvv)) {
 									field.add(gvv);
 								}
 							}
@@ -166,14 +169,16 @@ public final class ClassVisitor extends EmptyVisitor {
 					}
 				} else {
 					if (!(currentValue instanceof GroupOfValues)) {
-						if (!(field.contains(currentValue))) {
+						if (!Static.containsElementInCollection(field,
+								currentValue)) {
 							field.add(currentValue);
 						}
 					} else {
 						GroupOfValues gov = (GroupOfValues) currentValue;
 						for (Object govObject : gov.getAllValues(type,
 								description)) {
-							if (!(field.contains(govObject))) {
+							if (!Static.containsElementInCollection(field,
+									govObject)) {
 								field.add(govObject);
 							}
 						}
@@ -192,7 +197,20 @@ public final class ClassVisitor extends EmptyVisitor {
 
 	@Override
 	public int hashCode() {
-		return fields.hashCode() + classReferenceFormat.hashCode();
+		int fieldHash = 0;
+		for (Iterator<String> it = fields.keySet().iterator(); it.hasNext();) {
+			String key = it.next();
+			fieldHash += key.hashCode();
+			Stack<Object> value = fields.get(key);
+			for (Object obj : value) {
+				if (obj instanceof Description) {
+					fieldHash += ((Description) obj).id;
+				} else {
+					fieldHash += obj.hashCode();
+				}
+			}
+		}
+		return fieldHash + classReferenceFormat.hashCode();
 	}
 
 	@Override

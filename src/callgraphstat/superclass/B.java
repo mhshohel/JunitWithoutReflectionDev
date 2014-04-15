@@ -3,7 +3,7 @@ package callgraphstat.superclass;
 import java.util.ArrayList;
 import java.util.List;
 
-public class B extends SuperClassA {
+public class B extends SuperClassA implements IInterface {
 	private E evv = null;
 
 	public B(E e) {
@@ -43,7 +43,14 @@ public class B extends SuperClassA {
 		aValEx();
 		return this.val;
 	}
+
 	//
 	// void exam() {
 	// }
+
+	@Override
+	public void foo() {
+		// TODO Auto-generated method stub
+
+	}
 }
