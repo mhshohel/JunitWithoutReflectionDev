@@ -41,7 +41,7 @@ public final class GenerateCallGraph {
 		} else if (methods.size() == 0) {
 			throw new Exception("No main method found.");
 		} else {
-			mainMethod = methods.get(0);
+			this.mainMethod = methods.get(0);
 			start();
 		}
 	}
@@ -50,10 +50,15 @@ public final class GenerateCallGraph {
 		try {
 			this.mainMethod.start(null, new ArrayList<Object>(), false,
 					new HashSet<String>(), false);
-			this.mainMethod = null;
-			this.mainClass = null;
+			clear();
 		} catch (Exception e) {
 			throw new Exception(e.getMessage());
 		}
+	}
+
+	private void clear() {
+		this.mainMethod = null;
+		this.mainClass = null;
+		System.gc();
 	}
 }

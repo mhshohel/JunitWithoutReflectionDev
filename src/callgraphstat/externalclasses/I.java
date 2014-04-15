@@ -23,7 +23,6 @@ public class I implements IInterface {
 
 	@Override
 	public void foo() {
-		// TODO Auto-generated method stub
 
 	}
 

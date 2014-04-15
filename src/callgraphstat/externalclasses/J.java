@@ -23,13 +23,11 @@ public class J implements IInterface, IInterfacePart {
 
 	@Override
 	public void foofoos() {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void foo() {
-		// TODO Auto-generated method stub
 
 	}
 

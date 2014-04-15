@@ -241,7 +241,6 @@ public final class Description implements Comparable<Description> {
 	}
 
 	// add single value only not GroupOfValue class
-	// TODO: FIX IT
 	public void addValueToStaticField(Description description,
 			String fieldName, Object currentValue, Type type,
 			ReferenceType referenceType, boolean isConditions) {

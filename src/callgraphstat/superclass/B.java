@@ -9,7 +9,6 @@ public class B extends SuperClassA implements IInterface {
 	public B(E e) {
 		super(e);
 		this.evv = e;
-		// TODO Auto-generated constructor stub
 	}
 
 	public static List<SuperClassA> someList = new ArrayList<SuperClassA>();
@@ -50,7 +49,6 @@ public class B extends SuperClassA implements IInterface {
 
 	@Override
 	public void foo() {
-		// TODO Auto-generated method stub
 
 	}
 }

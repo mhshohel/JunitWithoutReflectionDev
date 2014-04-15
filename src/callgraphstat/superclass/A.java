@@ -134,7 +134,6 @@ public class A extends SuperClassA implements IInterface {
 
 	@Override
 	public void foo() {
-		// TODO Auto-generated method stub
 
 	}
 }
