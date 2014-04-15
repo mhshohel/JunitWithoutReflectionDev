@@ -22,11 +22,31 @@ public class Example {
 	// return i + 6 - k;
 	// }
 
+	static SuperClassA[] getArray() {
+		int i = 0;
+		SuperClassA[] array = new SuperClassA[10];
+		array[i] = new C(null);
+		if (i == 0)
+			array[1] = new A();
+		else
+			array[i++] = new B(null);
+		return array;
+	}
+
 	public static void main(String[] args) {
-		int[] ii = new int[4];
-		ii[0] = 9;
-		A[] array = new A[10];
-		array[0] = new A();
+		// int[] ii = new int[4];
+		// ii[0] = 9;
+		// int i = 0;
+
+		K k = new K();
+		K kv = k.getVal();
+
+		// Object v = getThis(this);
+
+		// SuperClassA[] array = getArray();
+
+		// SuperClassA aval = array[0];
+		// SuperClassA[] arrays = array;
 
 		// Map<String, SuperClassA> maps = new HashMap<String, SuperClassA>();
 		// maps.put("A", new A());
@@ -36,7 +56,9 @@ public class Example {
 		// stack.push(new C(null));
 		// stack.push(new D(null));
 		//
-		// Stack<SuperClassA> stackA = new Stack<SuperClassA>();
+		// Stack<D> stackA = new Stack<D>();
+		// stackA.add(new D(null));
+		// stackA.get(0).exam();
 		// //
 		// // stack.add(null);
 		// for (int i = 0; i < stack.size(); i++) {
