@@ -397,7 +397,7 @@ public final class MethodVisitor extends EmptyVisitor implements
 						Static.err("\t\t\tIs: " + this.isConditons);
 					}
 					// TODO: Remove me
-					if (Static.num == 60000) {
+					if (Static.num == 63000) {
 						System.err.println("");
 					}
 					Static.printNum();

@@ -22,5 +22,9 @@ package callgraphstat;
 public class Options {
 	// if deepSearch is true search deeply, otherwise do normal search
 	public static boolean deepSearch = false;
-	// create file from here
+	public static boolean sortedReport = true;
+	public static String path = "";
+	public static String parentPackage = "";
+	public static String mainClass = "";
+	public static String mainMethod = "main";
 }

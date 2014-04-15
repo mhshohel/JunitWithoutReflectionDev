@@ -53,7 +53,7 @@ public class Static {
 	// values
 	public static Stack<Object> someValues = new Stack<Object>();
 
-	public final static List<String> getUnsortedNodes() {
+	public final static List<String> getUnSortedNodes() {
 		return nodes;
 	}
 
@@ -267,7 +267,7 @@ public class Static {
 		return edges;
 	}
 
-	public final static List<String> getSorteLibraryEdges() {
+	public final static List<String> getSortedLibraryEdges() {
 		Collections.sort(libEdges);
 		return libEdges;
 	}
@@ -276,12 +276,12 @@ public class Static {
 		return libEdges;
 	}
 
-	public final static List<String> getSortdLibraryClassOrMethodNoAccess() {
+	public final static List<String> getSortedLibraryClassOrMethodNoAccess() {
 		Collections.sort(noAccessedClassesOrMethod);
 		return noAccessedClassesOrMethod;
 	}
 
-	public final static List<String> getUnSortdLibraryClassOrMethodNoAccess() {
+	public final static List<String> getUnSortedLibraryClassOrMethodNoAccess() {
 		return noAccessedClassesOrMethod;
 	}
 
