@@ -40,8 +40,7 @@ public final class ClassVisitor extends EmptyVisitor {
 	// TODO: Remove me
 	private String classReferenceFormat;
 
-	public ClassVisitor() {
-
+	private ClassVisitor() {
 	}
 
 	public ClassVisitor(JavaClass javaClass, Description description) {
@@ -61,71 +60,6 @@ public final class ClassVisitor extends EmptyVisitor {
 		// TODO Remove me
 		this.classReferenceFormat = "C:" + this.javaClass.getClassName() + "  "
 				+ " %s";
-	}
-
-	public final ClassVisitor copy() {
-		ClassVisitor classVisitor = new ClassVisitor();
-		classVisitor.description = this.description;
-		classVisitor.javaClass = this.javaClass;
-		classVisitor.constants = this.constants;
-		classVisitor.fields = new LinkedHashMap<String, Stack<Object>>();
-		Field[] fields = this.javaClass.getFields();
-		for (Field field : fields) {
-			if (!field.isStatic()) {
-				classVisitor.fields.put(field.getName(), new Stack<Object>());
-			}
-		}
-		classVisitor.classReferenceFormat = this.classReferenceFormat;
-		return classVisitor;
-	}
-
-	public final ClassVisitor copyAll() {
-		ClassVisitor classVisitor = new ClassVisitor();
-		classVisitor.description = this.description;
-		classVisitor.javaClass = this.javaClass;
-		classVisitor.constants = this.constants;
-		classVisitor.fields = new LinkedHashMap<String, Stack<Object>>();
-		Field[] fields = this.javaClass.getFields();
-		for (Field field : fields) {
-			if (!field.isStatic()) {
-				Stack<Object> values = new Stack<Object>();
-				Stack<Object> oldValues = this.fields.get(field.getName());
-				for (int i = 0; i < oldValues.size(); i++) {
-					values.add(oldValues.get(i));
-				}
-
-				classVisitor.fields.put(field.getName(), values);
-			}
-		}
-		classVisitor.classReferenceFormat = this.classReferenceFormat;
-		return classVisitor;
-	}
-
-	public Map<String, Stack<Object>> getFields() {
-		return this.fields;
-	}
-
-	// check for other type not description
-	public Object getValueFromField(Object targetClass, String fieldName,
-			ReferenceType referenceType) {
-		Stack<Object> field = null;
-		Object value = null;
-		if (targetClass != null && targetClass instanceof Description) {
-			Description description = (Description) targetClass;
-			ClassVisitor classVisitor = description.getClassVisitor();
-			field = classVisitor.fields.get(fieldName);
-			if (field != null) {
-				return field;
-			} else {
-				// no need to have copy of Description for Super Class
-				if (description.getSuperClassDescription() != null) {
-					value = getValueFromField(
-							description.getSuperClassDescription(), fieldName,
-							referenceType);
-				}
-			}
-		}
-		return (value == null) ? Static.NULL : value;
 	}
 
 	// check for other type not description
@@ -198,6 +132,80 @@ public final class ClassVisitor extends EmptyVisitor {
 		}
 	}
 
+	public final ClassVisitor copy() {
+		ClassVisitor classVisitor = new ClassVisitor();
+		classVisitor.description = this.description;
+		classVisitor.javaClass = this.javaClass;
+		classVisitor.constants = this.constants;
+		classVisitor.fields = new LinkedHashMap<String, Stack<Object>>();
+		Field[] fields = this.javaClass.getFields();
+		for (Field field : fields) {
+			if (!field.isStatic()) {
+				classVisitor.fields.put(field.getName(), new Stack<Object>());
+			}
+		}
+		classVisitor.classReferenceFormat = this.classReferenceFormat;
+		return classVisitor;
+	}
+
+	public final ClassVisitor copyAll() {
+		ClassVisitor classVisitor = new ClassVisitor();
+		classVisitor.description = this.description;
+		classVisitor.javaClass = this.javaClass;
+		classVisitor.constants = this.constants;
+		classVisitor.fields = new LinkedHashMap<String, Stack<Object>>();
+		Field[] fields = this.javaClass.getFields();
+		for (Field field : fields) {
+			if (!field.isStatic()) {
+				Stack<Object> values = new Stack<Object>();
+				Stack<Object> oldValues = this.fields.get(field.getName());
+				for (int i = 0; i < oldValues.size(); i++) {
+					values.add(oldValues.get(i));
+				}
+
+				classVisitor.fields.put(field.getName(), values);
+			}
+		}
+		classVisitor.classReferenceFormat = this.classReferenceFormat;
+		return classVisitor;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if (object instanceof ClassVisitor) {
+			ClassVisitor classVisitor = (ClassVisitor) object;
+			return this.hashCode() == classVisitor.hashCode();
+		}
+		return false;
+	}
+
+	public Map<String, Stack<Object>> getFields() {
+		return this.fields;
+	}
+
+	// check for other type not description
+	public Object getValueFromField(Object targetClass, String fieldName,
+			ReferenceType referenceType) {
+		Stack<Object> field = null;
+		Object value = null;
+		if (targetClass != null && targetClass instanceof Description) {
+			Description description = (Description) targetClass;
+			ClassVisitor classVisitor = description.getClassVisitor();
+			field = classVisitor.fields.get(fieldName);
+			if (field != null) {
+				return field;
+			} else {
+				// no need to have copy of Description for Super Class
+				if (description.getSuperClassDescription() != null) {
+					value = getValueFromField(
+							description.getSuperClassDescription(), fieldName,
+							referenceType);
+				}
+			}
+		}
+		return (value == null) ? Static.NULL : value;
+	}
+
 	@Override
 	public int hashCode() {
 		int fieldHash = 0;
@@ -214,14 +222,5 @@ public final class ClassVisitor extends EmptyVisitor {
 			}
 		}
 		return fieldHash + classReferenceFormat.hashCode();
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		if (object instanceof ClassVisitor) {
-			ClassVisitor classVisitor = (ClassVisitor) object;
-			return this.hashCode() == classVisitor.hashCode();
-		}
-		return false;
 	}
 }

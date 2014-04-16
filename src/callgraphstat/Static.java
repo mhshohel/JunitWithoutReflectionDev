@@ -43,24 +43,15 @@ public class Static {
 	public static List<String> nodes = new ArrayList<String>();
 	public static List<String> edges = new ArrayList<String>();
 	public static List<String> libEdges = new ArrayList<String>();
-	public static List<String> noAccessedClassesOrMethod = new ArrayList<String>();
+	public static List<String> noAccessedNodes = new ArrayList<String>();
 	public static List<String> noAccessedClasses = new ArrayList<String>();
 	private static int id = 0;
-
 	// keep Description objects that once is initialized, to avoid duplicate
 	public static Map<String, Description> initializedDescriptions = new LinkedHashMap<String, Description>();
 	// keep values that is not Description type, before us it please clear all
 	// values
 	public static Stack<Object> someValues = new Stack<Object>();
-
-	public final static List<String> getUnSortedNodes() {
-		return nodes;
-	}
-
-	public final static List<String> getSortedNodes() {
-		Collections.sort(nodes);
-		return nodes;
-	}
+	public static int num = 0;
 
 	public final static boolean addEdge(String source, String target) {
 		String edge = source.concat(" -- > ").concat(target).trim();
@@ -76,8 +67,8 @@ public class Static {
 			String className) {
 		String libEdge = source.concat(" -- > ").concat(target).trim();
 		Static.out("\t\t\tLib Edge: " + libEdge);
-		if (!noAccessedClassesOrMethod.contains(target)) {
-			noAccessedClassesOrMethod.add(target);
+		if (!noAccessedNodes.contains(target)) {
+			noAccessedNodes.add(target);
 		}
 		if (!noAccessedClasses.contains(className)) {
 			noAccessedClasses.add(className);
@@ -87,6 +78,27 @@ public class Static {
 		}
 		libEdges.add(libEdge);
 		return false;
+	}
+
+	public static boolean containsElementInCollection(Collection<?> elements,
+			Object value) {
+		for (Object element : elements) {
+			if (element instanceof Description && value instanceof Description) {
+				if (((Description) element).hashCode() == ((Description) value)
+						.hashCode()) {
+					return true;
+				}
+			} else if (element.toString().equalsIgnoreCase(value.toString())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// TODO:REMOVE ME: PRINT ERR
+	// ---------------------------------------
+	public static void err(Object obj) {
+		// System.err.println((obj == null) ? "null" : obj);
 	}
 
 	// if no value matched or not found in stack then type should check into
@@ -100,6 +112,81 @@ public class Static {
 		}
 
 		return name;
+	}
+
+	public static int getNewID() {
+		id++;
+		return id;
+	}
+
+	public final static List<String> getSortdNoAccessLibraryClass() {
+		Collections.sort(noAccessedClasses);
+		return noAccessedClasses;
+	}
+
+	public final static List<String> getSortedEdges() {
+		Collections.sort(edges);
+		return edges;
+	}
+
+	public final static List<String> getSortedLibraryEdges() {
+		Collections.sort(libEdges);
+		return libEdges;
+	}
+
+	public final static List<String> getSortedLibraryNodesNoAccess() {
+		Collections.sort(noAccessedNodes);
+		return noAccessedNodes;
+	}
+
+	public final static List<String> getSortedNodes() {
+		Collections.sort(nodes);
+		return nodes;
+	}
+
+	public final static List<String> getUnSortdNoAccessLibraryClass() {
+		return noAccessedClasses;
+	}
+
+	public final static List<String> getUnSortedEdges() {
+		return edges;
+	}
+
+	public final static List<String> getUnSortedLibraryEdges() {
+		return libEdges;
+	}
+
+	public final static List<String> getUnSortedLibraryNodesNoAccess() {
+		return noAccessedNodes;
+	}
+
+	public final static List<String> getUnSortedNodes() {
+		return nodes;
+	}
+
+	public static boolean isCollectionsOrMap(String classWithPackage) {
+		try {
+			if (Static.isPrimitiveTypeString(classWithPackage)) {
+				return false;
+			} else if (classWithPackage != "") {
+				Class<?> cls = Class.forName(classWithPackage);
+				if (Collection.class.isAssignableFrom(cls)
+						|| Map.class.isAssignableFrom(cls)) {
+					// TODO Remove me
+					Static.out("\t\t\t\tCollections or Map type: TRUE");
+					return true;
+				} else {
+					// TODO Remove me
+					Static.out("\t\t\t\tCollections or Map type: FALSE");
+					return false;
+				}
+			} else {
+				return false;
+			}
+		} catch (Exception e) {
+			Static.err("ERROR: isCollectionsOrMap");
+			return false;
+		}
 	}
 
 	public static boolean isPrimitiveType(Type type) {
@@ -135,46 +222,6 @@ public class Static {
 		}
 	}
 
-	public static boolean containsElementInCollection(Collection<?> elements,
-			Object value) {
-		for (Object element : elements) {
-			if (element instanceof Description && value instanceof Description) {
-				if (((Description) element).hashCode() == ((Description) value)
-						.hashCode()) {
-					return true;
-				}
-			} else if (element.toString().equalsIgnoreCase(value.toString())) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public static boolean isCollectionsOrMap(String classWithPackage) {
-		try {
-			if (Static.isPrimitiveTypeString(classWithPackage)) {
-				return false;
-			} else if (classWithPackage != "") {
-				Class<?> cls = Class.forName(classWithPackage);
-				if (Collection.class.isAssignableFrom(cls)
-						|| Map.class.isAssignableFrom(cls)) {
-					// TODO Remove me
-					Static.out("\t\t\t\tCollections or Map type: TRUE");
-					return true;
-				} else {
-					// TODO Remove me
-					Static.out("\t\t\t\tCollections or Map type: FALSE");
-					return false;
-				}
-			} else {
-				return false;
-			}
-		} catch (Exception e) {
-			Static.err("ERROR: isCollectionsOrMap");
-			return false;
-		}
-	}
-
 	public static boolean isSameType(String classType, String stackType) {
 		try {
 			classType = classType.replace("[]", "");
@@ -194,23 +241,18 @@ public class Static {
 		return false;
 	}
 
-	public static Object verifyTypeFromObjectsToStoreFromGOV(Object value,
-			Type type, Description description) {
-		try {
-			if (value != null && value.toString().equals(Static.NULL)) {
-				value = Static.NULL;
-			} else {
-				if (value != null) {
-					boolean result = isSameType(type.toString(),
-							value.toString());
-					if (!result) {
-						value = Static.NULL;
-					}
-				}
-			}
-		} catch (Exception e) {
-		}
-		return value;
+	// TODO:REMOVE ME: PRINT OUT
+	// ---------------------------------------
+	public static void out(Object obj) {
+		// System.out.println((obj == null) ? "null" : obj);
+	}
+
+	// TODO:REMOVE ME: JUST A TEST NUMBER FOR TRACE
+	// ---------------------------------------
+	public static void printNum() {
+		num++;
+		// System.err.println("COUNTER: ?=========================? " + (num)
+		// + " ?=========================?");
 	}
 
 	public static Object verifyTypeFromObjectsToStore(Object value, Type type,
@@ -258,63 +300,23 @@ public class Static {
 		return value;
 	}
 
-	public final static List<String> getSortedEdges() {
-		Collections.sort(edges);
-		return edges;
-	}
-
-	public final static List<String> getUnSortedEdges() {
-		return edges;
-	}
-
-	public final static List<String> getSortedLibraryEdges() {
-		Collections.sort(libEdges);
-		return libEdges;
-	}
-
-	public final static List<String> getUnSortedLibraryEdges() {
-		return libEdges;
-	}
-
-	public final static List<String> getSortedLibraryClassOrMethodNoAccess() {
-		Collections.sort(noAccessedClassesOrMethod);
-		return noAccessedClassesOrMethod;
-	}
-
-	public final static List<String> getUnSortedLibraryClassOrMethodNoAccess() {
-		return noAccessedClassesOrMethod;
-	}
-
-	public final static List<String> getSortdNoAccessLibraryClass() {
-		Collections.sort(noAccessedClasses);
-		return noAccessedClasses;
-	}
-
-	public final static List<String> getUnSortdNoAccessLibraryClass() {
-		return noAccessedClasses;
-	}
-
-	public static int getNewID() {
-		id++;
-		return id;
-	}
-
-	// TODO:REMOVE ME: JUST A TEST NUMBER FOR TRACE
-	// ---------------------------------------
-	public static void out(Object obj) {
-		// System.out.println((obj == null) ? "null" : obj);
-	}
-
-	public static void err(Object obj) {
-		// System.err.println((obj == null) ? "null" : obj);
-	}
-
-	public static int num = 0;
-
-	public static void printNum() {
-		num++;
-		// System.err.println("COUNTER: ?=========================? " + (num)
-		// + " ?=========================?");
+	public static Object verifyTypeFromObjectsToStoreFromGOV(Object value,
+			Type type, Description description) {
+		try {
+			if (value != null && value.toString().equals(Static.NULL)) {
+				value = Static.NULL;
+			} else {
+				if (value != null) {
+					boolean result = isSameType(type.toString(),
+							value.toString());
+					if (!result) {
+						value = Static.NULL;
+					}
+				}
+			}
+		} catch (Exception e) {
+		}
+		return value;
 	}
 
 	// ------------------------------------

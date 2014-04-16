@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  	<projectname>javac1.3</projectname>
+  	<projectdescription>Sun's javac compiler, version 1.3 </projectdescription>
+  	<projectspecification>
+  		<entrypoint>com.sun.tools.javac.Main</entrypoint>
+		<classpath>/Users/jonasl/Software/vizz_suite/jdk1.3.1/lib/tools.jar</classpath>
+		<classpath>/Users/jonasl/Software/vizz_suite/jdk1.3.1/jre/lib/rt.jar</classpath>
+		<applicationfilter> 
+			<include>com.sun.tools</include>
+		</applicationfilter>
+	</projectspecification>
+</project>

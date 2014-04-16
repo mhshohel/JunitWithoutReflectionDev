@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  	<projectname>observer</projectname>
+  	<projectdescription>A simple implementation of the observer pattern</projectdescription>
+  	<projectspecification>
+  		<entrypoint>lnu.test.small_programs.observer.Main</entrypoint>
+		<classpath>/Users/jonasl/Software/RTA/MyASMRTA/bin/</classpath>
+		<classpath>/Users/jonasl/Software/vizz_suite/jars/rt1.3.1.jar</classpath>
+		<applicationfilter>
+			<include>lnu</include>
+		</applicationfilter>
+	</projectspecification>
+</project>

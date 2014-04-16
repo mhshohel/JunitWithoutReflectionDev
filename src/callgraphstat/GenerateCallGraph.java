@@ -47,6 +47,12 @@ public final class GenerateCallGraph {
 		}
 	}
 
+	private void clear() {
+		this.mainMethod = null;
+		this.mainClass = null;
+		System.gc();
+	}
+
 	private void start() throws Exception {
 		try {
 			this.mainMethod.start(null, new ArrayList<Object>(), false,
@@ -55,11 +61,5 @@ public final class GenerateCallGraph {
 		} catch (Exception e) {
 			throw new Exception(e.getMessage());
 		}
-	}
-
-	private void clear() {
-		this.mainMethod = null;
-		this.mainClass = null;
-		System.gc();
 	}
 }

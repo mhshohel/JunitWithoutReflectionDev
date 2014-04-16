@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  	<projectname>observer</projectname>
+  	<projectdescription>My Standard Test Case </projectdescription>
+  	<projectspecification>
+  		<entrypoint>observer.Main</entrypoint>
+		<classpath>/Users/jonasl/Software/vizz_suite/small_tests</classpath>
+		<classpath>/Users/jonasl/Software/vizz_suite/jdk1.3.1/jre/lib/rt.jar</classpath>
+		<applicationfilter> 
+			<include>observer</include>
+		</applicationfilter>
+	</projectspecification>
+</project>

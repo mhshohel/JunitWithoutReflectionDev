@@ -84,6 +84,8 @@ public final class Description implements Comparable<Description> {
 	public boolean isSuperClassObjectInitiated = false;
 	public boolean isVisitedToCheckStaticField = false;
 
+	public List<Object> vals = new ArrayList<Object>();
+
 	private Description() {
 		initialize();
 	}
@@ -102,142 +104,13 @@ public final class Description implements Comparable<Description> {
 		initialize(clas, classDescriptions);
 	}
 
-	public List<Object> vals = new ArrayList<Object>();
-
-	private void initialize() {
-		this.id = Static.getNewID();
-		this.isVisitedToCheckStaticField = false;
-		this.classDescriptions = new LinkedHashMap<String, Description>();
-		this.methods = new LinkedHashMap<Method, MethodVisitor>();
-		this.interfaces = new ArrayList<Description>();
-		this.superClass = null;
-	}
-
-	private void initialize(Class<?> clas,
-			Map<String, Description> classDescriptions) throws Exception {
-		this.clas = clas;
-		this.classDescriptions = classDescriptions;
-		try {
-			String resourceName = clas.getName().replace('.',
-					File.separatorChar)
-					+ ".class";
-			this.classInputStream = clas.getClassLoader().getResourceAsStream(
-					resourceName);
-			this.javaClass = new ClassParser(classInputStream, resourceName)
-					.parse();
-			this.classVisitor = new ClassVisitor(javaClass, this);
-		} catch (Exception e) {
-			throw new Exception("Cannot parse Class to JavaClass.");
-		}
-		this.constants = new ConstantPoolGen(this.javaClass.getConstantPool());
-		int modifier = this.clas.getModifiers();
-		if (this.clas.isInterface()) {
-			this.classType = ClassType.INTERFACE;
-		} else if (Modifier.isAbstract(modifier)) {
-			this.classType = ClassType.ABSTRACT;
-		} else if (Modifier.isFinal(modifier)) {
-			this.classType = ClassType.FINAL;
-		} else if (this.clas.isEnum()) {
-			this.classType = ClassType.ENUM;
+	public void addStaticFieldsValue(String key, Object value) {
+		// if not found must look into super class
+		if (!this.staticFields.containsKey(key)) {
+			this.staticFields.put(key, new Stack<Object>());
 		} else {
-			this.classType = ClassType.CLASS;
+			this.staticFields.get(key).add(value);
 		}
-		// Inner Class as Application
-		for (Class<?> cls : this.clas.getDeclaredClasses()) {
-			if (!this.classDescriptions.containsKey(cls.getName())) {
-				this.classDescriptions.put(cls.getName(), new Description(cls,
-						ClassCategory.REGULAR, this.classDescriptions));
-			}
-		}
-		initializeMethodVisitor(this, false);
-	}
-
-	// if it a copy then true else false
-	private void initializeMethodVisitor(Description description, boolean isCopy) {
-		if (!description.clas.isInterface()) {
-			MethodVisitor methodVisitor = null;
-			MethodGen methodGen = null;
-			if (!isCopy) {
-				for (Method method : description.javaClass.getMethods()) {
-					methodGen = new MethodGen(method, description
-							.getJavaClass().getClassName(),
-							description.getConstantPoolGen());
-					methodVisitor = new MethodVisitor(description,
-							description.getClassVisitor(), method, methodGen);
-					description.methods.put(method, methodVisitor);
-					Static.nodes.add(methodVisitor.toString());
-				}
-				// Collections.sort(description.nodes);
-			} else {
-				for (Entry<Method, MethodVisitor> entry : this.getMethods()
-						.entrySet()) {
-					methodVisitor = new MethodVisitor(description,
-							description.getClassVisitor(), entry.getKey(),
-							entry.getValue().getMethodGen());
-					description.methods.put(entry.getKey(), methodVisitor);
-				}
-			}
-		}
-	}
-
-	public final void initializeInterfacesAndSuperClasses() throws Exception {
-		Description description = null;
-		for (Class<?> cls : this.clas.getInterfaces()) {
-			description = this.classDescriptions.get(cls.getName());
-			if (description != null) {
-				this.interfaces.add(description);
-			}
-		}
-		Class<?> superClass = this.clas.getSuperclass();
-		if (superClass != null) {
-			description = this.classDescriptions.get(superClass.getName());
-			if (description != null) {
-				this.superClass = description;
-			}
-		}
-		this.isSuperClassObjectInitiated = (this.superClass == null) ? true
-				: false;
-	}
-
-	// make new copy
-	public final Description copy() {
-		Description dummy = new Description();
-		dummy.clas = this.clas;
-		dummy.javaClass = this.javaClass;
-		dummy.classVisitor = this.classVisitor.copy();
-		dummy.constants = this.constants;
-		dummy.classDescriptions = this.classDescriptions;
-		dummy.interfaces = this.interfaces;
-		dummy.superClass = this.superClass;
-		dummy.classCategory = this.classCategory;
-		dummy.classInputStream = this.classInputStream;
-		dummy.classType = this.classType;
-		dummy.staticFields = this.staticFields;
-		dummy.isSuperClassObjectInitiated = (this.superClass == null) ? true
-				: false;
-		initializeMethodVisitor(dummy, true);
-		dummy.isVisitedToCheckStaticField = this.isVisitedToCheckStaticField;
-		return dummy;
-	}
-
-	public final Description copyAll() {
-		Description dummy = new Description();
-		dummy.clas = this.clas;
-		dummy.javaClass = this.javaClass;
-		dummy.classVisitor = this.classVisitor.copyAll();
-		dummy.constants = this.constants;
-		dummy.classDescriptions = this.classDescriptions;
-		dummy.interfaces = this.interfaces;
-		dummy.superClass = this.superClass;
-		dummy.classCategory = this.classCategory;
-		dummy.classInputStream = this.classInputStream;
-		dummy.classType = this.classType;
-		dummy.staticFields = this.staticFields;
-		dummy.isSuperClassObjectInitiated = (this.superClass == null) ? true
-				: false;
-		initializeMethodVisitor(dummy, true);
-		dummy.isVisitedToCheckStaticField = this.isVisitedToCheckStaticField;
-		return dummy;
 	}
 
 	// add single value only not GroupOfValue class
@@ -306,65 +179,88 @@ public final class Description implements Comparable<Description> {
 		}
 	}
 
-	public void addStaticFieldsValue(String key, Object value) {
-		// if not found must look into super class
-		if (!this.staticFields.containsKey(key)) {
-			this.staticFields.put(key, new Stack<Object>());
-		} else {
-			this.staticFields.get(key).add(value);
+	@Override
+	public int compareTo(Description description) {
+		return this.getActualClass().getName()
+				.compareTo(description.getActualClass().getName());
+	}
+
+	// make new copy
+	public final Description copy() {
+		Description dummy = new Description();
+		dummy.clas = this.clas;
+		dummy.javaClass = this.javaClass;
+		dummy.classVisitor = this.classVisitor.copy();
+		dummy.constants = this.constants;
+		dummy.classDescriptions = this.classDescriptions;
+		dummy.interfaces = this.interfaces;
+		dummy.superClass = this.superClass;
+		dummy.classCategory = this.classCategory;
+		dummy.classInputStream = this.classInputStream;
+		dummy.classType = this.classType;
+		dummy.staticFields = this.staticFields;
+		dummy.isSuperClassObjectInitiated = (this.superClass == null) ? true
+				: false;
+		initializeMethodVisitor(dummy, true);
+		dummy.isVisitedToCheckStaticField = this.isVisitedToCheckStaticField;
+		return dummy;
+	}
+
+	public final Description copyAll() {
+		Description dummy = new Description();
+		dummy.clas = this.clas;
+		dummy.javaClass = this.javaClass;
+		dummy.classVisitor = this.classVisitor.copyAll();
+		dummy.constants = this.constants;
+		dummy.classDescriptions = this.classDescriptions;
+		dummy.interfaces = this.interfaces;
+		dummy.superClass = this.superClass;
+		dummy.classCategory = this.classCategory;
+		dummy.classInputStream = this.classInputStream;
+		dummy.classType = this.classType;
+		dummy.staticFields = this.staticFields;
+		dummy.isSuperClassObjectInitiated = (this.superClass == null) ? true
+				: false;
+		initializeMethodVisitor(dummy, true);
+		dummy.isVisitedToCheckStaticField = this.isVisitedToCheckStaticField;
+		return dummy;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if (object instanceof Description) {
+			Description description = (Description) object;
+			return this.hashCode() == description.hashCode();
 		}
+		return false;
 	}
 
-	public Map<String, Stack<Object>> getStaticFields() {
-		return this.staticFields;
+	public final Class<?> getActualClass() {
+		return this.clas;
 	}
 
-	public final Stack<Object> getStaticFieldValues(String key) {
-		return this.staticFields.get(key);
+	public final ClassCategory getClassCategory() {
+		return this.classCategory;
 	}
 
-	private Stack<Object> getValuesFromStaticField(Description description,
-			String fieldName) {
-		Stack<Object> fields = description.getStaticFieldValues(fieldName);
-		if (fields == null) {
-			if (description.getSuperClassDescription() != null) {
-				fields = getValuesFromStaticField(
-						description.getSuperClassDescription(), fieldName);
-			}
-		}
-		return fields;
+	public final InputStream getClassInputStream() {
+		return classInputStream;
 	}
 
-	public final Object getValueFromStaticField(Description description,
-			String fieldName, ReferenceType referenceType) {
-		Stack<Object> fields = getValuesFromStaticField(description, fieldName);
-		if (fields != null) {
-			return fields;
-		} else {
-			return Static.NULL;
-		}
+	public final String getClassName() {
+		return clas.getName();
 	}
 
-	public final List<Description> getInterfaces() {
-		return this.interfaces;
+	public final ClassType getClassType() {
+		return this.classType;
 	}
 
-	public final void setSuperClassDescription(Description description) {
-		this.superClass = description;
+	public final ClassVisitor getClassVisitor() {
+		return this.classVisitor;
 	}
 
-	public final Description getSuperClassDescription() {
-		return this.superClass;
-	}
-
-	public final Description getDescriptionByJavaClass(JavaClass jc) {
-		for (Entry<String, Description> entry : this.classDescriptions
-				.entrySet()) {
-			if (entry.getValue().getJavaClass().equals(jc)) {
-				return entry.getValue();
-			}
-		}
-		return null;
+	public final ConstantPoolGen getConstantPoolGen() {
+		return this.constants;
 	}
 
 	public final Description getDescriptionByClass(Class<?> cls) {
@@ -388,68 +284,30 @@ public final class Description implements Comparable<Description> {
 		return null;
 	}
 
+	public final Description getDescriptionByJavaClass(JavaClass jc) {
+		for (Entry<String, Description> entry : this.classDescriptions
+				.entrySet()) {
+			if (entry.getValue().getJavaClass().equals(jc)) {
+				return entry.getValue();
+			}
+		}
+		return null;
+	}
+
 	public final Description getDescriptionByKey(String key) {
 		return this.classDescriptions.get(key);
 	}
 
-	public boolean hasDescription(String key) {
-		return this.classDescriptions.containsKey(key);
-	}
-
-	@Override
-	public int compareTo(Description description) {
-		return this.getActualClass().getName()
-				.compareTo(description.getActualClass().getName());
-	}
-
-	@Override
-	public int hashCode() {
-		return clas.hashCode() + javaClass.hashCode() + classVisitor.hashCode();
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		if (object instanceof Description) {
-			Description description = (Description) object;
-			return this.hashCode() == description.hashCode();
-		}
-		return false;
-	}
-
-	public final ClassVisitor getClassVisitor() {
-		return this.classVisitor;
-	}
-
-	public final ConstantPoolGen getConstantPoolGen() {
-		return this.constants;
-	}
-
-	public final Class<?> getActualClass() {
-		return this.clas;
-	}
-
-	public final void setClassCategory(ClassCategory classCategory) {
-		this.classCategory = classCategory;
-	}
-
-	public final ClassCategory getClassCategory() {
-		return this.classCategory;
-	}
-
-	public final InputStream getClassInputStream() {
-		return classInputStream;
-	}
-
-	public final String getClassName() {
-		return clas.getName();
-	}
-
-	public final ClassType getClassType() {
-		return this.classType;
+	public final List<Description> getInterfaces() {
+		return this.interfaces;
 	}
 
 	public final JavaClass getJavaClass() {
 		return javaClass;
+	}
+
+	public final Map<String, Description> getListOfClassDescriptions() {
+		return this.classDescriptions;
 	}
 
 	public final Method getMethodByNameAndTypeArgs(String methodName,
@@ -472,6 +330,38 @@ public final class Description implements Comparable<Description> {
 			}
 		}
 		return null;
+	}
+
+	public final String getMethodFullName(Method method) {
+		return method.toString().substring(0,
+				(method.toString().indexOf(')') + 1));
+	}
+
+	public final String getMethodName(Method method) {
+		return method.getName();
+	}
+
+	public final Map<Method, MethodVisitor> getMethods() {
+		return this.methods;
+	}
+
+	public final MethodVisitor getMethodVisitorByMethod(Method method) {
+		return this.methods.get(method);
+	}
+
+	public final List<MethodVisitor> getMethodVisitorByName(String methodName) {
+		String name = null;
+		List<MethodVisitor> methods = new ArrayList<MethodVisitor>();
+
+		for (Entry<Method, MethodVisitor> entry : this.methods.entrySet()) {
+			if (methodName != null) {
+				name = entry.getKey().getName();
+				if (name.equalsIgnoreCase(methodName)) {
+					methods.add(entry.getValue());
+				}
+			}
+		}
+		return methods;
 	}
 
 	public final MethodVisitor getMethodVisitorByNameAndTypeArgs(
@@ -514,36 +404,142 @@ public final class Description implements Comparable<Description> {
 		return methodVisitor;
 	}
 
-	public final List<MethodVisitor> getMethodVisitorByName(String methodName) {
-		String name = null;
-		List<MethodVisitor> methods = new ArrayList<MethodVisitor>();
+	public Map<String, Stack<Object>> getStaticFields() {
+		return this.staticFields;
+	}
 
-		for (Entry<Method, MethodVisitor> entry : this.methods.entrySet()) {
-			if (methodName != null) {
-				name = entry.getKey().getName();
-				if (name.equalsIgnoreCase(methodName)) {
-					methods.add(entry.getValue());
+	public final Stack<Object> getStaticFieldValues(String key) {
+		return this.staticFields.get(key);
+	}
+
+	public final Description getSuperClassDescription() {
+		return this.superClass;
+	}
+
+	public final Object getValueFromStaticField(Description description,
+			String fieldName, ReferenceType referenceType) {
+		Stack<Object> fields = getValuesFromStaticField(description, fieldName);
+		if (fields != null) {
+			return fields;
+		} else {
+			return Static.NULL;
+		}
+	}
+
+	private Stack<Object> getValuesFromStaticField(Description description,
+			String fieldName) {
+		Stack<Object> fields = description.getStaticFieldValues(fieldName);
+		if (fields == null) {
+			if (description.getSuperClassDescription() != null) {
+				fields = getValuesFromStaticField(
+						description.getSuperClassDescription(), fieldName);
+			}
+		}
+		return fields;
+	}
+
+	public boolean hasDescription(String key) {
+		return this.classDescriptions.containsKey(key);
+	}
+
+	@Override
+	public int hashCode() {
+		return clas.hashCode() + javaClass.hashCode() + classVisitor.hashCode();
+	}
+
+	private void initialize() {
+		this.id = Static.getNewID();
+		this.isVisitedToCheckStaticField = false;
+		this.classDescriptions = new LinkedHashMap<String, Description>();
+		this.methods = new LinkedHashMap<Method, MethodVisitor>();
+		this.interfaces = new ArrayList<Description>();
+		this.superClass = null;
+	}
+
+	private void initialize(Class<?> clas,
+			Map<String, Description> classDescriptions) throws Exception {
+		this.clas = clas;
+		this.classDescriptions = classDescriptions;
+		try {
+			String resourceName = clas.getName().replace('.',
+					File.separatorChar)
+					+ ".class";
+			this.classInputStream = clas.getClassLoader().getResourceAsStream(
+					resourceName);
+			this.javaClass = new ClassParser(classInputStream, resourceName)
+					.parse();
+			this.classVisitor = new ClassVisitor(javaClass, this);
+		} catch (Exception e) {
+			throw new Exception("Cannot parse Class to JavaClass.");
+		}
+		this.constants = new ConstantPoolGen(this.javaClass.getConstantPool());
+		int modifier = this.clas.getModifiers();
+		if (this.clas.isInterface()) {
+			this.classType = ClassType.INTERFACE;
+		} else if (Modifier.isAbstract(modifier)) {
+			this.classType = ClassType.ABSTRACT;
+		} else if (Modifier.isFinal(modifier)) {
+			this.classType = ClassType.FINAL;
+		} else if (this.clas.isEnum()) {
+			this.classType = ClassType.ENUM;
+		} else {
+			this.classType = ClassType.CLASS;
+		}
+		// Inner Class as Application
+		for (Class<?> cls : this.clas.getDeclaredClasses()) {
+			if (!this.classDescriptions.containsKey(cls.getName())) {
+				this.classDescriptions.put(cls.getName(), new Description(cls,
+						ClassCategory.REGULAR, this.classDescriptions));
+			}
+		}
+		initializeMethodVisitor(this, false);
+	}
+
+	public final void initializeInterfacesAndSuperClasses() throws Exception {
+		Description description = null;
+		for (Class<?> cls : this.clas.getInterfaces()) {
+			description = this.classDescriptions.get(cls.getName());
+			if (description != null) {
+				this.interfaces.add(description);
+			}
+		}
+		Class<?> superClass = this.clas.getSuperclass();
+		if (superClass != null) {
+			description = this.classDescriptions.get(superClass.getName());
+			if (description != null) {
+				this.superClass = description;
+			}
+		}
+		this.isSuperClassObjectInitiated = (this.superClass == null) ? true
+				: false;
+	}
+
+	// if it a copy then true else false
+	private void initializeMethodVisitor(Description description, boolean isCopy) {
+		if (!description.clas.isInterface()) {
+			MethodVisitor methodVisitor = null;
+			MethodGen methodGen = null;
+			if (!isCopy) {
+				for (Method method : description.javaClass.getMethods()) {
+					methodGen = new MethodGen(method, description
+							.getJavaClass().getClassName(),
+							description.getConstantPoolGen());
+					methodVisitor = new MethodVisitor(description,
+							description.getClassVisitor(), method, methodGen);
+					description.methods.put(method, methodVisitor);
+					Static.nodes.add(methodVisitor.toString());
+				}
+				// Collections.sort(description.nodes);
+			} else {
+				for (Entry<Method, MethodVisitor> entry : this.getMethods()
+						.entrySet()) {
+					methodVisitor = new MethodVisitor(description,
+							description.getClassVisitor(), entry.getKey(),
+							entry.getValue().getMethodGen());
+					description.methods.put(entry.getKey(), methodVisitor);
 				}
 			}
 		}
-		return methods;
-	}
-
-	public final String getMethodFullName(Method method) {
-		return method.toString().substring(0,
-				(method.toString().indexOf(')') + 1));
-	}
-
-	public final String getMethodName(Method method) {
-		return method.getName();
-	}
-
-	public final Map<Method, MethodVisitor> getMethods() {
-		return this.methods;
-	}
-
-	public final MethodVisitor getMethodVisitorByMethod(Method method) {
-		return this.methods.get(method);
 	}
 
 	public final boolean isGeneratedCode() {
@@ -558,8 +554,12 @@ public final class Description implements Comparable<Description> {
 		return (this.classCategory == ClassCategory.TEST);
 	}
 
-	public final Map<String, Description> getListOfClassDescriptions() {
-		return this.classDescriptions;
+	public final void setClassCategory(ClassCategory classCategory) {
+		this.classCategory = classCategory;
+	}
+
+	public final void setSuperClassDescription(Description description) {
+		this.superClass = description;
 	}
 
 	public final String toString() {

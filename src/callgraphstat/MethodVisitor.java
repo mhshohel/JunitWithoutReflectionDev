@@ -185,6 +185,723 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
+	private void addReturnValues(boolean isPrimitive, Type returnType) {
+		try {
+			// must remove last value of group or other
+			// not save as group or collection
+			Object value = getValue(returnType, true);
+			if (isPrimitive) {
+				addReturnValues(Static.PRIMITIVE);
+			} else {
+				Static.err("Return Value for Referance Type");
+				if (value instanceof Collection<?>) {
+					for (Object object : (Collection<?>) value) {
+						addReturnValues(object);
+					}
+				} else {
+					addReturnValues(value);
+				}
+			}
+		} catch (Exception e) {
+			Static.err("ERROR: addReturnValues");
+		}
+	}
+
+	private void addReturnValues(Object value) {
+		if (!Static.containsElementInCollection(this.returnValues, value)) {
+			this.returnValues.add(value);
+		}
+	}
+
+	private void addToLoaclVariable(String variableName, Object currentValue,
+			ReferenceType referenceType, Type type) {
+		try {
+			List<Object> values = this.localVariables.get(variableName);
+			// keep previous value if and only if condition is open, otherwise
+			// remove all
+			if (values != null) {
+				if (!this.isConditons) {
+					if (!values.isEmpty()) {
+						values.clear();
+					}
+				}
+				// do not save group value
+				if (currentValue instanceof Collection) {
+					for (Object stackValues : (Collection<?>) currentValue) {
+						if (!(stackValues instanceof GroupOfValues)) {
+							Object thisValue = null;
+							if (!Static.isCollectionsOrMap(type.toString())) {
+								thisValue = Static
+										.verifyTypeFromObjectsToStore(
+												stackValues, type, description);
+							} else {
+								thisValue = stackValues;
+							}
+							if (!Static.containsElementInCollection(values,
+									thisValue)) {
+								values.add(thisValue);
+							}
+						} else {
+							GroupOfValues gv = (GroupOfValues) stackValues;
+							for (Object gvv : gv
+									.getAllValues(type, description)) {
+								if (!Static.containsElementInCollection(values,
+										gvv)) {
+									values.add(gvv);
+								}
+							}
+						}
+					}
+				} else {
+					if (!(currentValue instanceof GroupOfValues)) {
+						if (!Static.containsElementInCollection(values,
+								currentValue)) {
+							values.add(currentValue);
+						}
+					} else {
+						GroupOfValues gv = (GroupOfValues) currentValue;
+						for (Object gvv : gv.getAllValues(type, description)) {
+							if (!Static
+									.containsElementInCollection(values, gvv)) {
+								values.add(gvv);
+							}
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			Static.err("ERROR: addToLoaclVariable");
+		}
+	}
+
+	private void addToTemporalVariable(Object object) {
+		try {
+			Object lastValue = (!this.temporalVariables.isEmpty()) ? this.temporalVariables
+					.peek() : null;
+			if (lastValue != null) {
+				if (lastValue instanceof GroupOfValues) {
+					GroupOfValues gov = (GroupOfValues) lastValue;
+					if (gov.isOpen) {
+						if (!this.tempGroupValues.isEmpty()) {
+							// peek the last group object and add value
+							this.tempGroupValues.peek().add(object);
+						} else {
+							// if somehow miss then it will add value, however,
+							// this line will never use
+							gov.addAtLast(object);
+						}
+					} else {
+						this.temporalVariables.add(object);
+					}
+				} else {
+					this.temporalVariables.add(object);
+				}
+			} else {
+				this.temporalVariables.add(object);
+			}
+		} catch (Exception e) {
+			Static.err("ERROR in addToTemporalVariable ");
+		}
+	}
+
+	// add values from params to local variable of Method
+	private void addValuesToLocalVariableFromParameters(int length,
+			List<Object> params) {
+		try {
+			if (length > 0) {
+				int k = -1;
+				Stack<Object> object = null;
+				for (Entry<String, Stack<Object>> key : this.localVariables
+						.entrySet()) {
+					k++;
+					if (key.getKey().equalsIgnoreCase(Static.THIS)) {
+						k--;
+					} else {
+						if (k < length) {
+							object = new Stack<Object>();
+							if (params.get(k) instanceof Collection<?>) {
+								for (Object obj : (Collection<?>) params.get(k)) {
+									object.add(obj);
+								}
+							} else {
+								object.add(params.get(k));
+							}
+							key.setValue(object);
+						} else {
+							key.setValue(new Stack<Object>());
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			Static.err("ERROR: addValuesToLocalVariableFromParameters");
+		}
+	}
+
+	private boolean arrayInstructions(ArrayInstruction obj) {
+		if (obj instanceof IALOAD || obj instanceof CALOAD
+				|| obj instanceof BALOAD || obj instanceof SALOAD
+				|| obj instanceof LALOAD || obj instanceof DALOAD
+				|| obj instanceof FALOAD || obj instanceof AALOAD) {
+			visitArrayLoad(obj);
+			return true;
+		} else if (obj instanceof IASTORE || obj instanceof CASTORE
+				|| obj instanceof BASTORE || obj instanceof SASTORE
+				|| obj instanceof LASTORE || obj instanceof DASTORE
+				|| obj instanceof FASTORE || obj instanceof AASTORE) {
+			visitArrayStore(obj);
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public int compareTo(MethodVisitor node) {
+		return getMethod().getName().compareTo(node.getMethod().getName());
+	}
+
+	// generate edges which has no description or method visitor recorded
+	private boolean createEdgeIfMethodNotFound(Description description,
+			MethodVisitor methodVisitor, String source, String referenceType,
+			String methodName, List<Object> params, Type[] types,
+			boolean isCollectionType, Object collectionVariableObject) {
+		this.collectionMethodReturnType = null;
+		boolean hasDescription = this.description.hasDescription(referenceType
+				.toString());
+		if (description == null) {
+			String target = referenceType + "." + methodName;
+			String type = "(";
+			if (params != null && !params.isEmpty()) {
+				int length = params.size();
+				Object param = null;
+				String actualParam = "";
+				for (int i = 0; i < length; i++) {
+					param = params.get(i);
+					if (param instanceof Collection<?>) {
+						if (((Collection<?>) param).size() == 1) {
+							param = ((List<?>) param).get(0);
+						} else {
+							param = type;
+						}
+					}
+					actualParam = param.toString();
+					if (actualParam.equalsIgnoreCase(Static.PRIMITIVE)) {
+						actualParam = types[i].toString();
+					}
+					type += ((i + 1) == length) ? actualParam : actualParam
+							+ ",";
+				}
+			}
+
+			type += ")";
+			target += type;
+			// keep edges that is not part of Description or part of Library
+			// Class
+			if (!hasDescription) {
+				boolean result = false;
+				if (methodName.equalsIgnoreCase("<init>")) {
+					target += "void";
+					result = true;
+				} else {
+					try {
+						// should set new target
+						Class<?> clas = Class.forName(referenceType.toString());
+						java.lang.reflect.Method[] methods = clas.getMethods();
+						for (java.lang.reflect.Method method : methods) {
+							if (method.getName().equalsIgnoreCase(methodName)) {
+								result = true;
+								Class<?>[] cTypes = method.getParameterTypes();
+								for (int i = 0; i < cTypes.length; i++) {
+									if (!cTypes[i].getName().equalsIgnoreCase(
+											types[i].toString())) {
+										result = false;
+										break;
+									}
+								}
+								if (result) {
+									this.collectionMethodReturnType = method
+											.getReturnType();
+									target = method.getDeclaringClass()
+											.getName()
+											+ "."
+											+ methodName
+											+ type
+											+ this.collectionMethodReturnType;
+									for (Class<?> exType : method
+											.getExceptionTypes()) {
+										this.exceptionClassList.add(exType
+												.getName());
+									}
+									break;
+								}
+							}
+						}
+					} catch (ClassNotFoundException e) {
+						Static.err("ERROR in createEdgeIfMethodNotFound ");
+					}
+				}
+				if (this.collectionMethodReturnType != null
+						&& !(this.collectionMethodReturnType.toString()
+								.equalsIgnoreCase("void"))) {
+					if (Static
+							.isPrimitiveTypeString(this.collectionMethodReturnType
+									.toString())) {
+						addToTemporalVariable(Static.PRIMITIVE);
+					} else {
+						if (isCollectionType
+								&& collectionVariableObject != null) {
+							addToTemporalVariable(collectionVariableObject);
+						} else {
+							addToTemporalVariable(this.collectionMethodReturnType);
+						}
+					}
+				}
+				if (result) {
+					Static.addLibraryEdge(source, target, referenceType);
+					return Static.addEdge(source, target);
+				} else {
+					return false;
+				}
+			}
+			return Static.addEdge(source, target);
+		}
+		return false;
+		// make a return type
+	}
+
+	private void createNewArrayProviderObject() {
+		try {
+			// removePrimitiveData();
+			// this.temporalVariables.add(new ArrayObjectProvider());
+		} catch (Exception e) {
+			Static.err("ERROR: createNewArrayProviderObject");
+		}
+	}
+
+	private void fieldValueInstructor(FieldInstruction obj) {
+		try {
+			// TODO Remove me
+			Static.out("\t\t" + obj.getName() + "   --->   "
+					+ obj.getType(constantPoolGen).getSignature());
+
+			Static.out("\t\t" + obj.getFieldName(constantPoolGen));
+			Static.out("\t\t" + obj.getFieldType(constantPoolGen));
+
+			if (obj instanceof PUTFIELD) {
+				storeValues("PUTFIELD",
+						((PUTFIELD) obj).getFieldName(constantPoolGen),
+						((PUTFIELD) obj).getFieldType(constantPoolGen),
+						((PUTFIELD) obj).getReferenceType(constantPoolGen));
+			} else if (obj instanceof GETFIELD) {
+				loadValues("GETFIELD",
+						((GETFIELD) obj).getFieldName(constantPoolGen),
+						((GETFIELD) obj).getFieldType(constantPoolGen),
+						((GETFIELD) obj).getReferenceType(constantPoolGen));
+			} else if (obj instanceof PUTSTATIC) {
+				storeValues("PUTSTATIC",
+						((PUTSTATIC) obj).getFieldName(constantPoolGen),
+						((PUTSTATIC) obj).getFieldType(constantPoolGen),
+						((PUTSTATIC) obj).getReferenceType(constantPoolGen));
+			} else if (obj instanceof GETSTATIC) {
+				loadValues("GETSTATIC",
+						((GETSTATIC) obj).getFieldName(constantPoolGen),
+						((GETSTATIC) obj).getFieldType(constantPoolGen),
+						((GETSTATIC) obj).getReferenceType(constantPoolGen));
+			}
+		} catch (Exception e) {
+			Static.err("ERROR: fieldValueInstructor");
+		}
+	}
+
+	// remove value(s) that contains by if, if can one value or twos depending
+	// of category
+	private void fixIfConsitions(Instruction i) {
+		try {
+			if (i instanceof IF_ACMPEQ || i instanceof IF_ACMPNE
+					|| i instanceof IF_ICMPEQ || i instanceof IF_ICMPGE
+					|| i instanceof IF_ICMPGT || i instanceof IF_ICMPLE
+					|| i instanceof IF_ICMPLT || i instanceof IF_ICMPNE) {
+				// remove last two values from stack
+				for (int j = 0; j < 2; j++) {
+					if (!temporalVariables.isEmpty()) {
+						if (this.temporalVariables.peek() instanceof GroupOfValues) {
+							if (!this.tempGroupValues.isEmpty()) {
+								GroupOfValues gov = this.tempGroupValues.peek();
+								gov.pop();
+							}
+						} else {
+							this.temporalVariables.pop();
+						}
+					}
+				}
+			} else if (i instanceof IFEQ || i instanceof IFGE
+					|| i instanceof IFGT || i instanceof IFLE
+					|| i instanceof IFLT || i instanceof IFNE
+					|| i instanceof IFNONNULL || i instanceof IFNULL) {
+				// remove one value from stack
+				if (!temporalVariables.isEmpty()) {
+					if (this.temporalVariables.peek() instanceof GroupOfValues) {
+						if (!this.tempGroupValues.isEmpty()) {
+							GroupOfValues gov = this.tempGroupValues.peek();
+							gov.pop();
+						}
+					} else {
+						this.temporalVariables.pop();
+					}
+				}
+			}
+		} catch (Exception e) {
+			Static.err("ERROR: fixIfConsitions");
+		}
+	}
+
+	public final ClassVisitor getClassVisitor() {
+		return this.classVisitor;
+	}
+
+	public final Description getDescription() {
+		return this.description;
+	}
+
+	private Stack<Description> getInvokedDescription(ReferenceType type) {
+		// especially for Interface, it will match the type first to send values
+		String classType = type.toString();
+		Stack<Description> values = new Stack<Description>();
+		GroupOfValues gov = null;
+		try {
+			Object value = (this.temporalVariables != null && !this.temporalVariables
+					.isEmpty()) ? this.temporalVariables.peek() : Static.NULL;
+
+			if (value instanceof GroupOfValues) {
+				gov = (GroupOfValues) value;
+				if (gov.isOpen) {
+					// not close get last group and marge
+					if (!this.tempGroupValues.isEmpty()) {
+						value = this.tempGroupValues.peek().pop();
+						if (value instanceof GroupOfValues) {
+							// get all values including child
+							value = ((GroupOfValues) value).getAllValues(type,
+									this.description);
+						} else if (value instanceof Collection) {
+							Stack<Object> allValues = new Stack<Object>();
+							for (Object stackValues : (Collection<?>) value) {
+								Object thisValue = Static
+										.verifyTypeFromObjectsToStore(
+												stackValues, type, description);
+								if (!Static.containsElementInCollection(
+										allValues, thisValue)) {
+									allValues.add(thisValue);
+								}
+							}
+							value = allValues;
+						}
+					}
+				} else {
+					// if close
+					value = gov.getAllValues(type, this.description);
+					this.temporalVariables.pop();
+				}
+			} else {
+				this.temporalVariables.pop();
+			}
+			if (!Static.someValues.isEmpty()) {
+				Static.someValues.clear();
+			}
+			if (value instanceof Collection) {
+				for (Object stackObject : (Collection<?>) value) {
+					String stackType = stackObject.toString();
+					if (Static.isSameType(classType, stackType)) {
+						if (stackObject instanceof Description) {
+							values.add((Description) stackObject);
+						} else {
+							Static.someValues.add(stackObject);
+						}
+					}
+				}
+			} else {
+				if (value instanceof Description) {
+					values.add((Description) value);
+				} else {
+					Static.someValues.add(value);
+				}
+			}
+
+		} catch (Exception e) {
+			Static.err("ERROR: getInvokedDescription");
+		}
+		return values;
+	}
+
+	private Stack<Object> getLocalVariablesByVarialbleName(String variableName) {
+		Stack<Object> objects = null;
+		try {
+			objects = this.localVariables.get(variableName);
+		} catch (Exception e) {
+			Static.err("ERROR: getLocalVariablesByVarialbleName");
+		}
+		return objects;
+	}
+
+	private final LocalVariableGen getLocalVariablesName(int index) {
+		LocalVariableGen localVariableGen = null;
+		// keep the line number for same indexed variable
+		List<Integer> list = new ArrayList<Integer>();
+		String name = null;
+		int currentIndex = -1;
+		int size = this.localVariableArray.length;
+		LocalVariable currentVariable = null;
+		try {
+			for (int i = 0; i < size; i++) {
+				currentVariable = this.localVariableArray[i];
+				currentIndex = currentVariable.getIndex();
+				if (currentIndex == index) {
+					if (currentVariable.getStartPC() == this.currentLineNumber) {
+						name = currentVariable.getName();
+						break;
+					} else {
+						list.add(currentVariable.getStartPC());
+						// have to be less than the end_pc
+						list.add(currentVariable.getStartPC()
+								+ currentVariable.getLength() - 1);
+					}
+					if (list.size() < 3) {
+						if (i + 1 < size) {
+							if (this.localVariableArray[i + 1].getIndex() != index) {
+								name = currentVariable.getName();
+								break;
+							}
+						} else {
+							name = currentVariable.getName();
+							break;
+						}
+					}
+				} else if (currentIndex > index) {
+					break;
+				}
+			}
+			if (!list.isEmpty() && list.size() != 1 && name == null) {
+				Collections.sort(list);
+			}
+			if (name == null) {
+				if (list.size() == 1) {
+					name = this.localVariableTable.getLocalVariable(index,
+							list.get(0)).getName();
+				} else {
+					LocalVariable lv = null;
+					for (int val : list) {
+						if (val > this.currentLineNumber) {
+							lv = this.localVariableTable.getLocalVariable(
+									index, val);
+							if (lv != null) {
+								name = lv.getName();
+								break;
+							}
+						}
+					}
+				}
+			}
+			Static.err(name);
+			for (LocalVariableGen lvg : this.localVariableGens) {
+				if (lvg.getName().equalsIgnoreCase(name)) {
+					localVariableGen = lvg;
+					break;
+				}
+			}
+		} catch (Exception e) {
+			Static.err("ERROR: getLocalVariablesName");
+		}
+		return localVariableGen;
+	}
+
+	private Object getLocalVariableValueByVarialbleName(String variableName,
+			ReferenceType referenceType) {
+		Stack<Object> objects = getLocalVariablesByVarialbleName(variableName);
+		if (objects != null && !objects.isEmpty()) {
+			if (variableName.equalsIgnoreCase("this")) {
+				return objects.peek();
+			}
+			return objects;
+		}
+		return null;
+	}
+
+	public final Method getMethod() {
+		return this.method;
+	}
+
+	public final MethodGen getMethodGen() {
+		return this.methodGen;
+	}
+
+	public final String getNode() {
+		return this.node;
+	}
+
+	private List<Object> getParameters(Type[] types, String methodName) {
+		List<Object> params = new ArrayList<Object>();
+		try {
+			int length = types.length;
+			int c = types.length;
+			if (length > 0) {
+				for (int j = 0; j < length; j++) {
+					c--;
+					Type type = types[c];
+					Object value = getValue(type, true);
+					params.add(value);
+				}
+			}
+			if (params.size() > 1) {
+				Collections.reverse(params);
+			}
+		} catch (Exception e) {
+			Static.err("ERROR: getParameters");
+		}
+		// TODO Remove me
+		Static.out("\t\t\t\tParams:   " + params);
+		return params;
+	}
+
+	private Object getTargetClass(Type type) {
+		Object target = null;
+		try {
+			if (this.temporalVariables != null
+					&& !this.temporalVariables.isEmpty()) {
+				if (!((this.temporalVariables.peek()) instanceof GroupOfValues)) {
+					return this.temporalVariables.pop();
+				} else {
+					GroupOfValues gov = (GroupOfValues) this.temporalVariables
+							.peek();
+					if (gov.isOpen) {
+						if (!this.tempGroupValues.isEmpty()) {
+							target = this.tempGroupValues.peek().pop();
+							if (target instanceof GroupOfValues) {
+								// assume if group found then that will be
+								// close.
+								// So, pop that group and then pop another to
+								// get
+								// target. It's because if there is a group
+								// found
+								// that will be collected as value of that
+								// target,
+								// so, it will be empty that we don not need to
+								// take
+								target = this.tempGroupValues.peek().pop();
+							}
+						} else {
+							target = null;
+						}
+					} else {
+						this.temporalVariables.pop();
+						if (!((this.temporalVariables.peek()) instanceof GroupOfValues)) {
+							return this.temporalVariables.pop();
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			Static.err("ERROR: getTargetClass");
+		}
+		return target;
+	}
+
+	@SuppressWarnings("unchecked")
+	private Object getValue(Type type, boolean shouldPOP) {
+		// to store pass stack or group value that will converted to stack
+		// only, no gov directly
+		Object value = null;
+		boolean isCollectionType = Static.isCollectionsOrMap(type.toString());
+		GroupOfValues gov = null;
+		try {
+			value = (this.temporalVariables != null && !this.temporalVariables
+					.isEmpty()) ? this.temporalVariables.peek() : null;
+			if (value instanceof GroupOfValues) {
+				gov = (GroupOfValues) value;
+				if (gov.isOpen) {
+					// not close get last group and merge
+					if (!this.tempGroupValues.isEmpty()) {
+						if (shouldPOP) {
+							value = this.tempGroupValues.peek().pop();
+						} else {
+							value = this.tempGroupValues.peek().peek();
+						}
+						if (Static.isPrimitiveType(type)) {
+							value = Static.PRIMITIVE;
+						} else {
+							if (value instanceof GroupOfValues) {
+								// get all values including child
+								value = ((GroupOfValues) value).getAllValues(
+										type, this.description);
+							} else if (value instanceof Collection) {
+								if (!((Stack<Object>) value).isEmpty()) {
+									if (!((Stack<Object>) value).get(0)
+											.toString().contains("[]")) {
+										if (!isCollectionType) {
+											Stack<Object> allValues = new Stack<Object>();
+											for (Object stackValues : (Collection<?>) value) {
+												Object thisValue = Static
+														.verifyTypeFromObjectsToStore(
+																stackValues,
+																type,
+																description);
+												if (!Static
+														.containsElementInCollection(
+																allValues,
+																thisValue)) {
+													allValues.add(thisValue);
+												}
+											}
+											value = allValues;
+										}
+									}
+								}
+							}
+						}
+					} else {
+						value = gov.getAllValues(type, this.description);
+					}
+				} else {
+					// if close
+					// if close merge all data
+					if (Static.isPrimitiveType(type)) {
+						value = Static.PRIMITIVE;
+					} else {
+						value = gov.getAllValues(type, this.description);
+					}
+					if (shouldPOP) {
+						this.temporalVariables.pop();
+					}
+				}
+			} else {
+				if (shouldPOP) {
+					this.temporalVariables.pop();
+				}
+			}
+
+			if (value instanceof List) {
+				if (((List<?>) value).isEmpty() || ((List<?>) value) == null) {
+					value = Static.NULL;
+				}
+			} else {
+				value = Static.verifyTypeFromObjectsToStore(value, type,
+						this.description);
+			}
+			if (value == null) {
+				if (Static.isPrimitiveType(type)) {
+					value = Static.PRIMITIVE;
+				} else {
+					value = Static.getDescriptionCopy(this.description, type);
+				}
+			}
+		} catch (Exception e) {
+			value = Static.getDescriptionCopy(this.description, type);
+			if (Static.isPrimitiveTypeString(value.toString())) {
+				value = Static.PRIMITIVE;
+			}
+			Static.err("SOLVED: getValue; for any exception its solved inside the exception");
+		}
+		return value;
+	}
+
 	private void initialize() {
 		this.types = this.method.getArgumentTypes();
 		int length = this.types.length;
@@ -199,41 +916,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 		this.localVariables = new LinkedHashMap<String, Stack<Object>>();
 		this.exceptionTable = this.method.getExceptionTable();
 		this.exceptionClassList = new HashSet<String>();
-	}
-
-	public final Description getDescription() {
-		return this.description;
-	}
-
-	public final ClassVisitor getClassVisitor() {
-		return this.classVisitor;
-	}
-
-	public final MethodGen getMethodGen() {
-		return this.methodGen;
-	}
-
-	public final Method getMethod() {
-		return this.method;
-	}
-
-	public final String toString() {
-		return this.node;
-	}
-
-	public final String getNode() {
-		return this.node;
-	}
-
-	@Override
-	public int compareTo(MethodVisitor node) {
-		return getMethod().getName().compareTo(node.getMethod().getName());
-	}
-
-	private boolean visitInstruction(Instruction i) {
-		short opcode = i.getOpcode();
-		return ((InstructionConstants.INSTRUCTIONS[opcode] != null)
-				&& !(i instanceof ConstantPushInstruction) && !(i instanceof ReturnInstruction));
 	}
 
 	private void initializeStaticFields(Description description, String source,
@@ -271,6 +953,265 @@ public final class MethodVisitor extends EmptyVisitor implements
 			// ------------------------------------------------------------------------------
 		} catch (Exception e) {
 			Static.err("ERROR: initializeStaticFields");
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void invokedVirtualAndInterface(String flag, InvokeInstruction i) {
+		// TODO: Remove flag at the end of everything, this flag is just to
+		// Print I, O, C, M
+		try {
+			boolean isCollectionType = false;
+			Type[] types = i.getArgumentTypes(constantPoolGen);
+			String methodName = i.getMethodName(constantPoolGen);
+			// TODO: decide as output requirement
+			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
+					methodName, flag);
+			List<Object> params = getParameters(types, methodName);
+			ReferenceType referenceType = i.getReferenceType(constantPoolGen);
+			// -------------For Collection or Map ----------------------
+			isCollectionType = Static.isCollectionsOrMap(referenceType
+					.toString());
+			Stack<Object> cols = null;
+			if (isCollectionType) {
+				Object obj = getValue(referenceType, false);
+				if (obj instanceof Collection) {
+					cols = (Stack<Object>) obj;
+					for (Object para : params) {
+						if (!Static.containsElementInCollection(cols, para)) {
+							if (para instanceof Collection<?>) {
+								for (Object par : (Collection<?>) para) {
+									if (!Static.containsElementInCollection(
+											cols, par)) {
+										cols.add(par);
+									}
+								}
+							} else {
+								if (!Static.containsElementInCollection(cols,
+										para)) {
+									cols.add(para);
+								}
+							}
+						}
+					}
+				}
+			}
+			// -------------------------------------------------
+			// check Exception class and then keep them
+			if (Static.isSameType(referenceType.toString(),
+					"java.lang.Exception")) {
+				if (!referenceType.toString().equalsIgnoreCase(
+						"java.lang.Object")) {
+					this.exceptionClassList.add(referenceType.toString());
+				}
+			}
+			List<Description> listDescriptions = getInvokedDescription(referenceType);
+			if (listDescriptions != null && !listDescriptions.isEmpty()) {
+				Stack<Object> allReturnValues = new Stack<Object>();
+				Object returnType = null;
+				for (Description des : listDescriptions) {
+					if (!des.toString().equalsIgnoreCase(Static.NULL)) {
+						Description description = des;// getInvokedDescription(referenceType);
+						Static.out(referenceType.toString());
+						MethodVisitor methodVisitor = null;
+						if (description != null) {
+							methodVisitor = description
+									.getMethodVisitorByNameAndTypeArgs(
+											description, methodName, types,
+											true);
+							if (methodVisitor != null) {
+								returnType = methodVisitor.start(this.node,
+										params, false, this.exceptionClassList,
+										false);
+							}
+						}
+						// check Exception class and then print edges, print all
+						if (Static.isSameType(referenceType.toString(),
+								"java.lang.Exception")) {
+							for (String ex : this.exceptionClassList) {
+								createEdgeIfMethodNotFound(null, null,
+										this.node, ex, methodName, params,
+										types, false, null);
+							}
+						}
+						if (returnType != null
+								&& !returnType.toString().equalsIgnoreCase(
+										"void")) {
+							// this.temporalVariables.add(returnType);
+							if (returnType instanceof Collection<?>) {
+								for (Object obj : (Collection<?>) returnType) {
+									if (!Static.containsElementInCollection(
+											allReturnValues, obj)) {
+										allReturnValues.add(obj);
+									}
+								}
+							} else {
+								if (!Static.containsElementInCollection(
+										allReturnValues, returnType)) {
+									allReturnValues.add(returnType);
+								}
+							}
+						}
+						Static.out("------------------------");
+					}
+					if (returnType != null
+							&& !returnType.toString().equalsIgnoreCase("void")) {
+						addToTemporalVariable(allReturnValues);
+					}
+				}
+			} else {
+				if (!Static.someValues.isEmpty()) {
+					while (!Static.someValues.isEmpty()) {
+						createEdgeIfMethodNotFound(null, null, this.node,
+								Static.someValues.pop().toString(), methodName,
+								params, types, isCollectionType, cols);
+					}
+				}
+			}
+			if (!Static.someValues.isEmpty()) {
+				Static.someValues.clear();
+			}
+		} catch (Exception e) {
+			Static.err("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
+		}
+		// Verify and remove remaining primitive data
+		removePrimitiveData();
+	}
+
+	private void loadValueFromLocalVariable(LoadInstruction obj) {
+		try { // int index = -1;
+			LocalVariableGen localVariableGen = null;
+			if (obj instanceof ILOAD) {
+				localVariableGen = getLocalVariablesName(((ILOAD) obj)
+						.getIndex());
+			} else if (obj instanceof LLOAD) {
+				localVariableGen = getLocalVariablesName(((LLOAD) obj)
+						.getIndex());
+			} else if (obj instanceof DLOAD) {
+				localVariableGen = getLocalVariablesName(((DLOAD) obj)
+						.getIndex());
+			} else if (obj instanceof FLOAD) {
+				localVariableGen = getLocalVariablesName(((FLOAD) obj)
+						.getIndex());
+			} else if (obj instanceof ALOAD) {
+				localVariableGen = getLocalVariablesName(((ALOAD) obj)
+						.getIndex());
+			}
+			if (localVariableGen != null) {
+				loadValues("ALOAD", localVariableGen.getName(),
+						localVariableGen.getType(), null);
+				Object refObj = ((this.temporalVariables != null && !this.temporalVariables
+						.isEmpty()) ? this.temporalVariables.peek()
+						: Static.NULL);
+				// loaded value can be stack
+				Static.out("LOAD: " + localVariableGen.getName() + "   "
+						+ localVariableGen.getType() + "\t" + refObj);
+			}
+		} catch (Exception e) {
+			Static.err("ERROR: loadValueFromLocalVariable");
+		}
+	}
+
+	private void loadValues(String flag, String variableName, Type type,
+			ReferenceType referenceType) {
+		try {
+			Object value = null;
+			try {
+				Object targetClass = null;
+				switch (flag) {
+				case "ALOAD":
+					value = getLocalVariableValueByVarialbleName(variableName,
+							referenceType);
+					break;
+				case "GETFIELD":
+					targetClass = getTargetClass(type);
+					Static.err("Targets PULL = " + targetClass);
+					Stack<Object> values = new Stack<Object>();
+					if (targetClass != null) {
+						if (targetClass instanceof Collection<?>) {
+							for (Object object : (Collection<?>) targetClass) {
+								value = this.classVisitor.getValueFromField(
+										object, variableName, referenceType);
+								if (value instanceof Collection<?>) {
+									for (Object val : (Collection<?>) value) {
+										if (!Static
+												.containsElementInCollection(
+														values, val)) {
+											values.add(val);
+										}
+									}
+								} else {
+									if (!Static.containsElementInCollection(
+											values, value)) {
+										values.add(value);
+									}
+								}
+							}
+							value = values;
+						} else {
+							value = this.classVisitor.getValueFromField(
+									targetClass, variableName, referenceType);
+						}
+					}
+					break;
+				case "GETSTATIC":
+					Description description = this.description
+							.getDescriptionByClassName(referenceType.toString());
+					if (description != null) {
+						// get the actual link
+						initializeStaticFields(
+								description,
+								(this.source != null) ? this.source : this.node,
+								this.exceptions, true);
+
+						value = this.description.getValueFromStaticField(
+								description, variableName, referenceType);
+					} else {
+						value = type;
+					}
+					break;
+				}
+			} catch (Exception e) {
+				value = type;
+			}
+			if (value != null) {
+				addToTemporalVariable(value);
+			}
+			Static.out("STACK: " + this.temporalVariables);
+		} catch (Exception e) {
+			Static.err("ERROR: loadValues");
+		}
+	}
+
+	// TODO: REMOVE ME - I am for PRINT
+	private void printObjectInvoke(Type[] types, ReferenceType referenceType,
+			String methodName, String flag) {
+		// ------------Only To Show-------------
+		String type = "(";
+		for (int j = 0; j < types.length; j++) {
+			type += ((j + 1) == types.length) ? types[j] : types[j] + ",";
+		}
+		type += ")";
+		Static.out(String.format(format, flag, referenceType, methodName)
+				+ " "
+				+ type
+				+ "\n------------------------------------------------------------------------------------------\n");
+		// -------------------------------------
+	}
+
+	// remove primitive type data from stack until the last value is other type
+	private void removePrimitiveData() {
+		try {
+			if (this.temporalVariables != null
+					&& !this.temporalVariables.isEmpty()) {
+				if (this.temporalVariables.peek().toString()
+						.equalsIgnoreCase(Static.PRIMITIVE)) {
+					this.temporalVariables.pop();
+					removePrimitiveData();
+				}
+			}
+		} catch (Exception e) {
+			Static.err("ERROR: removePrimitiveData");
 		}
 	}
 
@@ -566,165 +1507,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 		// ----------------------------------------------------------
 	}
 
-	// add values from params to local variable of Method
-	private void addValuesToLocalVariableFromParameters(int length,
-			List<Object> params) {
-		try {
-			if (length > 0) {
-				int k = -1;
-				Stack<Object> object = null;
-				for (Entry<String, Stack<Object>> key : this.localVariables
-						.entrySet()) {
-					k++;
-					if (key.getKey().equalsIgnoreCase(Static.THIS)) {
-						k--;
-					} else {
-						if (k < length) {
-							object = new Stack<Object>();
-							if (params.get(k) instanceof Collection<?>) {
-								for (Object obj : (Collection<?>) params.get(k)) {
-									object.add(obj);
-								}
-							} else {
-								object.add(params.get(k));
-							}
-							key.setValue(object);
-						} else {
-							key.setValue(new Stack<Object>());
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			Static.err("ERROR: addValuesToLocalVariableFromParameters");
-		}
-	}
-
-	// remove value(s) that contains by if, if can one value or twos depending
-	// of category
-	private void fixIfConsitions(Instruction i) {
-		try {
-			if (i instanceof IF_ACMPEQ || i instanceof IF_ACMPNE
-					|| i instanceof IF_ICMPEQ || i instanceof IF_ICMPGE
-					|| i instanceof IF_ICMPGT || i instanceof IF_ICMPLE
-					|| i instanceof IF_ICMPLT || i instanceof IF_ICMPNE) {
-				// remove last two values from stack
-				for (int j = 0; j < 2; j++) {
-					if (!temporalVariables.isEmpty()) {
-						if (this.temporalVariables.peek() instanceof GroupOfValues) {
-							if (!this.tempGroupValues.isEmpty()) {
-								GroupOfValues gov = this.tempGroupValues.peek();
-								gov.pop();
-							}
-						} else {
-							this.temporalVariables.pop();
-						}
-					}
-				}
-			} else if (i instanceof IFEQ || i instanceof IFGE
-					|| i instanceof IFGT || i instanceof IFLE
-					|| i instanceof IFLT || i instanceof IFNE
-					|| i instanceof IFNONNULL || i instanceof IFNULL) {
-				// remove one value from stack
-				if (!temporalVariables.isEmpty()) {
-					if (this.temporalVariables.peek() instanceof GroupOfValues) {
-						if (!this.tempGroupValues.isEmpty()) {
-							GroupOfValues gov = this.tempGroupValues.peek();
-							gov.pop();
-						}
-					} else {
-						this.temporalVariables.pop();
-					}
-				}
-			}
-		} catch (Exception e) {
-			Static.err("ERROR: fixIfConsitions");
-		}
-	}
-
-	private void addToLoaclVariable(String variableName, Object currentValue,
-			ReferenceType referenceType, Type type) {
-		try {
-			List<Object> values = this.localVariables.get(variableName);
-			// keep previous value if and only if condition is open, otherwise
-			// remove all
-			if (values != null) {
-				if (!this.isConditons) {
-					if (!values.isEmpty()) {
-						values.clear();
-					}
-				}
-				// do not save group value
-				if (currentValue instanceof Collection) {
-					for (Object stackValues : (Collection<?>) currentValue) {
-						if (!(stackValues instanceof GroupOfValues)) {
-							Object thisValue = null;
-							if (!Static.isCollectionsOrMap(type.toString())) {
-								thisValue = Static
-										.verifyTypeFromObjectsToStore(
-												stackValues, type, description);
-							} else {
-								thisValue = stackValues;
-							}
-							if (!Static.containsElementInCollection(values,
-									thisValue)) {
-								values.add(thisValue);
-							}
-						} else {
-							GroupOfValues gv = (GroupOfValues) stackValues;
-							for (Object gvv : gv
-									.getAllValues(type, description)) {
-								if (!Static.containsElementInCollection(values,
-										gvv)) {
-									values.add(gvv);
-								}
-							}
-						}
-					}
-				} else {
-					if (!(currentValue instanceof GroupOfValues)) {
-						if (!Static.containsElementInCollection(values,
-								currentValue)) {
-							values.add(currentValue);
-						}
-					} else {
-						GroupOfValues gv = (GroupOfValues) currentValue;
-						for (Object gvv : gv.getAllValues(type, description)) {
-							if (!Static
-									.containsElementInCollection(values, gvv)) {
-								values.add(gvv);
-							}
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			Static.err("ERROR: addToLoaclVariable");
-		}
-	}
-
-	private Stack<Object> getLocalVariablesByVarialbleName(String variableName) {
-		Stack<Object> objects = null;
-		try {
-			objects = this.localVariables.get(variableName);
-		} catch (Exception e) {
-			Static.err("ERROR: getLocalVariablesByVarialbleName");
-		}
-		return objects;
-	}
-
-	private Object getLocalVariableValueByVarialbleName(String variableName,
-			ReferenceType referenceType) {
-		Stack<Object> objects = getLocalVariablesByVarialbleName(variableName);
-		if (objects != null && !objects.isEmpty()) {
-			if (variableName.equalsIgnoreCase("this")) {
-				return objects.peek();
-			}
-			return objects;
-		}
-		return null;
-	}
-
 	private void storeValues(String flag, String variableName, Type type,
 			ReferenceType referenceType) {
 		try {
@@ -764,317 +1546,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
-	private void addReturnValues(boolean isPrimitive, Type returnType) {
-		try {
-			// must remove last value of group or other
-			// not save as group or collection
-			Object value = getValue(returnType, true);
-			if (isPrimitive) {
-				addReturnValues(Static.PRIMITIVE);
-			} else {
-				Static.err("Return Value for Referance Type");
-				if (value instanceof Collection<?>) {
-					for (Object object : (Collection<?>) value) {
-						addReturnValues(object);
-					}
-				} else {
-					addReturnValues(value);
-				}
-			}
-		} catch (Exception e) {
-			Static.err("ERROR: addReturnValues");
-		}
-	}
-
-	private void addReturnValues(Object value) {
-		if (!Static.containsElementInCollection(this.returnValues, value)) {
-			this.returnValues.add(value);
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private Object getValue(Type type, boolean shouldPOP) {
-		// to store pass stack or group value that will converted to stack
-		// only, no gov directly
-		Object value = null;
-		boolean isCollectionType = Static.isCollectionsOrMap(type.toString());
-		GroupOfValues gov = null;
-		try {
-			value = (this.temporalVariables != null && !this.temporalVariables
-					.isEmpty()) ? this.temporalVariables.peek() : null;
-			if (value instanceof GroupOfValues) {
-				gov = (GroupOfValues) value;
-				if (gov.isOpen) {
-					// not close get last group and merge
-					if (!this.tempGroupValues.isEmpty()) {
-						if (shouldPOP) {
-							value = this.tempGroupValues.peek().pop();
-						} else {
-							value = this.tempGroupValues.peek().peek();
-						}
-						if (Static.isPrimitiveType(type)) {
-							value = Static.PRIMITIVE;
-						} else {
-							if (value instanceof GroupOfValues) {
-								// get all values including child
-								value = ((GroupOfValues) value).getAllValues(
-										type, this.description);
-							} else if (value instanceof Collection) {
-								if (!((Stack<Object>) value).isEmpty()) {
-									if (!((Stack<Object>) value).get(0)
-											.toString().contains("[]")) {
-										if (!isCollectionType) {
-											Stack<Object> allValues = new Stack<Object>();
-											for (Object stackValues : (Collection<?>) value) {
-												Object thisValue = Static
-														.verifyTypeFromObjectsToStore(
-																stackValues,
-																type,
-																description);
-												if (!Static
-														.containsElementInCollection(
-																allValues,
-																thisValue)) {
-													allValues.add(thisValue);
-												}
-											}
-											value = allValues;
-										}
-									}
-								}
-							}
-						}
-					} else {
-						value = gov.getAllValues(type, this.description);
-					}
-				} else {
-					// if close
-					// if close merge all data
-					if (Static.isPrimitiveType(type)) {
-						value = Static.PRIMITIVE;
-					} else {
-						value = gov.getAllValues(type, this.description);
-					}
-					if (shouldPOP) {
-						this.temporalVariables.pop();
-					}
-				}
-			} else {
-				if (shouldPOP) {
-					this.temporalVariables.pop();
-				}
-			}
-
-			if (value instanceof List) {
-				if (((List<?>) value).isEmpty() || ((List<?>) value) == null) {
-					value = Static.NULL;
-				}
-			} else {
-				value = Static.verifyTypeFromObjectsToStore(value, type,
-						this.description);
-			}
-			if (value == null) {
-				if (Static.isPrimitiveType(type)) {
-					value = Static.PRIMITIVE;
-				} else {
-					value = Static.getDescriptionCopy(this.description, type);
-				}
-			}
-		} catch (Exception e) {
-			value = Static.getDescriptionCopy(this.description, type);
-			if (Static.isPrimitiveTypeString(value.toString())) {
-				value = Static.PRIMITIVE;
-			}
-			Static.err("SOLVED: getValue; for any exception its solved inside the exception");
-		}
-		return value;
-	}
-
-	private Object getTargetClass(Type type) {
-		Object target = null;
-		try {
-			if (this.temporalVariables != null
-					&& !this.temporalVariables.isEmpty()) {
-				if (!((this.temporalVariables.peek()) instanceof GroupOfValues)) {
-					return this.temporalVariables.pop();
-				} else {
-					GroupOfValues gov = (GroupOfValues) this.temporalVariables
-							.peek();
-					if (gov.isOpen) {
-						if (!this.tempGroupValues.isEmpty()) {
-							target = this.tempGroupValues.peek().pop();
-							if (target instanceof GroupOfValues) {
-								// assume if group found then that will be
-								// close.
-								// So, pop that group and then pop another to
-								// get
-								// target. It's because if there is a group
-								// found
-								// that will be collected as value of that
-								// target,
-								// so, it will be empty that we don not need to
-								// take
-								target = this.tempGroupValues.peek().pop();
-							}
-						} else {
-							target = null;
-						}
-					} else {
-						this.temporalVariables.pop();
-						if (!((this.temporalVariables.peek()) instanceof GroupOfValues)) {
-							return this.temporalVariables.pop();
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			Static.err("ERROR: getTargetClass");
-		}
-		return target;
-	}
-
-	private void loadValues(String flag, String variableName, Type type,
-			ReferenceType referenceType) {
-		try {
-			Object value = null;
-			try {
-				Object targetClass = null;
-				switch (flag) {
-				case "ALOAD":
-					value = getLocalVariableValueByVarialbleName(variableName,
-							referenceType);
-					break;
-				case "GETFIELD":
-					targetClass = getTargetClass(type);
-					Static.err("Targets PULL = " + targetClass);
-					Stack<Object> values = new Stack<Object>();
-					if (targetClass != null) {
-						if (targetClass instanceof Collection<?>) {
-							for (Object object : (Collection<?>) targetClass) {
-								value = this.classVisitor.getValueFromField(
-										object, variableName, referenceType);
-								if (value instanceof Collection<?>) {
-									for (Object val : (Collection<?>) value) {
-										if (!Static
-												.containsElementInCollection(
-														values, val)) {
-											values.add(val);
-										}
-									}
-								} else {
-									if (!Static.containsElementInCollection(
-											values, value)) {
-										values.add(value);
-									}
-								}
-							}
-							value = values;
-						} else {
-							value = this.classVisitor.getValueFromField(
-									targetClass, variableName, referenceType);
-						}
-					}
-					break;
-				case "GETSTATIC":
-					Description description = this.description
-							.getDescriptionByClassName(referenceType.toString());
-					if (description != null) {
-						// get the actual link
-						initializeStaticFields(
-								description,
-								(this.source != null) ? this.source : this.node,
-								this.exceptions, true);
-
-						value = this.description.getValueFromStaticField(
-								description, variableName, referenceType);
-					} else {
-						value = type;
-					}
-					break;
-				}
-			} catch (Exception e) {
-				value = type;
-			}
-			if (value != null) {
-				addToTemporalVariable(value);
-			}
-			Static.out("STACK: " + this.temporalVariables);
-		} catch (Exception e) {
-			Static.err("ERROR: loadValues");
-		}
-	}
-
-	private final LocalVariableGen getLocalVariablesName(int index) {
-		LocalVariableGen localVariableGen = null;
-		// keep the line number for same indexed variable
-		List<Integer> list = new ArrayList<Integer>();
-		String name = null;
-		int currentIndex = -1;
-		int size = this.localVariableArray.length;
-		LocalVariable currentVariable = null;
-		try {
-			for (int i = 0; i < size; i++) {
-				currentVariable = this.localVariableArray[i];
-				currentIndex = currentVariable.getIndex();
-				if (currentIndex == index) {
-					if (currentVariable.getStartPC() == this.currentLineNumber) {
-						name = currentVariable.getName();
-						break;
-					} else {
-						list.add(currentVariable.getStartPC());
-						// have to be less than the end_pc
-						list.add(currentVariable.getStartPC()
-								+ currentVariable.getLength() - 1);
-					}
-					if (list.size() < 3) {
-						if (i + 1 < size) {
-							if (this.localVariableArray[i + 1].getIndex() != index) {
-								name = currentVariable.getName();
-								break;
-							}
-						} else {
-							name = currentVariable.getName();
-							break;
-						}
-					}
-				} else if (currentIndex > index) {
-					break;
-				}
-			}
-			if (!list.isEmpty() && list.size() != 1 && name == null) {
-				Collections.sort(list);
-			}
-			if (name == null) {
-				if (list.size() == 1) {
-					name = this.localVariableTable.getLocalVariable(index,
-							list.get(0)).getName();
-				} else {
-					LocalVariable lv = null;
-					for (int val : list) {
-						if (val > this.currentLineNumber) {
-							lv = this.localVariableTable.getLocalVariable(
-									index, val);
-							if (lv != null) {
-								name = lv.getName();
-								break;
-							}
-						}
-					}
-				}
-			}
-			Static.err(name);
-			for (LocalVariableGen lvg : this.localVariableGens) {
-				if (lvg.getName().equalsIgnoreCase(name)) {
-					localVariableGen = lvg;
-					break;
-				}
-			}
-		} catch (Exception e) {
-			Static.err("ERROR: getLocalVariablesName");
-		}
-		return localVariableGen;
-	}
-
 	private void storeValueToLocalVariable(StoreInstruction obj) {
 		try { // int index = -1;
 			LocalVariableGen localVariableGen = null;
@@ -1109,90 +1580,41 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
-	private void loadValueFromLocalVariable(LoadInstruction obj) {
-		try { // int index = -1;
-			LocalVariableGen localVariableGen = null;
-			if (obj instanceof ILOAD) {
-				localVariableGen = getLocalVariablesName(((ILOAD) obj)
-						.getIndex());
-			} else if (obj instanceof LLOAD) {
-				localVariableGen = getLocalVariablesName(((LLOAD) obj)
-						.getIndex());
-			} else if (obj instanceof DLOAD) {
-				localVariableGen = getLocalVariablesName(((DLOAD) obj)
-						.getIndex());
-			} else if (obj instanceof FLOAD) {
-				localVariableGen = getLocalVariablesName(((FLOAD) obj)
-						.getIndex());
-			} else if (obj instanceof ALOAD) {
-				localVariableGen = getLocalVariablesName(((ALOAD) obj)
-						.getIndex());
-			}
-			if (localVariableGen != null) {
-				loadValues("ALOAD", localVariableGen.getName(),
-						localVariableGen.getType(), null);
-				Object refObj = ((this.temporalVariables != null && !this.temporalVariables
-						.isEmpty()) ? this.temporalVariables.peek()
-						: Static.NULL);
-				// loaded value can be stack
-				Static.out("LOAD: " + localVariableGen.getName() + "   "
-						+ localVariableGen.getType() + "\t" + refObj);
-			}
-		} catch (Exception e) {
-			Static.err("ERROR: loadValueFromLocalVariable");
-		}
+	public final String toString() {
+		return this.node;
 	}
 
-	private void fieldValueInstructor(FieldInstruction obj) {
+	@SuppressWarnings("unchecked")
+	private void visitArrayLoad(ArrayInstruction obj) {
 		try {
-			// TODO Remove me
-			Static.out("\t\t" + obj.getName() + "   --->   "
-					+ obj.getType(constantPoolGen).getSignature());
+			Type type = obj.getType(constantPoolGen);
 
-			Static.out("\t\t" + obj.getFieldName(constantPoolGen));
-			Static.out("\t\t" + obj.getFieldType(constantPoolGen));
-
-			if (obj instanceof PUTFIELD) {
-				storeValues("PUTFIELD",
-						((PUTFIELD) obj).getFieldName(constantPoolGen),
-						((PUTFIELD) obj).getFieldType(constantPoolGen),
-						((PUTFIELD) obj).getReferenceType(constantPoolGen));
-			} else if (obj instanceof GETFIELD) {
-				loadValues("GETFIELD",
-						((GETFIELD) obj).getFieldName(constantPoolGen),
-						((GETFIELD) obj).getFieldType(constantPoolGen),
-						((GETFIELD) obj).getReferenceType(constantPoolGen));
-			} else if (obj instanceof PUTSTATIC) {
-				storeValues("PUTSTATIC",
-						((PUTSTATIC) obj).getFieldName(constantPoolGen),
-						((PUTSTATIC) obj).getFieldType(constantPoolGen),
-						((PUTSTATIC) obj).getReferenceType(constantPoolGen));
-			} else if (obj instanceof GETSTATIC) {
-				loadValues("GETSTATIC",
-						((GETSTATIC) obj).getFieldName(constantPoolGen),
-						((GETSTATIC) obj).getFieldType(constantPoolGen),
-						((GETSTATIC) obj).getReferenceType(constantPoolGen));
+			Object arrayObjcet = null;
+			String verifyArray = "";
+			// to prevent unlimited loop, after 20 times it will not continue
+			int limit = 20;
+			while (!verifyArray.toString().contains("[]") && limit > 0) {
+				arrayObjcet = getValue(type, true);
+				if (arrayObjcet instanceof Collection<?>) {
+					if (!((Collection<?>) arrayObjcet).isEmpty()) {
+						verifyArray = ((Stack<Object>) arrayObjcet).get(0)
+								.toString();
+					}
+				}
+				limit--;
+				if (!verifyArray.toString().contains("[]")) {
+					arrayObjcet = null;
+				} else {
+					break;
+				}
 			}
+			// first element contains array typed value
+			// do not remove that, otherwise other value cannot recognize that
+			// as array
+			addToTemporalVariable(arrayObjcet);
 		} catch (Exception e) {
-			Static.err("ERROR: fieldValueInstructor");
+			Static.err("ERROR: visitArrayLoad");
 		}
-	}
-
-	private boolean arrayInstructions(ArrayInstruction obj) {
-		if (obj instanceof IALOAD || obj instanceof CALOAD
-				|| obj instanceof BALOAD || obj instanceof SALOAD
-				|| obj instanceof LALOAD || obj instanceof DALOAD
-				|| obj instanceof FALOAD || obj instanceof AALOAD) {
-			visitArrayLoad(obj);
-			return true;
-		} else if (obj instanceof IASTORE || obj instanceof CASTORE
-				|| obj instanceof BASTORE || obj instanceof SASTORE
-				|| obj instanceof LASTORE || obj instanceof DASTORE
-				|| obj instanceof FASTORE || obj instanceof AASTORE) {
-			visitArrayStore(obj);
-			return true;
-		}
-		return false;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1256,293 +1678,10 @@ public final class MethodVisitor extends EmptyVisitor implements
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private void visitArrayLoad(ArrayInstruction obj) {
-		try {
-			Type type = obj.getType(constantPoolGen);
-
-			Object arrayObjcet = null;
-			String verifyArray = "";
-			// to prevent unlimited loop, after 20 times it will not continue
-			int limit = 20;
-			while (!verifyArray.toString().contains("[]") && limit > 0) {
-				arrayObjcet = getValue(type, true);
-				if (arrayObjcet instanceof Collection<?>) {
-					if (!((Collection<?>) arrayObjcet).isEmpty()) {
-						verifyArray = ((Stack<Object>) arrayObjcet).get(0)
-								.toString();
-					}
-				}
-				limit--;
-				if (!verifyArray.toString().contains("[]")) {
-					arrayObjcet = null;
-				} else {
-					break;
-				}
-			}
-			// first element contains array typed value
-			// do not remove that, otherwise other value cannot recognize that
-			// as array
-			addToTemporalVariable(arrayObjcet);
-		} catch (Exception e) {
-			Static.err("ERROR: visitArrayLoad");
-		}
-	}
-
-	private List<Object> getParameters(Type[] types, String methodName) {
-		List<Object> params = new ArrayList<Object>();
-		try {
-			int length = types.length;
-			int c = types.length;
-			if (length > 0) {
-				for (int j = 0; j < length; j++) {
-					c--;
-					Type type = types[c];
-					Object value = getValue(type, true);
-					params.add(value);
-				}
-			}
-			if (params.size() > 1) {
-				Collections.reverse(params);
-			}
-		} catch (Exception e) {
-			Static.err("ERROR: getParameters");
-		}
-		// TODO Remove me
-		Static.out("\t\t\t\tParams:   " + params);
-		return params;
-	}
-
-	private void createNewArrayProviderObject() {
-		try {
-			// removePrimitiveData();
-			// this.temporalVariables.add(new ArrayObjectProvider());
-		} catch (Exception e) {
-			Static.err("ERROR: createNewArrayProviderObject");
-		}
-	}
-
-	// remove primitive type data from stack until the last value is other type
-	private void removePrimitiveData() {
-		try {
-			if (this.temporalVariables != null
-					&& !this.temporalVariables.isEmpty()) {
-				if (this.temporalVariables.peek().toString()
-						.equalsIgnoreCase(Static.PRIMITIVE)) {
-					this.temporalVariables.pop();
-					removePrimitiveData();
-				}
-			}
-		} catch (Exception e) {
-			Static.err("ERROR: removePrimitiveData");
-		}
-	}
-
-	// TODO: REMOVE ME - I am for PRINT
-	private void printObjectInvoke(Type[] types, ReferenceType referenceType,
-			String methodName, String flag) {
-		// ------------Only To Show-------------
-		String type = "(";
-		for (int j = 0; j < types.length; j++) {
-			type += ((j + 1) == types.length) ? types[j] : types[j] + ",";
-		}
-		type += ")";
-		Static.out(String.format(format, flag, referenceType, methodName)
-				+ " "
-				+ type
-				+ "\n------------------------------------------------------------------------------------------\n");
-		// -------------------------------------
-	}
-
-	private Stack<Description> getInvokedDescription(ReferenceType type) {
-		// especially for Interface, it will match the type first to send values
-		String classType = type.toString();
-		Stack<Description> values = new Stack<Description>();
-		GroupOfValues gov = null;
-		try {
-			Object value = (this.temporalVariables != null && !this.temporalVariables
-					.isEmpty()) ? this.temporalVariables.peek() : Static.NULL;
-
-			if (value instanceof GroupOfValues) {
-				gov = (GroupOfValues) value;
-				if (gov.isOpen) {
-					// not close get last group and marge
-					if (!this.tempGroupValues.isEmpty()) {
-						value = this.tempGroupValues.peek().pop();
-						if (value instanceof GroupOfValues) {
-							// get all values including child
-							value = ((GroupOfValues) value).getAllValues(type,
-									this.description);
-						} else if (value instanceof Collection) {
-							Stack<Object> allValues = new Stack<Object>();
-							for (Object stackValues : (Collection<?>) value) {
-								Object thisValue = Static
-										.verifyTypeFromObjectsToStore(
-												stackValues, type, description);
-								if (!Static.containsElementInCollection(
-										allValues, thisValue)) {
-									allValues.add(thisValue);
-								}
-							}
-							value = allValues;
-						}
-					}
-				} else {
-					// if close
-					value = gov.getAllValues(type, this.description);
-					this.temporalVariables.pop();
-				}
-			} else {
-				this.temporalVariables.pop();
-			}
-			if (!Static.someValues.isEmpty()) {
-				Static.someValues.clear();
-			}
-			if (value instanceof Collection) {
-				for (Object stackObject : (Collection<?>) value) {
-					String stackType = stackObject.toString();
-					if (Static.isSameType(classType, stackType)) {
-						if (stackObject instanceof Description) {
-							values.add((Description) stackObject);
-						} else {
-							Static.someValues.add(stackObject);
-						}
-					}
-				}
-			} else {
-				if (value instanceof Description) {
-					values.add((Description) value);
-				} else {
-					Static.someValues.add(value);
-				}
-			}
-
-		} catch (Exception e) {
-			Static.err("ERROR: getInvokedDescription");
-		}
-		return values;
-	}
-
-	@SuppressWarnings("unchecked")
-	private void invokedVirtualAndInterface(String flag, InvokeInstruction i) {
-		// TODO: Remove flag at the end of everything, this flag is just to
-		// Print I, O, C, M
-		try {
-			boolean isCollectionType = false;
-			Type[] types = i.getArgumentTypes(constantPoolGen);
-			String methodName = i.getMethodName(constantPoolGen);
-			// TODO: decide as output requirement
-			printObjectInvoke(types, i.getReferenceType(constantPoolGen),
-					methodName, flag);
-			List<Object> params = getParameters(types, methodName);
-			ReferenceType referenceType = i.getReferenceType(constantPoolGen);
-			// -------------For Collection or Map ----------------------
-			isCollectionType = Static.isCollectionsOrMap(referenceType
-					.toString());
-			Stack<Object> cols = null;
-			if (isCollectionType) {
-				Object obj = getValue(referenceType, false);
-				if (obj instanceof Collection) {
-					cols = (Stack<Object>) obj;
-					for (Object para : params) {
-						if (!Static.containsElementInCollection(cols, para)) {
-							if (para instanceof Collection<?>) {
-								for (Object par : (Collection<?>) para) {
-									if (!Static.containsElementInCollection(
-											cols, par)) {
-										cols.add(par);
-									}
-								}
-							} else {
-								if (!Static.containsElementInCollection(cols,
-										para)) {
-									cols.add(para);
-								}
-							}
-						}
-					}
-				}
-			}
-			// -------------------------------------------------
-			// check Exception class and then keep them
-			if (Static.isSameType(referenceType.toString(),
-					"java.lang.Exception")) {
-				if (!referenceType.toString().equalsIgnoreCase(
-						"java.lang.Object")) {
-					this.exceptionClassList.add(referenceType.toString());
-				}
-			}
-			List<Description> listDescriptions = getInvokedDescription(referenceType);
-			if (listDescriptions != null && !listDescriptions.isEmpty()) {
-				Stack<Object> allReturnValues = new Stack<Object>();
-				Object returnType = null;
-				for (Description des : listDescriptions) {
-					if (!des.toString().equalsIgnoreCase(Static.NULL)) {
-						Description description = des;// getInvokedDescription(referenceType);
-						Static.out(referenceType.toString());
-						MethodVisitor methodVisitor = null;
-						if (description != null) {
-							methodVisitor = description
-									.getMethodVisitorByNameAndTypeArgs(
-											description, methodName, types,
-											true);
-							if (methodVisitor != null) {
-								returnType = methodVisitor.start(this.node,
-										params, false, this.exceptionClassList,
-										false);
-							}
-						}
-						// check Exception class and then print edges, print all
-						if (Static.isSameType(referenceType.toString(),
-								"java.lang.Exception")) {
-							for (String ex : this.exceptionClassList) {
-								createEdgeIfMethodNotFound(null, null,
-										this.node, ex, methodName, params,
-										types, false, null);
-							}
-						}
-						if (returnType != null
-								&& !returnType.toString().equalsIgnoreCase(
-										"void")) {
-							// this.temporalVariables.add(returnType);
-							if (returnType instanceof Collection<?>) {
-								for (Object obj : (Collection<?>) returnType) {
-									if (!Static.containsElementInCollection(
-											allReturnValues, obj)) {
-										allReturnValues.add(obj);
-									}
-								}
-							} else {
-								if (!Static.containsElementInCollection(
-										allReturnValues, returnType)) {
-									allReturnValues.add(returnType);
-								}
-							}
-						}
-						Static.out("------------------------");
-					}
-					if (returnType != null
-							&& !returnType.toString().equalsIgnoreCase("void")) {
-						addToTemporalVariable(allReturnValues);
-					}
-				}
-			} else {
-				if (!Static.someValues.isEmpty()) {
-					while (!Static.someValues.isEmpty()) {
-						createEdgeIfMethodNotFound(null, null, this.node,
-								Static.someValues.pop().toString(), methodName,
-								params, types, isCollectionType, cols);
-					}
-				}
-			}
-			if (!Static.someValues.isEmpty()) {
-				Static.someValues.clear();
-			}
-		} catch (Exception e) {
-			Static.err("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i)");
-		}
-		// Verify and remove remaining primitive data
-		removePrimitiveData();
+	private boolean visitInstruction(Instruction i) {
+		short opcode = i.getOpcode();
+		return ((InstructionConstants.INSTRUCTIONS[opcode] != null)
+				&& !(i instanceof ConstantPushInstruction) && !(i instanceof ReturnInstruction));
 	}
 
 	@Override
@@ -1551,15 +1690,6 @@ public final class MethodVisitor extends EmptyVisitor implements
 			invokedVirtualAndInterface("I", i);
 		} catch (Exception e) {
 			Static.err("SOME ERROR FOUND: public void visitINVOKEINTERFACE(INVOKEINTERFACE i) ");
-		}
-	}
-
-	@Override
-	public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i) {
-		try {
-			invokedVirtualAndInterface("O", i);
-		} catch (Exception e) {
-			Static.err("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i) ");
 		}
 	}
 
@@ -1641,6 +1771,19 @@ public final class MethodVisitor extends EmptyVisitor implements
 		removePrimitiveData();
 	}
 
+	// @Override
+	// public void visitCHECKCAST(CHECKCAST obj) {
+	// try {
+	// Static.err("CAST");
+	// Static.out("\t\t" + obj.getName() + "   --->   "
+	// + obj.getType(constantPoolGen).getSignature());
+	// Static.out("\t\t" + obj.getType(constantPoolGen));
+	// Static.out("\t\t" + obj.getLoadClassType(constantPoolGen));
+	// } catch (Exception e) {
+	// Static.err("SOME ERROR FOUND: public void visitCHECKCAST(CHECKCAST obj) ");
+	// }
+	// }
+
 	@Override
 	public void visitINVOKESTATIC(INVOKESTATIC i) {
 		try {
@@ -1679,155 +1822,12 @@ public final class MethodVisitor extends EmptyVisitor implements
 		removePrimitiveData();
 	}
 
-	// @Override
-	// public void visitCHECKCAST(CHECKCAST obj) {
-	// try {
-	// Static.err("CAST");
-	// Static.out("\t\t" + obj.getName() + "   --->   "
-	// + obj.getType(constantPoolGen).getSignature());
-	// Static.out("\t\t" + obj.getType(constantPoolGen));
-	// Static.out("\t\t" + obj.getLoadClassType(constantPoolGen));
-	// } catch (Exception e) {
-	// Static.err("SOME ERROR FOUND: public void visitCHECKCAST(CHECKCAST obj) ");
-	// }
-	// }
-
-	private void addToTemporalVariable(Object object) {
+	@Override
+	public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i) {
 		try {
-			Object lastValue = (!this.temporalVariables.isEmpty()) ? this.temporalVariables
-					.peek() : null;
-			if (lastValue != null) {
-				if (lastValue instanceof GroupOfValues) {
-					GroupOfValues gov = (GroupOfValues) lastValue;
-					if (gov.isOpen) {
-						if (!this.tempGroupValues.isEmpty()) {
-							// peek the last group object and add value
-							this.tempGroupValues.peek().add(object);
-						} else {
-							// if somehow miss then it will add value, however,
-							// this line will never use
-							gov.addAtLast(object);
-						}
-					} else {
-						this.temporalVariables.add(object);
-					}
-				} else {
-					this.temporalVariables.add(object);
-				}
-			} else {
-				this.temporalVariables.add(object);
-			}
+			invokedVirtualAndInterface("O", i);
 		} catch (Exception e) {
-			Static.err("ERROR in addToTemporalVariable ");
+			Static.err("SOME ERROR FOUND: public void visitINVOKEVIRTUAL(INVOKEVIRTUAL i) ");
 		}
-	}
-
-	// generate edges which has no description or method visitor recorded
-	private boolean createEdgeIfMethodNotFound(Description description,
-			MethodVisitor methodVisitor, String source, String referenceType,
-			String methodName, List<Object> params, Type[] types,
-			boolean isCollectionType, Object collectionVariableObject) {
-		this.collectionMethodReturnType = null;
-		boolean hasDescription = this.description.hasDescription(referenceType
-				.toString());
-		if (description == null) {
-			String target = referenceType + "." + methodName;
-			String type = "(";
-			if (params != null && !params.isEmpty()) {
-				int length = params.size();
-				Object param = null;
-				String actualParam = "";
-				for (int i = 0; i < length; i++) {
-					param = params.get(i);
-					if (param instanceof Collection<?>) {
-						if (((Collection<?>) param).size() == 1) {
-							param = ((List<?>) param).get(0);
-						} else {
-							param = type;
-						}
-					}
-					actualParam = param.toString();
-					if (actualParam.equalsIgnoreCase(Static.PRIMITIVE)) {
-						actualParam = types[i].toString();
-					}
-					type += ((i + 1) == length) ? actualParam : actualParam
-							+ ",";
-				}
-			}
-
-			type += ")";
-			target += type;
-			// keep edges that is not part of Description or part of Library
-			// Class
-			if (!hasDescription) {
-				boolean result = false;
-				if (methodName.equalsIgnoreCase("<init>")) {
-					target += "void";
-					result = true;
-				} else {
-					try {
-						// should set new target
-						Class<?> clas = Class.forName(referenceType.toString());
-						java.lang.reflect.Method[] methods = clas.getMethods();
-						for (java.lang.reflect.Method method : methods) {
-							if (method.getName().equalsIgnoreCase(methodName)) {
-								result = true;
-								Class<?>[] cTypes = method.getParameterTypes();
-								for (int i = 0; i < cTypes.length; i++) {
-									if (!cTypes[i].getName().equalsIgnoreCase(
-											types[i].toString())) {
-										result = false;
-										break;
-									}
-								}
-								if (result) {
-									this.collectionMethodReturnType = method
-											.getReturnType();
-									target = method.getDeclaringClass()
-											.getName()
-											+ "."
-											+ methodName
-											+ type
-											+ this.collectionMethodReturnType;
-									for (Class<?> exType : method
-											.getExceptionTypes()) {
-										this.exceptionClassList.add(exType
-												.getName());
-									}
-									break;
-								}
-							}
-						}
-					} catch (ClassNotFoundException e) {
-						Static.err("ERROR in createEdgeIfMethodNotFound ");
-					}
-				}
-				if (this.collectionMethodReturnType != null
-						&& !(this.collectionMethodReturnType.toString()
-								.equalsIgnoreCase("void"))) {
-					if (Static
-							.isPrimitiveTypeString(this.collectionMethodReturnType
-									.toString())) {
-						addToTemporalVariable(Static.PRIMITIVE);
-					} else {
-						if (isCollectionType
-								&& collectionVariableObject != null) {
-							addToTemporalVariable(collectionVariableObject);
-						} else {
-							addToTemporalVariable(this.collectionMethodReturnType);
-						}
-					}
-				}
-				if (result) {
-					Static.addLibraryEdge(source, target, referenceType);
-					return Static.addEdge(source, target);
-				} else {
-					return false;
-				}
-			}
-			return Static.addEdge(source, target);
-		}
-		return false;
-		// make a return type
 	}
 }

@@ -1,0 +1,111 @@
+Informations And Instructions:
+----------------------------------
+Classes Information: Package: callgraphstat (Main Class: callgraphstat.JCallGraph)
+--------------------------------------------
+1. ClassVisitor: Contains fields and others
+
+2. Description: It contains each accessed class information. Class that has no Description can not read any information except method or class name.
+It contains all static fields information and for any new invocation its return a copy of its own.
+
+3. GenerateCallGraph: Act like a middle man of Actual action.
+
+4. GroupOfValues: This class is used for conditions and loop. Whenever loop or conditions found it will keep those values separately so that it can 
+provide actual used classes instead of providing all implemented classes.
+
+5. JCallGraph: It contains Main class. It read all class file and at the end create report files.
+
+6. MethodVisitor: This class is the actual class that generate call graph by calling start method. It has many properties including teporal stack that
+is used to store values to traverse. It works by reading instructions of OP code.
+7. Options: It contains information of classes, path and others to generate call graph.
+
+8. Static: It has all kind of supporting properties and methods. Ex: print, type check etc.
+
+Library Files:
+--------------
+1. bcel-5.2.jar
+2. tools.jar
+3. jdk1.7.0_45 (must use jdk not jre)
+
+***Lib Folder contains my used library files, please import them to your project.
+
+This application has two features:
+	1. Generate Sorted and Unsorted report. Default Sorted.
+	2. Deep Search that can traverse objects whether it can find duplicate edges. Default is false (No Deep Search).
+	For large application it can throw Stackoverflow exceptions if Deep Search is true.
+	
+Report:
+--------
+All reports will be saved in working directory, after compilation you will get the message.
+	
+Changes and fix:
+------------------ 
+1. Previously It has no support for conditions and loop, now it can trace them accurately. This was the most tricky part because a parameter can have
+condition that should trace. Finally done.
+2. Now it can trace exceptions. Exception edges mostly used Throwable, because other exceptions are the child of it. If any custom exception handler
+used it can show that edge. Only if the exception is called then it can show otherwise not, means a exception "e" never used will not generate edge, but 
+if its used any way like e.getMessage(); it will generate edges also thrown exceptions.
+3. Collections and Array fixed with limited values, means by keeping only used objects.
+4. Others small changes to make it almost perfect.
+
+Instructions:
+--------------
+Here I have used two of your classes, below I have written instructions for both. Total 7 steps to follow:
+	Observer:
+	---------
+	1.	Please provide a name for this test. This name will be used as prefix of generated report.
+
+		Observer
+	
+	2.	Please provide package folder path, not the package name.
+		ex: C:\Temp\src
+
+		My Directory: (Please use yours)
+		G:\My Documents\Java\Eclips\ThesisProjectsJonasFinal\StaticCallGraph\bin
+
+	3.	Please provide packages name that should include, only parent package
+		ex: lnu of lnu.some, org of org.some
+		To exit please write 0
+
+		observer
+		0
+
+	4.	Please provide main class name with package and without .class
+		ex: package.some.Main
+
+		observer.Main
+
+	5.	Please provide main method name.
+		ex: main
+
+		main
+
+	6.	Do you want to do deep search, deep search will create and traverse each object whether it can find same edges or not
+		otherwise it will not traverse if duplicate edges found.
+		Warning: Deep search can through Stackoverflow exception for big application. Default: deep search false.
+		Write anything to do deep search, else just enter for next.
+
+		you can write anything for DeepSearch, otherwise just enter, now it will do deep search
+
+		
+	7.	Do you want unsorted report? Type anything below it will generate unsorted report. (Default: Sorted)
+
+		you can write anything for DeepSearch, otherwise just enter, now it will generate unsorted report
+
+
+	ASM: (For ASM Class use following)
+	------------------------------------
+	1.	ASM
+	2.	My Directory: (Please use yours)
+		G:\My Documents\Java\Eclips\ThesisProjectsJonasFinal\StaticCallGraph\bin
+	3.	lnu
+		org
+		0
+	4.	lnu.Main
+	5. 	main
+	6.
+	7.
+	
+I have attached generated report for both without Deep search and Sorted and a excel file to compare both of our generated edges by marking differences.
+After reading and testing please send me your feedback and give me an appointment whenever you want.
+
+Thank you.

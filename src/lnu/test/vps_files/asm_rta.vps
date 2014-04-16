@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  	<projectname>asm_rta</projectname>
+  	<projectdescription>My own RTA implem using ASM </projectdescription>
+  	<projectspecification>
+  		<entrypoint>lnu.Main</entrypoint>
+		<classpath>/Users/jonasl/Software/RTA/asm/bin</classpath>
+		<classpath>/Users/jonasl/Software/RTA/ASM_RTA/bin</classpath>
+		<applicationfilter> 
+			<include>lnu</include>
+			<include>org.objectweb</include>
+		</applicationfilter>
+	</projectspecification>
+</project>

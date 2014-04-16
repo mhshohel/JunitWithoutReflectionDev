@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  	<projectname>junit_graphs</projectname>
+  	<projectdescription>Shohel's JUnit test case for our STP graph package </projectdescription>
+  	<projectspecification>
+  		<entrypoint>graphs.test.TestDirectedGraphOutput</entrypoint>
+  		<entrypoint>graphs.test.TestDFSOutput</entrypoint>
+  		<entrypoint>graphs.test.TestAlgorithmsOutput</entrypoint>
+		<classpath>/Users/jonasl/Software/shohel/graph</classpath>
+		<classpath>/Users/jonasl/Software/jars/junit-4.7.jar</classpath>
+		<applicationfilter> 
+			<include>graphs</include>
+			<include>eclips</include>
+		</applicationfilter>
+	</projectspecification>
+</project>

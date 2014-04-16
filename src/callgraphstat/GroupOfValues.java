@@ -30,13 +30,7 @@ public class GroupOfValues {
 	private int id = -1;
 	private int endLineNumber = -1;
 
-	public void setEndLineNumber(int number) {
-		this.endLineNumber = number;
-	}
-
-	public int getEndlineNumber() {
-		return this.endLineNumber;
-	}
+	private Stack<Object> allValues = new Stack<Object>();
 
 	public GroupOfValues() {
 		this.isOpen = true;
@@ -58,13 +52,6 @@ public class GroupOfValues {
 		}
 	}
 
-	// add values that needs GroupValues close
-	// public void forceAddz(Object value) {
-	// open();
-	// this.add(value);
-	// close();
-	// }
-
 	// Object fail to add normal way
 	public void addAtLast(Object object) {
 		if (!this.values.isEmpty()) {
@@ -83,7 +70,30 @@ public class GroupOfValues {
 		}
 	}
 
-	private Stack<Object> allValues = new Stack<Object>();
+	// add values that needs GroupValues close
+	// public void forceAddz(Object value) {
+	// open();
+	// this.add(value);
+	// close();
+	// }
+
+	public void close() {
+		this.isOpen = false;
+	}
+
+	public void close(int number) {
+		if (this.endLineNumber <= number) {
+			close();
+		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if (object instanceof GroupOfValues) {
+			return ((GroupOfValues) object).id == this.id;
+		}
+		return false;
+	}
 
 	public Stack<Object> getAllValues(Type type, Description description) {
 		// change here for collection
@@ -94,6 +104,14 @@ public class GroupOfValues {
 		}
 		getValuesFromGroup(this, type, description);
 		return (this.allValues.isEmpty()) ? null : this.allValues;
+	}
+
+	public int getEndlineNumber() {
+		return this.endLineNumber;
+	}
+
+	public Stack<Object> getValues() {
+		return this.values;
 	}
 
 	private Object getValuesFromGroup(GroupOfValues gov, Type type,
@@ -134,34 +152,17 @@ public class GroupOfValues {
 		return this.allValues;
 	}
 
-	public int size() {
-		return this.values.size();
-	}
-
-	public void close(int number) {
-		if (this.endLineNumber <= number) {
-			close();
-		}
-	}
-
-	public void close() {
-		this.isOpen = false;
-	}
-
-	public void open() {
-		this.isOpen = true;
-	}
-
-	public void reopen() {
-		this.isOpen = true;
-	}
-
-	public Stack<Object> getValues() {
-		return this.values;
+	@Override
+	public int hashCode() {
+		return this.values.hashCode() + this.id;
 	}
 
 	public boolean isEmpty() {
 		return this.values.isEmpty();
+	}
+
+	public void open() {
+		this.isOpen = true;
 	}
 
 	public Object peek() {
@@ -172,17 +173,16 @@ public class GroupOfValues {
 		return (this.values.isEmpty()) ? null : this.values.pop();
 	}
 
-	@Override
-	public int hashCode() {
-		return this.values.hashCode() + this.id;
+	public void reopen() {
+		this.isOpen = true;
 	}
 
-	@Override
-	public boolean equals(Object object) {
-		if (object instanceof GroupOfValues) {
-			return ((GroupOfValues) object).id == this.id;
-		}
-		return false;
+	public void setEndLineNumber(int number) {
+		this.endLineNumber = number;
+	}
+
+	public int size() {
+		return this.values.size();
 	}
 
 	@Override
