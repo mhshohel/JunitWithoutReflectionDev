@@ -1,0 +1,40 @@
+Report Type: Sorted
+_________________________
+
+
+EDGES
+_____________________
+All Edges...
+
+Total Edges: 30
+
+observer.Adder.<init>(observer.Bag)void -- > java.lang.Object.<init>()void
+observer.Adder.<init>(observer.Bag)void -- > observer.Bag.addObserver(observer.Adder)void
+observer.Adder.update(observer.Subject)void -- > java.util.ArrayList.get(int)class java.lang.Object
+observer.Adder.update(observer.Subject)void -- > java.util.ArrayList.size()int
+observer.Adder.update(observer.Subject)void -- > observer.Bag.getValueList()java.util.ArrayList
+observer.Adder.update(observer.Subject)void -- > observer.Value.getValue()int
+observer.Bag.<init>()void -- > java.lang.Object.<init>()void
+observer.Bag.<init>()void -- > java.util.ArrayList.<init>()void
+observer.Bag.<init>()void -- > observer.ObserverArray.<init>()void
+observer.Bag.add(observer.Value)void -- > java.util.ArrayList.add(observer.Value)boolean
+observer.Bag.add(observer.Value)void -- > observer.Bag.notifyObs()void
+observer.Bag.addObserver(observer.Observer)void -- > observer.ObserverArray.add(observer.Adder)void
+observer.Bag.addObserver(observer.Observer)void -- > observer.ObserverArray.add(observer.Printer)void
+observer.Bag.notifyObs()void -- > observer.Adder.update(observer.Bag)void
+observer.Bag.notifyObs()void -- > observer.ObserverArray.get(int)java.lang.Object
+observer.Bag.notifyObs()void -- > observer.ObserverArray.size()int
+observer.Bag.notifyObs()void -- > observer.Printer.update(observer.Bag)void
+observer.Main.main(java.lang.String[])void -- > observer.Adder.<init>(observer.Bag)void
+observer.Main.main(java.lang.String[])void -- > observer.Bag.<init>()void
+observer.Main.main(java.lang.String[])void -- > observer.Bag.add(observer.Value)void
+observer.Main.main(java.lang.String[])void -- > observer.Printer.<init>(observer.Bag)void
+observer.Main.main(java.lang.String[])void -- > observer.Value.<init>(int)void
+observer.ObserverArray.<init>()void -- > java.lang.Object.<init>()void
+observer.Printer.<init>(observer.Bag)void -- > java.lang.Object.<init>()void
+observer.Printer.<init>(observer.Bag)void -- > observer.Bag.addObserver(observer.Printer)void
+observer.Printer.update(observer.Subject)void -- > java.util.ArrayList.get(int)class java.lang.Object
+observer.Printer.update(observer.Subject)void -- > java.util.ArrayList.size()int
+observer.Printer.update(observer.Subject)void -- > observer.Bag.getValueList()java.util.ArrayList
+observer.Printer.update(observer.Subject)void -- > observer.Value.getValue()int
+observer.Value.<init>(int)void -- > java.lang.Object.<init>()void

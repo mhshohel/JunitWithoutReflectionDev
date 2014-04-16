@@ -1,0 +1,103 @@
+Report Type: Sorted
+_________________________
+
+
+NO ACCESS CLASSES NODES
+_____________________
+Nodes that has no access to read, assume library classes
+
+Total No Access Library Nodes: 93
+
+java.io.File.<init>(java.lang.String)void
+java.io.File.<init>(null)void
+java.io.File.canRead()boolean
+java.io.File.exists()boolean
+java.io.File.getAbsolutePath()class java.lang.String
+java.io.File.mkdirs()boolean
+java.io.File.toURI()class java.net.URI
+java.io.FileReader.<init>(java.io.File)void
+java.io.IOException.<init>(java.lang.String)void
+java.io.InputStream.available()int
+java.io.InputStream.close()void
+java.io.PrintStream.println(()void
+java.io.PrintStream.println(java.lang.String)void
+java.io.PrintWriter.<init>(java.io.File)void
+java.io.PrintWriter.close()void
+java.io.PrintWriter.println(java.lang.String)void
+java.lang.Byte.<init>(byte)void
+java.lang.Character.<init>(char)void
+java.lang.ClassLoader.getSystemClassLoader()class java.lang.ClassLoader
+java.lang.Double.<init>(double)void
+java.lang.Double.longBitsToDouble(long)double
+java.lang.Float.<init>(float)void
+java.lang.Float.intBitsToFloat(int)float
+java.lang.IllegalArgumentException.<init>()void
+java.lang.Integer.<init>(int)void
+java.lang.Long.<init>(long)void
+java.lang.Object.<init>()void
+java.lang.Object.toString()class java.lang.String
+java.lang.Runtime.freeMemory()long
+java.lang.Runtime.gc()void
+java.lang.Runtime.getRuntime()class java.lang.Runtime
+java.lang.Runtime.totalMemory()long
+java.lang.RuntimeException.<init>()void
+java.lang.RuntimeException.<init>(java.lang.String)void
+java.lang.Short.<init>(short)void
+java.lang.String.<init>(char[],int,int)void
+java.lang.String.<init>(null,int,int)void
+java.lang.String.valueOf(char)class java.lang.String
+java.lang.String.valueOf(int)class java.lang.String
+java.lang.String.valueOf(java.lang.Object)class java.lang.String
+java.lang.String.valueOf(long)class java.lang.String
+java.lang.String.valueOf(null)class java.lang.String
+java.lang.StringBuilder.<init>(java.lang.String)void
+java.lang.StringBuilder.append(char)class java.lang.AbstractStringBuilder
+java.lang.StringBuilder.append(int)class java.lang.AbstractStringBuilder
+java.lang.StringBuilder.append(java.lang.String)class java.lang.AbstractStringBuilder
+java.lang.StringBuilder.append(java.lang.String[])class java.lang.AbstractStringBuilder
+java.lang.StringBuilder.append(long)class java.lang.AbstractStringBuilder
+java.lang.StringBuilder.append(null)class java.lang.AbstractStringBuilder
+java.lang.System.arraycopy((,int,byte[],int,int)void
+java.lang.System.arraycopy(null,int,byte[],int,int)void
+java.lang.System.currentTimeMillis()long
+java.lang.System.exit(int)void
+java.lang.System.getProperty(java.lang.String)class java.lang.String
+java.lang.Throwable.printStackTrace()void
+java.lang.reflect.AccessibleObject.setAccessible(boolean)void
+java.util.AbstractCollection.toArray(java.lang.Object[])class [Ljava.lang.Object;
+java.util.ArrayList.<init>()void
+java.util.ArrayList.<init>(int)void
+java.util.ArrayList.<init>(org.objectweb.asm.tree.MethodNode)void
+java.util.ArrayList.add(()boolean
+java.util.ArrayList.add(byte[])boolean
+java.util.ArrayList.add(java.lang.Object)boolean
+java.util.ArrayList.add(org.objectweb.asm.tree.AnnotationNode)boolean
+java.util.ArrayList.toArray(java.lang.Object[])class [Ljava.lang.Object;
+java.util.HashMap.<init>()void
+java.util.HashMap.get(java.lang.Object)class java.lang.Object
+java.util.HashMap.get(org.objectweb.asm.tree.MethodNode)class java.lang.Object
+java.util.HashMap.put(java.lang.Object,(java.lang.Object,)class java.lang.Object
+java.util.HashMap.put(java.lang.Object,org.objectweb.asm.tree.ClassNode)class java.lang.Object
+java.util.HashSet.<init>()void
+java.util.HashSet.add(java.lang.Object)boolean
+java.util.HashSet.add(lnu.asm.rta.entities.RTAMethod)boolean
+java.util.HashSet.contains(()boolean
+java.util.HashSet.contains(java.lang.Object)boolean
+java.util.HashSet.contains(lnu.asm.rta.entities.RTAMethod)boolean
+java.util.HashSet.contains(org.objectweb.asm.tree.ClassNode)boolean
+java.util.HashSet.iterator()interface java.util.Iterator
+java.util.HashSet.size()int
+java.util.Iterator.hasNext()boolean
+java.util.Iterator.next()class java.lang.Object
+java.util.LinkedList.<init>()void
+java.util.LinkedList.add(java.lang.Object)boolean
+java.util.LinkedList.add(lnu.asm.rta.entities.RTAMethod)boolean
+java.util.LinkedList.removeFirst()class java.lang.Object
+java.util.LinkedList.size()int
+java.util.List.add(org.objectweb.asm.tree.AnnotationNode)boolean
+javax.xml.stream.XMLInputFactory.createXMLStreamReader(java.io.FileReader)interface javax.xml.stream.XMLStreamReader
+javax.xml.stream.XMLInputFactory.newInstance()class javax.xml.stream.XMLInputFactory
+javax.xml.stream.XMLStreamReader.getLocalName()class java.lang.String
+javax.xml.stream.XMLStreamReader.getText()class java.lang.String
+javax.xml.stream.XMLStreamReader.hasNext()boolean
+javax.xml.stream.XMLStreamReader.next()int

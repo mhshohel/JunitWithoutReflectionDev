@@ -1,0 +1,42 @@
+Report Type: Sorted
+_________________________
+
+
+NO ACCESS CLASSES
+_____________________
+List of Classes that has no access, assume library classes
+
+Total No Access Classes: 32
+
+java.io.File
+java.io.FileReader
+java.io.IOException
+java.io.InputStream
+java.io.PrintStream
+java.io.PrintWriter
+java.lang.Byte
+java.lang.Character
+java.lang.ClassLoader
+java.lang.Double
+java.lang.Exception
+java.lang.Float
+java.lang.IllegalArgumentException
+java.lang.Integer
+java.lang.Long
+java.lang.Object
+java.lang.Runtime
+java.lang.RuntimeException
+java.lang.Short
+java.lang.String
+java.lang.StringBuilder
+java.lang.System
+java.lang.reflect.Method
+java.util.ArrayList
+java.util.HashMap
+java.util.HashSet
+java.util.Iterator
+java.util.LinkedList
+java.util.List
+javax.xml.stream.XMLInputFactory
+javax.xml.stream.XMLStreamException
+javax.xml.stream.XMLStreamReader

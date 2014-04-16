@@ -114,7 +114,7 @@ public final class JCallGraph {
 	}
 
 	public static void main(String[] args) {
-		String location = null;
+		Thread myThread = null;
 		try {
 			getAndSetInfo();
 			System.out.println("\n\n\nCreating Static Callgraph... "
@@ -127,7 +127,7 @@ public final class JCallGraph {
 			runtime.gc();
 			long start = System.nanoTime();
 			Runnable runnable = new Progress();
-			Thread myThread = new Thread(runnable);
+			myThread = new Thread(runnable);
 			myThread.start();
 			JCallGraph jCallGraph = new JCallGraph();
 			Description des = jCallGraph.getClassDescriptions().get(
@@ -161,10 +161,11 @@ public final class JCallGraph {
 			System.err.println("--------------PROVIDED INFO-------------");
 			System.err.println("Path: " + Options.path);
 			System.err.println("Packages: " + Options.packages);
-			System.err.println("Location: " + location);
 			System.err.println("Main Class: " + Options.mainClass);
 			System.err.println("Main Method: " + Options.mainMethod);
 			writerClose();
+			myThread.interrupt();
+			myThread = null;
 			e.printStackTrace();
 		}
 	}

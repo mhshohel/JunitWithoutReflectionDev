@@ -1,0 +1,15 @@
+Report Type: Sorted
+_________________________
+
+
+NO ACCESS CLASSES NODES
+_____________________
+Nodes that has no access to read, assume library classes
+
+Total No Access Library Nodes: 5
+
+java.lang.Object.<init>()void
+java.util.ArrayList.<init>()void
+java.util.ArrayList.add(observer.Value)boolean
+java.util.ArrayList.get(int)class java.lang.Object
+java.util.ArrayList.size()int

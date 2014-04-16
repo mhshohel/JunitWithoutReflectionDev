@@ -1,0 +1,21 @@
+Report Type: Sorted
+_________________________
+
+
+LIBRARY EDGES
+_____________________
+Edges...(That has no further access to the class or assume library classes)
+
+Total Library Edges: 11
+
+observer.Adder.<init>(observer.Bag)void -- > java.lang.Object.<init>()void
+observer.Adder.update(observer.Subject)void -- > java.util.ArrayList.get(int)class java.lang.Object
+observer.Adder.update(observer.Subject)void -- > java.util.ArrayList.size()int
+observer.Bag.<init>()void -- > java.lang.Object.<init>()void
+observer.Bag.<init>()void -- > java.util.ArrayList.<init>()void
+observer.Bag.add(observer.Value)void -- > java.util.ArrayList.add(observer.Value)boolean
+observer.ObserverArray.<init>()void -- > java.lang.Object.<init>()void
+observer.Printer.<init>(observer.Bag)void -- > java.lang.Object.<init>()void
+observer.Printer.update(observer.Subject)void -- > java.util.ArrayList.get(int)class java.lang.Object
+observer.Printer.update(observer.Subject)void -- > java.util.ArrayList.size()int
+observer.Value.<init>(int)void -- > java.lang.Object.<init>()void
