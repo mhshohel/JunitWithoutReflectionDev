@@ -21,7 +21,6 @@ package callgraphstat;
 
 import java.io.File;
 import java.io.InputStream;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,42 +39,42 @@ import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.Type;
 
 public final class Description implements Comparable<Description> {
-	public enum ClassCategory {
-		GENERATED("Generated Code"), REGULAR("Regular Class"), TEST(
-				"Test Class");
-		private String category;
-
-		private ClassCategory(String category) {
-			this.category = category;
-		}
-
-		public String toString() {
-			return this.category;
-		}
-	}
-
-	public enum ClassType {
-		INTERFACE("interface"), ABSTRACT("abstract"), FINAL("final"), ENUM(
-				"enum"), CLASS("class");
-		private String category;
-
-		private ClassType(String category) {
-			this.category = category;
-		}
-
-		public String toString() {
-			return this.category;
-		}
-	}
+	// public enum ClassCategory {
+	// GENERATED("Generated Code"), REGULAR("Regular Class"), TEST(
+	// "Test Class");
+	// private String category;
+	//
+	// private ClassCategory(String category) {
+	// this.category = category;
+	// }
+	//
+	// public String toString() {
+	// return this.category;
+	// }
+	// }
+	//
+	// public enum ClassType {
+	// INTERFACE("interface"), ABSTRACT("abstract"), FINAL("final"), ENUM(
+	// "enum"), CLASS("class");
+	// private String category;
+	//
+	// private ClassType(String category) {
+	// this.category = category;
+	// }
+	//
+	// public String toString() {
+	// return this.category;
+	// }
+	// }
 
 	public int id = 0;
 	private Class<?> clas = null;
 	private JavaClass javaClass = null;
 	private ClassVisitor classVisitor = null;
 	private ConstantPoolGen constants = null;
-	private ClassCategory classCategory = null;
+	// private ClassCategory classCategory = null;
 	private InputStream classInputStream = null;
-	private ClassType classType = null;
+	// private ClassType classType = null;
 	private Map<String, Description> classDescriptions = null;
 	private Map<Method, MethodVisitor> methods = null;
 	private List<Description> interfaces = null;
@@ -90,17 +89,17 @@ public final class Description implements Comparable<Description> {
 		initialize();
 	}
 
-	public Description(Class<?> clas, ClassCategory classCategory,
-			Map<String, Description> classDescriptions) throws Exception {
-		initialize();
-		this.classCategory = classCategory;
-		initialize(clas, classDescriptions);
-	}
+	// public Description(Class<?> clas, ClassCategory classCategory,
+	// Map<String, Description> classDescriptions) throws Exception {
+	// initialize();
+	// // this.classCategory = classCategory;
+	// initialize(clas, classDescriptions);
+	// }
 
 	public Description(Class<?> clas, Map<String, Description> classDescriptions)
 			throws Exception {
 		initialize();
-		this.classCategory = ClassCategory.REGULAR;
+		// this.classCategory = ClassCategory.REGULAR;
 		initialize(clas, classDescriptions);
 	}
 
@@ -195,9 +194,9 @@ public final class Description implements Comparable<Description> {
 		dummy.classDescriptions = this.classDescriptions;
 		dummy.interfaces = this.interfaces;
 		dummy.superClass = this.superClass;
-		dummy.classCategory = this.classCategory;
+		// dummy.classCategory = this.classCategory;
 		dummy.classInputStream = this.classInputStream;
-		dummy.classType = this.classType;
+		// dummy.classType = this.classType;
 		dummy.staticFields = this.staticFields;
 		dummy.isSuperClassObjectInitiated = (this.superClass == null) ? true
 				: false;
@@ -215,9 +214,9 @@ public final class Description implements Comparable<Description> {
 		dummy.classDescriptions = this.classDescriptions;
 		dummy.interfaces = this.interfaces;
 		dummy.superClass = this.superClass;
-		dummy.classCategory = this.classCategory;
+		// dummy.classCategory = this.classCategory;
 		dummy.classInputStream = this.classInputStream;
-		dummy.classType = this.classType;
+		// dummy.classType = this.classType;
 		dummy.staticFields = this.staticFields;
 		dummy.isSuperClassObjectInitiated = (this.superClass == null) ? true
 				: false;
@@ -239,9 +238,9 @@ public final class Description implements Comparable<Description> {
 		return this.clas;
 	}
 
-	public final ClassCategory getClassCategory() {
-		return this.classCategory;
-	}
+	// public final ClassCategory getClassCategory() {
+	// return this.classCategory;
+	// }
 
 	public final InputStream getClassInputStream() {
 		return classInputStream;
@@ -251,9 +250,9 @@ public final class Description implements Comparable<Description> {
 		return clas.getName();
 	}
 
-	public final ClassType getClassType() {
-		return this.classType;
-	}
+	// public final ClassType getClassType() {
+	// return this.classType;
+	// }
 
 	public final ClassVisitor getClassVisitor() {
 		return this.classVisitor;
@@ -473,23 +472,27 @@ public final class Description implements Comparable<Description> {
 			throw new Exception("Cannot parse Class to JavaClass.");
 		}
 		this.constants = new ConstantPoolGen(this.javaClass.getConstantPool());
-		int modifier = this.clas.getModifiers();
-		if (this.clas.isInterface()) {
-			this.classType = ClassType.INTERFACE;
-		} else if (Modifier.isAbstract(modifier)) {
-			this.classType = ClassType.ABSTRACT;
-		} else if (Modifier.isFinal(modifier)) {
-			this.classType = ClassType.FINAL;
-		} else if (this.clas.isEnum()) {
-			this.classType = ClassType.ENUM;
-		} else {
-			this.classType = ClassType.CLASS;
-		}
+		// int modifier = this.clas.getModifiers();
+		// if (this.clas.isInterface()) {
+		// this.classType = ClassType.INTERFACE;
+		// } else if (Modifier.isAbstract(modifier)) {
+		// this.classType = ClassType.ABSTRACT;
+		// } else if (Modifier.isFinal(modifier)) {
+		// this.classType = ClassType.FINAL;
+		// } else if (this.clas.isEnum()) {
+		// this.classType = ClassType.ENUM;
+		// } else {
+		// this.classType = ClassType.CLASS;
+		// }
 		// Inner Class as Application
 		for (Class<?> cls : this.clas.getDeclaredClasses()) {
+			// if (!this.classDescriptions.containsKey(cls.getName())) {
+			// this.classDescriptions.put(cls.getName(), new Description(cls,
+			// ClassCategory.REGULAR, this.classDescriptions));
+			// }
 			if (!this.classDescriptions.containsKey(cls.getName())) {
 				this.classDescriptions.put(cls.getName(), new Description(cls,
-						ClassCategory.REGULAR, this.classDescriptions));
+						this.classDescriptions));
 			}
 		}
 		initializeMethodVisitor(this, false);
@@ -542,21 +545,21 @@ public final class Description implements Comparable<Description> {
 		}
 	}
 
-	public final boolean isGeneratedCode() {
-		return (this.classCategory == ClassCategory.GENERATED);
-	}
+	// public final boolean isGeneratedCode() {
+	// return (this.classCategory == ClassCategory.GENERATED);
+	// }
 
-	public final boolean isRegularClass() {
-		return (this.classCategory == ClassCategory.REGULAR);
-	}
+	// public final boolean isRegularClass() {
+	// return (this.classCategory == ClassCategory.REGULAR);
+	// }
 
-	public final boolean isTestClass() {
-		return (this.classCategory == ClassCategory.TEST);
-	}
+	// public final boolean isTestClass() {
+	// return (this.classCategory == ClassCategory.TEST);
+	// }
 
-	public final void setClassCategory(ClassCategory classCategory) {
-		this.classCategory = classCategory;
-	}
+	// public final void setClassCategory(ClassCategory classCategory) {
+	// this.classCategory = classCategory;
+	// }
 
 	public final void setSuperClassDescription(Description description) {
 		this.superClass = description;
