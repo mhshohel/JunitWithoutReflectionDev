@@ -1,0 +1,36 @@
+Report Type: Sorted
+_________________________
+
+
+NO ACCESS CLASSES NODES
+_____________________
+Nodes that has no access to read, assume library classes
+
+Total No Access Library Nodes: 26
+
+java.io.PrintStream.println(()void
+java.io.PrintStream.println(dreamer.SquareMatrix)void
+java.io.PrintStream.println(java.lang.String)void
+java.lang.Boolean.valueOf(boolean)class java.lang.Boolean
+java.lang.Boolean.valueOf(dv103.Int[][])class java.lang.Boolean
+java.lang.IllegalArgumentException.<init>(java.lang.String)void
+java.lang.IndexOutOfBoundsException.<init>(java.lang.String)void
+java.lang.Object.<init>()void
+java.lang.RuntimeException.<init>(java.lang.String)void
+java.lang.System.arraycopy(java.lang.Object,int,dv103.Int[][],int,int)void
+java.lang.System.arraycopy(java.lang.Object,int,dv103.Ring[][],int,int)void
+java.lang.System.arraycopy(java.lang.Object,int,java.lang.Object,int,int)void
+java.lang.Throwable.printStackTrace()void
+org.junit.Assert.assertEquals((,dreamer.SquareMatrix)void
+org.junit.Assert.assertEquals(double,double,double)void
+org.junit.Assert.assertEquals(dreamer.SquareMatrix,(dreamer.SquareMatrix,)void
+org.junit.Assert.assertEquals(dreamer.SquareMatrix,dreamer.SquareMatrix)void
+org.junit.Assert.assertEquals(dv103.Real,dv103.QRing)void
+org.junit.Assert.assertEquals(dv103.Real,dv103.Ring)void
+org.junit.Assert.assertEquals(java.lang.Object,dv103.Int)void
+org.junit.Assert.assertEquals(java.lang.Object,dv103.Real)void
+org.junit.Assert.assertEquals(java.lang.Object,dv103.Ring)void
+org.junit.Assert.assertEquals(java.lang.Object,java.lang.Object)void
+org.junit.Assert.assertEquals(long,long)void
+org.junit.Assert.assertFalse(boolean)void
+org.junit.Assert.assertTrue(boolean)void

@@ -19,7 +19,6 @@
  */
 package callgraphstat;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,13 +88,6 @@ public final class Description implements Comparable<Description> {
 		initialize();
 	}
 
-	// public Description(Class<?> clas, ClassCategory classCategory,
-	// Map<String, Description> classDescriptions) throws Exception {
-	// initialize();
-	// // this.classCategory = classCategory;
-	// initialize(clas, classDescriptions);
-	// }
-
 	public Description(Class<?> clas, Map<String, Description> classDescriptions)
 			throws Exception {
 		initialize();
@@ -103,12 +95,31 @@ public final class Description implements Comparable<Description> {
 		initialize(clas, classDescriptions);
 	}
 
+	public void addInterfaceDescription(Description description) {
+		if (description != null && !this.interfaces.contains(description)) {
+			this.interfaces.add(description);
+		}
+	}
+
+	// public Description(Class<?> clas, ClassCategory classCategory,
+	// Map<String, Description> classDescriptions) throws Exception {
+	// initialize();
+	// // this.classCategory = classCategory;
+	// initialize(clas, classDescriptions);
+	// }
+
 	public void addStaticFieldsValue(String key, Object value) {
 		// if not found must look into super class
 		if (!this.staticFields.containsKey(key)) {
 			this.staticFields.put(key, new Stack<Object>());
 		} else {
 			this.staticFields.get(key).add(value);
+		}
+	}
+
+	public void addSuperClassDescription(Description description) {
+		if (description != null && this.superClass == null) {
+			this.superClass = description;
 		}
 	}
 
@@ -460,11 +471,11 @@ public final class Description implements Comparable<Description> {
 		this.clas = clas;
 		this.classDescriptions = classDescriptions;
 		try {
-			String resourceName = clas.getName().replace('.',
-					File.separatorChar)
-					+ ".class";
-			this.classInputStream = clas.getClassLoader().getResourceAsStream(
-					resourceName);
+			// this.clas = ArrayList.class;
+			String resourceName = (this.clas.getName()).replace(".", "/")
+					.concat(".class");
+			this.classInputStream = ClassLoader.getSystemClassLoader()
+					.getResourceAsStream(resourceName);
 			this.javaClass = new ClassParser(classInputStream, resourceName)
 					.parse();
 			this.classVisitor = new ClassVisitor(javaClass, this);
@@ -491,8 +502,13 @@ public final class Description implements Comparable<Description> {
 			// ClassCategory.REGULAR, this.classDescriptions));
 			// }
 			if (!this.classDescriptions.containsKey(cls.getName())) {
-				this.classDescriptions.put(cls.getName(), new Description(cls,
-						this.classDescriptions));
+				// Description description =
+				Static.createDescriptionOfClass(cls.getName(),
+						this.classDescriptions);
+				// if (description != null) {
+				// this.classDescriptions.put(cls.getName(), new Description(
+				// cls, this.classDescriptions));
+				// }
 			}
 		}
 		initializeMethodVisitor(this, false);
@@ -517,7 +533,7 @@ public final class Description implements Comparable<Description> {
 				: false;
 	}
 
-	// if it a copy then true else false
+	// if its a copy then true else false
 	private void initializeMethodVisitor(Description description, boolean isCopy) {
 		if (!description.clas.isInterface()) {
 			MethodVisitor methodVisitor = null;

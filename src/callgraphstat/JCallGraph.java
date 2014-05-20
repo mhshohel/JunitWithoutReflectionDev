@@ -114,9 +114,10 @@ public final class JCallGraph {
 	}
 
 	public static void main(String[] args) {
-		Thread myThread = null;
+		// Thread myThread = null;
 		try {
-			getAndSetInfo();
+			// get information from user
+			// getAndSetInfo();
 			System.out.println("\n\n\nCreating Static Callgraph... "
 					+ ((Options.deepSearch) ? "by Searching deeply."
 							: "without deep search") + " \n\n\n");
@@ -126,22 +127,22 @@ public final class JCallGraph {
 			// Run the garbage collector
 			runtime.gc();
 			long start = System.nanoTime();
-			Runnable runnable = new Progress();
-			myThread = new Thread(runnable);
-			myThread.start();
-			JCallGraph jCallGraph = new JCallGraph();
-			Description des = jCallGraph.getClassDescriptions().get(
-					Options.mainClass);
+			// Runnable runnable = new Progress();
+			// myThread = new Thread(runnable);
+			// myThread.start();
+			Description des = new JCallGraph().getTargetDescription();
 			if (des != null) {
 				new GenerateCallGraph(des.copy(), Options.mainMethod);
 			}
-			myThread.interrupt();
-			myThread = null;
+			// myThread.interrupt();
+			// myThread = null;
 			long end = System.nanoTime();
 			// Calculate the used memory
 			long memory = runtime.totalMemory() - runtime.freeMemory();
 			// ---------------------------------------------------------
-			printAndWrite();
+			// print result in a text file
+			// printAndWrite();
+
 			// ---------------------------------------------------------
 			System.out.println("\n\n\n");
 			for (int i = 0; i < output.length; i++) {
@@ -158,14 +159,14 @@ public final class JCallGraph {
 					+ bytesToMegabytes(memory));
 			// ---------------------------------------------------------
 		} catch (Exception e) {
-			System.err.println("--------------PROVIDED INFO-------------");
-			System.err.println("Path: " + Options.path);
-			System.err.println("Packages: " + Options.packages);
-			System.err.println("Main Class: " + Options.mainClass);
-			System.err.println("Main Method: " + Options.mainMethod);
-			writerClose();
-			myThread.interrupt();
-			myThread = null;
+			// System.err.println("--------------PROVIDED INFO-------------");
+			// System.err.println("Path: " + Options.path);
+			// System.err.println("Packages: " + Options.packages);
+			// System.err.println("Main Class: " + Options.mainClass);
+			// System.err.println("Main Method: " + Options.mainMethod);
+			// writerClose();
+			// myThread.interrupt();
+			// myThread = null;
 			e.printStackTrace();
 		}
 	}
@@ -291,13 +292,20 @@ public final class JCallGraph {
 		}
 	}
 
-	public JCallGraph() throws Exception {
-		for (int i = 0; i < Options.packages.size(); i++) {
-			file = new File(Options.path.trim().concat(File.separator)
-					.concat(Options.packages.get(i).trim()));
-			readFiles(file, Options.packages.get(i));
-		}
-		initializeInterfacesAndSuperClasses();
+	public JCallGraph() {
+		// Static.createDescriptionOfClass(Options.className,
+		// this.classDescriptions);
+		// for (int i = 0; i < Options.packages.size(); i++) {
+		// file = new File(Options.path.trim().concat(File.separator)
+		// .concat(Options.packages.get(i).trim()));
+		// readFiles(file, Options.packages.get(i));
+		// }
+		// initializeInterfacesAndSuperClasses();
+	}
+
+	public Description getTargetDescription() throws Exception {
+		return Static.createDescriptionOfClass(Options.className,
+				this.classDescriptions);
 	}
 
 	public Map<String, Description> getClassDescriptions() {

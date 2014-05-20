@@ -40,6 +40,8 @@ public class Static {
 	public static final String ARRAY_TYPE = "arr_typ";
 	public static final String ARRAY_OBJECT = "arr_obj";
 	public static final String COLLECTION_TYPE = "coll_typ";
+	// keep only nodes that is accessed by other class
+	public static List<String> applicationNodes = new ArrayList<String>();
 	public static List<String> nodes = new ArrayList<String>();
 	public static List<String> edges = new ArrayList<String>();
 	public static List<String> libEdges = new ArrayList<String>();
@@ -52,6 +54,12 @@ public class Static {
 	// values
 	public static Stack<Object> someValues = new Stack<Object>();
 	public static int num = 0;
+
+	public static void addApplicationNodes(String node) {
+		if (!applicationNodes.contains(node)) {
+			applicationNodes.add(node);
+		}
+	}
 
 	public final static boolean addEdge(String source, String target) {
 		String edge = source.concat(" -- > ").concat(target).trim();
@@ -95,10 +103,44 @@ public class Static {
 		return false;
 	}
 
+	public static Description createDescriptionOfClass(String className,
+			Map<String, Description> classDescriptions) {
+		Description description = null;
+		try {
+			Class<?> clas = Class.forName(className);
+			Static.err("CLASS NAME:  " + clas.getName());
+			// make sure about Description, if some problem found then it should
+			// not create Description instance
+			try {
+				description = new Description(clas, classDescriptions);
+			} catch (Exception e) {
+				// ignore this error, it will be cannot parse JavaClass, so make
+				// description = null, so that it can not preced next
+				description = null;
+			}
+			if (description != null) {
+				if (!classDescriptions.containsKey(clas.getName())) {
+					classDescriptions.put(clas.getName(), description);
+				}
+				setSuperClassDescription(description, classDescriptions);
+				setInterfaceForDescription(description, classDescriptions);
+			}
+		} catch (ClassNotFoundException e) {
+			// ignore exception
+			Static.err("Class Not Found: " + e.getMessage());
+			description = null;
+		} catch (Exception e) {
+			// ignore exception
+			Static.err(e.getMessage());
+			description = null;
+		}
+		return description;
+	}
+
 	// TODO:REMOVE ME: PRINT ERR
 	// ---------------------------------------
 	public static void err(Object obj) {
-		// System.err.println((obj == null) ? "null" : obj);
+		System.err.println((obj == null) ? "null" : obj);
 	}
 
 	// if no value matched or not found in stack then type should check into
@@ -124,6 +166,11 @@ public class Static {
 		return noAccessedClasses;
 	}
 
+	public final static List<String> getSortedApplicationNodes() {
+		Collections.sort(applicationNodes);
+		return applicationNodes;
+	}
+
 	public final static List<String> getSortedEdges() {
 		Collections.sort(edges);
 		return edges;
@@ -142,6 +189,10 @@ public class Static {
 	public final static List<String> getSortedNodes() {
 		Collections.sort(nodes);
 		return nodes;
+	}
+
+	public final static List<String> getUnSortdApplicationNodes() {
+		return applicationNodes;
 	}
 
 	public final static List<String> getUnSortdNoAccessLibraryClass() {
@@ -244,15 +295,55 @@ public class Static {
 	// TODO:REMOVE ME: PRINT OUT
 	// ---------------------------------------
 	public static void out(Object obj) {
-		// System.out.println((obj == null) ? "null" : obj);
+		System.out.println((obj == null) ? "null" : obj);
 	}
 
 	// TODO:REMOVE ME: JUST A TEST NUMBER FOR TRACE
 	// ---------------------------------------
 	public static void printNum() {
 		num++;
-		// System.err.println("COUNTER: ?=========================? " + (num)
-		// + " ?=========================?");
+		System.err.println("COUNTER: ?=========================? " + (num)
+				+ " ?=========================?");
+	}
+
+	private static void setInterfaceForDescription(
+			Description currentDescription,
+			Map<String, Description> classDescriptions) {
+		Class<?> currentClass = currentDescription.getActualClass();
+		for (Class<?> cls : currentClass.getInterfaces()) {
+			Description description = classDescriptions.get(cls.getName());
+			if (description != null) {
+				currentDescription.addInterfaceDescription(description);
+			} else {
+				Description newDescription = createDescriptionOfClass(
+						cls.getName(), classDescriptions);
+				if (newDescription != null) {
+					currentDescription.addInterfaceDescription(newDescription);
+				}
+			}
+		}
+	}
+
+	private static void setSuperClassDescription(
+			Description currentDescription,
+			Map<String, Description> classDescriptions) {
+		Class<?> currentClass = currentDescription.getActualClass();
+		Class<?> superClass = currentClass.getSuperclass();
+		if (superClass != null) {
+			Description description = classDescriptions.get(superClass
+					.getName());
+			if (description != null) {
+				currentDescription.addSuperClassDescription(description);
+			} else {
+				Description newDescription = createDescriptionOfClass(
+						superClass.getName(), classDescriptions);
+				if (newDescription != null) {
+					currentDescription.addSuperClassDescription(newDescription);
+				}
+			}
+		}
+		currentDescription.isSuperClassObjectInitiated = (superClass == null) ? true
+				: false;
 	}
 
 	public static Object verifyTypeFromObjectsToStore(Object value, Type type,

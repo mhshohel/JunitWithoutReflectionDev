@@ -24,11 +24,21 @@ import java.util.List;
 
 public class Options {
 	// if deepSearch is true search deeply, otherwise do normal search
+	// public static boolean deepSearch = false;
+	// public static boolean sortedReport = true;
+	// public static String path = "";
+	// public static List<String> packages = new ArrayList<String>();
+	// public static String mainClass = "";
+	// public static String mainMethod = "";
+	// public static String appName = "";
+
 	public static boolean deepSearch = false;
 	public static boolean sortedReport = true;
 	public static String path = "";
 	public static List<String> packages = new ArrayList<String>();
-	public static String mainClass = "";
-	public static String mainMethod = "";
+	public static String pack = "sample";
+	public static String mainClass = "MainClass";
+	public static String mainMethod = "Main";
 	public static String appName = "";
+	public static String className = pack.concat(".").concat(mainClass);
 }

@@ -1,0 +1,15 @@
+Report Type: Unsorted
+_________________________
+
+
+LIBRARY EDGES
+_____________________
+Edges...(That has no further access to the class or assume library classes)
+
+Total Library Edges: 5
+
+simple.A.<init>()void -- > java.lang.Object.<init>()void
+simple.CustomException.getNewList()simple.CustomException$SomeClass -- > java.io.PrintStream.println(java.lang.String)void
+simple.CustomException$SomeClass.<init>(simple.CustomException)void -- > java.lang.Object.<init>()void
+simple.Example.g(simple.B)void -- > java.lang.Throwable.getLocalizedMessage()class java.lang.String
+simple.Example.g(simple.B)void -- > java.io.PrintStream.println(java.lang.String)void

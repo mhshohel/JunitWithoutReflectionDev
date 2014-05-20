@@ -1,0 +1,25 @@
+Report Type: Unsorted
+_________________________
+
+
+NODES
+_____________________
+Total Nodes: 17
+
+simple.A.<init>()void
+simple.A.foo()void
+simple.B.<init>()void
+simple.B.foo()void
+simple.C.<init>()void
+simple.C.foo()void
+simple.CustomException$SomeClass.<init>(simple.CustomException)void
+simple.CustomException$SomeClass.noMethod()void
+simple.CustomException.<init>()void
+simple.CustomException.getNewList()simple.CustomException$SomeClass
+simple.CustomException.getValue()int
+simple.D.<init>()void
+simple.D.foo()void
+simple.Example.<init>()void
+simple.Example.main(java.lang.String[])void
+simple.Example.f(simple.A)void
+simple.Example.g(simple.B)void
